@@ -2134,7 +2134,7 @@ function initialiseWMERouteSpeeds()
         '<style>\n'	+
         '#sidepanel-routespeeds select { margin-left:20px; font-size:12px; height:22px; border:1px solid; border-color:rgb(169, 169, 169); border-radius:4px; border: 1px solid; border-color: rgb(169, 169, 169); -webkit-border-radius:4px; -moz-border-radius:4px; }\n' +
         '#sidepanel-routespeeds select, #sidepanel-routespeeds input { margin-top:2px; margin-bottom:2px; width:initial; }\n' +
-        '#sidepanel-routespeeds .checkbox, #sidepanel-routespeeds .checkbox+.checkbox { min-height:20px; vertical-align:baseline; margin-top:0px; margin-bottom:0px; display:inline-block; }\n'	+
+        '#sidepanel-routespeeds input[type="checkbox"] { margin-bottom:0px; }\n'	+
         '#sidepanel-routespeeds label ~ label, #sidepanel-routespeeds span label { margin-left:20px; }\n' +
         '</style>' +
 
@@ -2223,13 +2223,13 @@ function initialiseWMERouteSpeeds()
         '<a id="routespeeds-reset-options-to-livemap-route" onclick="return false;" style="cursor:pointer; float:right; margin-right:20px;" title="Reset routing options to the Livemap Route equivalents">Reset to Livemap Route</a>'	+
         '</div>' +
 
-        '<div><label class="checkbox"><input id="routespeeds-option1" type="checkbox"/>Disable script</label></div>'	+
-        '<div><label class="checkbox"><input id="routespeeds-option2" type="checkbox"/>Show cross-times through segments</label></div>'	+
-        '<div><label class="checkbox"><input id="routespeeds-option3" type="checkbox"/>Hide labels</label></div>'	+
-        '<div><label class="checkbox"><input id="routespeeds-option4" type="checkbox"/>Speed in mph</label></div>'	+
+        '<div><label class=""><input id="routespeeds-option1" type="checkbox"/>Disable script</label></div>'	+
+        '<div><label class=""><input id="routespeeds-option2" type="checkbox"/>Show cross-times through segments</label></div>'	+
+        '<div><label class=""><input id="routespeeds-option3" type="checkbox"/>Hide labels</label></div>'	+
+        '<div><label class=""><input id="routespeeds-option4" type="checkbox"/>Speed in mph</label></div>'	+
 
         '<div>'	+
-        '<label class="checkbox" style="display:inline-block;"><input id="routespeeds-option5" type="checkbox"/>Alternative routes</label>'	+
+        '<label class="" style="display:inline-block;"><input id="routespeeds-option5" type="checkbox"/>Alternative routes</label>'	+
         '<select id=routespeeds-option6 style="margin-left:10px; display:inline-block;" >'	+
         '<option id=routespeeds-option6-v1 value="1">1</option>'	+
         '<option id=routespeeds-option6-v2 value="2">2</option>'	+
@@ -2238,11 +2238,11 @@ function initialiseWMERouteSpeeds()
         '<option id=routespeeds-option6-v5 value="5">5</option>'	+
         '</select>'	+
         '<span id="routespeeds-option5-span" style="display:none;">'	+
-        '<label class="checkbox" style="margin-left:15px; display:inline-block;" title="When enabled ten times more alternative routes is requested from the routing server.&#13;This usually increases the request time, but sometimes provides interesting routes..."><input id="routespeeds-option12" type="checkbox"/>Try more</label>'	+
+        '<label class="" style="margin-left:15px; display:inline-block;" title="When enabled ten times more alternative routes is requested from the routing server.&#13;This usually increases the request time, but sometimes provides interesting routes..."><input id="routespeeds-option12" type="checkbox"/>Try more</label>'	+
         '</span>'	+
         '</div>'	+
 
-        '<div><label class="checkbox"><input id=routespeeds-option7 type="checkbox"/>Real-Time Traffic</label></div>'	+
+        '<div><label class=""><input id=routespeeds-option7 type="checkbox"/>Real-Time Traffic</label></div>'	+
 
         '<div>'	+
         'Route type:<select id=routespeeds-option13 style="margin-left:10px;" >'	+
@@ -2255,20 +2255,20 @@ function initialiseWMERouteSpeeds()
 
         '<div>'	+
         '<div style="min-width:55px; display:inline-block;"><b>Avoid:</b></div>'	+
-        '<label class="checkbox"><input id=routespeeds-option8 type="checkbox"/>Tolls</label>'	+
+        '<label class=""><input id=routespeeds-option8 type="checkbox"/>Tolls</label>'	+
         line_div_break	+
-        '<label class="checkbox"><input id=routespeeds-option9 type="checkbox"/>Freeways</label>'	+
+        '<label class=""><input id=routespeeds-option9 type="checkbox"/>Freeways</label>'	+
         '</div>'	+
         '<div style="margin-left:55px">'	+
-        '<label class="checkbox"><input id=routespeeds-option10 type="checkbox"/>Dirt roads</label>'	+
+        '<label class=""><input id=routespeeds-option10 type="checkbox"/>Dirt roads</label>'	+
         '<span id=routespeeds-option10-span style="display:none;">'	+
-        '<label class="checkbox"><input id=routespeeds-option11 type="checkbox"/>Long dirt roads</label>'	+
+        '<label class=""><input id=routespeeds-option11 type="checkbox"/>Long dirt roads</label>'	+
         '</span>'	+
         '</div>'	+
 
         '<div>'  +
         '<div style="min-width:55px; display:inline-block;"><b>Allow:</b></div>'	+
-        '<label class="checkbox"><input id=routespeeds-option14  type="checkbox"/>U-Turns</label>'	+
+        '<label class=""><input id=routespeeds-option14  type="checkbox"/>U-Turns</label>'	+
         '</div>'	+
 
         '<b><p id=routespeeds-error style="color:#FF0000"></p></b>'	+
