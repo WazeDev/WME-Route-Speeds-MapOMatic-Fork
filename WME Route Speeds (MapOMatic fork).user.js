@@ -3,7 +3,7 @@ var meta = function () {/*
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
-// @version             1.4.8-momfork
+// @version             1.4.9-momfork
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -1580,20 +1580,16 @@ function livemapRoute() {
 
 	var stra = getId('sidepanel-routespeeds-a').value;
 	var strb = getId('sidepanel-routespeeds-b').value;
-	
+
 	var pastedlink = false;
 
 	//sprawdzenie czy wklejono link z LiveMap, jeżeli tak to sparsowanie i przeformatowanie współrzędnych oraz przeniesienie widoku mapy na miejsce wklejonej trasy
-	if (stra.indexOf('livemap?')>=0) {
+	if (stra.indexOf('livemap?')>=0 || stra.indexOf('livemap/?')>=0) {
 		get_coords_from_livemap_link(stra);
-		stra = getId('sidepanel-routespeeds-a').value;
-		strb = getId('sidepanel-routespeeds-b').value;
 		pastedlink = true;
 	}
-	else if (strb.indexOf('livemap?')>=0) {
+	else if (strb.indexOf('livemap?')>=0 || strb.indexOf('livemap/?')>=0) {
 		get_coords_from_livemap_link(strb);
-		stra = getId('sidepanel-routespeeds-a').value;
-		strb = getId('sidepanel-routespeeds-b').value;
 		pastedlink = true;
 	}
 
@@ -1601,7 +1597,7 @@ function livemapRoute() {
 	strb = getId('sidepanel-routespeeds-b').value;
 	if (stra === "") return;
 	if (strb === "") return;
-	
+
 	var p1 = stra.split(",");
 	var p2 = strb.split(",");
 
