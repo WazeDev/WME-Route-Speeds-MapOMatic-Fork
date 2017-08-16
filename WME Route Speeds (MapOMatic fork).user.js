@@ -2,8 +2,8 @@ var meta = function () {/*
 // ==UserScript==
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
-// @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/.*$/
-// @version             1.4.9-momfork
+// @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
+// @version             1.5.00-momfork
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -14,6 +14,8 @@ var meta = function () {/*
 */};
 
 /*
+ * 1.5.00-momfork (20170816)
+ * - Updated include statement for latest URL change
  * Version history:
  * 1.4.8-momfork (20170123)
  * - Updated formatting in options panel to fix checkbox alignment issues.
