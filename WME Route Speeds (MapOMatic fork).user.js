@@ -3,10 +3,10 @@ var meta = function () {/*
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             1.5.00-momfork
+// @version             2017.11.10.001
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
-// @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
+// @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js?version=229392
 // @author              wlodek76 (forked by MapOMatic)
 // @copyright           2014, 2015 wlodek76
 // @contributor         2014, 2015 FZ69617
@@ -14,6 +14,10 @@ var meta = function () {/*
 */};
 
 /*
+ * 2017.11.10.001 (20171011)
+ * - Changing to use WazeWrap.Interface.Tab to load the Route Speeds tab so it can recover from changing the map units (Imperial/Metric)
+ *   and coming back from event mode
+ *
  * 1.5.00-momfork (20170816)
  * - Updated include statement for latest URL change
  * Version history:
@@ -665,10 +669,8 @@ function loopWMERouteSpeeds() {
 
 	if (routespeedsoption1) return;
 
-	var tab = getId('sidepanel-routespeeds-tab');
-	if (tab === 'undefined') return;
-	var tabParrent = tab.parentNode;
-	if (tabParrent.className === '') {
+	var tabOpen = $('#user-tabs > .nav-tabs > li > a[href="#sidepanel-routespeeds"]').attr('aria-expanded') == "true";
+	if (!tabOpen) {
 		if (tabswitched !== 1) {
 			tabswitched = 1;
 			showLayers(false);
@@ -1340,11 +1342,11 @@ function getnowtoday()
 function requestRouteFromLiveMap(x1, y1, x2, y2)
 {
 	var atTime = getnowtoday();
-	
+
 	var numRoutes = 1;
 	if (routespeedsoption5) numRoutes = parseInt(routespeedsoption6);
 	var numPaths = (routespeedsoption5 && routespeedsoption12) ? numRoutes * 10 : numRoutes;
-			
+
 	var routeType = (routespeedsoption13 === 2)	? "DISTANCE" : (routespeedsoption13 === 3) ? "TIME" : "HISTORIC_TIME";
 
 	var avoidTollRoads  = routespeedsoption8;
@@ -1549,11 +1551,11 @@ function get_coords_from_livemap_link(link) {
 	var lat1 = '';
 	var lon2 = '';
 	var lat2 = '';
-	
+
 	var opt = link.split('&');
 	for(var i=0; i<opt.length; i++) {
 		var o = opt[i];
-		
+
 		if (o.indexOf('from_lon=')===0) lon1 =        o.substring(9, 30);
 		if (o.indexOf('from_lat=')===0) lat1 = ', ' + o.substring(9, 30);
 		if (o.indexOf('to_lon=')===0)   lon2 =        o.substring(7, 30);
@@ -1568,7 +1570,7 @@ function livemapRoute() {
 
 	if (routespeedsoption1) return;
 	if (routewait) return;
-	
+
 	routewsp1 = [];
 	routeodc1 = [];
 	routewsp2 = [];
@@ -1630,7 +1632,7 @@ function livemapRoute() {
 	objprog1.style.backgroundColor = '#FF8000';
 
 	createMarkers(x1, y1, x2, y2, true);
-	
+
 	if (pastedlink) {
 		clickA();
 	}
@@ -1703,7 +1705,7 @@ function resetOptions() {
 	getId('routespeeds-option12').checked = routespeedsoption12 = false;
 
 	getId('routespeeds-option7').checked  = routespeedsoption7  = false;
-	
+
 	getId('routespeeds-option13').value   = routespeedsoption13 = 1;
 
 	getId('routespeeds-option8').checked  = routespeedsoption8  = false;
@@ -1711,7 +1713,7 @@ function resetOptions() {
 	getId('routespeeds-option10').checked = routespeedsoption10 = true;
 	getId('routespeeds-option11').checked = routespeedsoption11 = false;
 	getId('routespeeds-option14').checked = routespeedsoption14 = true;
-	
+
 	update_adv_switches();
 }
 //--------------------------------------------------------------------------------------------------------
@@ -1753,7 +1755,7 @@ function clickOption1()
 	routespeedsoption1 = (getId('routespeeds-option1').checked === true);
 
 	if (routespeedsoption1) {
-		getId('sidepanel-routespeeds-tab').style.color = "#A0A0A0";
+		getId('sidepanel-routespeeds').style.color = "#A0A0A0";
 
 		getId('routespeeds-summary1').innerHTML = '';
 		getId('routespeeds-summary2').innerHTML = '';
@@ -1788,7 +1790,7 @@ function clickOption1()
 		showClosures(0);
 	}
 	else {
-		getId('sidepanel-routespeeds-tab').style.color = "";
+		getId('sidepanel-routespeeds').style.color = "";
 
 		if (showMarkers(true)) livemapRoute();
 		showClosures(1);
@@ -1853,7 +1855,7 @@ function clickOption9()
 function clickOption10()
 {
 	routespeedsoption10 = (getId('routespeeds-option10').checked === true);
-	
+
 	routespeedsoption11 = false;
 	getId('routespeeds-option11').checked = false;
 
@@ -2202,7 +2204,7 @@ function initialiseWMERouteSpeeds()
         '<option value="1350">22:30</option>' +
         '<option value="1380">23:00</option>' +
         '<option value="1410">23:30</option>' +
-        '</select>'	+ 
+        '</select>'	+
         '<select id=routespeeds-day style="margin-left:5px;" >'	+
         '<option value="today">Today</option>'	+
         '<option value="1">Monday</option>'	+
@@ -2295,25 +2297,30 @@ function initialiseWMERouteSpeeds()
         '.routespeeds_header                  { display:inline-block; width:14px; height:14px; text-align:center; border-radius:2px; margin-right:2px; position:relative; top:2px; }'	+
         '</style>';
 
-	var userTabs = getId('user-info');
+	/*var userTabs = getId('user-info');
 	var navTabs = getElementsByClassName('nav-tabs', userTabs)[0];
 	var tabContent = getElementsByClassName('tab-content', userTabs)[0];
 
 	newtab = document.createElement('li');
-	newtab.innerHTML = '<a id=sidepanel-routespeeds-tab href="#sidepanel-routespeeds" data-toggle="tab" style="" >Route Speeds</a>';
+	newtab.innerHTML = '<a id=sidepanel-routespeeds href="#sidepanel-routespeeds" data-toggle="tab" style="" >Route Speeds</a>';
 	navTabs.appendChild(newtab);
 
 	addon.id = "sidepanel-routespeeds";
 	addon.className = "tab-pane";
-	tabContent.appendChild(addon);
+	tabContent.appendChild(addon);*/
 
+    new WazeWrap.Interface.Tab('Route Speeds', addon.innerHTML, init);
 
-	resetOptions();
+	window.addEventListener("beforeunload", saveRouteSpeedsOptions, true);
+}
+
+function init()
+{
+    resetOptions();
 	loadRouteSpeedsOptions();
 
-
-	if (routespeedsoption1) getId('sidepanel-routespeeds-tab').style.color = "#A0A0A0";
-	else                    getId('sidepanel-routespeeds-tab').style.color = "";
+	if (routespeedsoption1) getId('sidepanel-routespeeds').style.color = "#A0A0A0";
+	else                    getId('sidepanel-routespeeds').style.color = "";
 
 	getId('routespeeds-option6').value  = routespeedsoption6;
 	getId('routespeeds-option13').value = routespeedsoption13;
@@ -2352,8 +2359,7 @@ function initialiseWMERouteSpeeds()
 	getId('routespeeds-button-A').onclick       = clickA;
 	getId('routespeeds-button-B').onclick       = clickB;
 
-	window.Waze.map.events.register("zoomend", null, rezoom);
-	window.addEventListener("beforeunload", saveRouteSpeedsOptions, true);
+    window.Waze.map.events.register("zoomend", null, rezoom);
 
 	window.setInterval(loopWMERouteSpeeds, 500);
 	window.setInterval(panningWMERouteSpeeds, 100);
