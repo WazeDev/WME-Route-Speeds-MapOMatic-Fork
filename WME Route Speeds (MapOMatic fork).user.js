@@ -13,14 +13,17 @@ var meta = function () {/*
 // ==/UserScript==
 */};
 
-/*
+/*Version history:
+ * 
+ * 2017.11.15.001 (20171115)
+ * - New: Added Avoid Difficult Turns option (tonestertm)
+ * - New: Added a checkbox and functionality to place results in Livemap's natural sort order, to help with troubleshooting around penalties.
+ *   Note that when Routing Order is checked, the Try More option is ignored, to better approximate Livemap results (tonestertm)
+ *   
  * 2017.11.10.001 (20171011)
  * - Changing to use WazeWrap.Interface.Tab to load the Route Speeds tab so it can recover from changing the map units (Imperial/Metric)
  *   and coming back from event mode
- *
- * 1.5.00-momfork (20170816)
- * - Updated include statement for latest URL change
- * Version history:
+ * 
  * 1.4.8-momfork (20170123)
  * - Updated formatting in options panel to fix checkbox alignment issues.
  *
@@ -134,6 +137,8 @@ var routespeedsoption11 = false;
 var routespeedsoption12 = false;
 var routespeedsoption13 = 1;
 var routespeedsoption14 = true;
+var routespeedsoption15 = false; // Routing Order
+var routespeedsoption16 = false; // Difficult Turns
 
 var lastmapcenter = [0, 0];
 var panningX = 0;
@@ -235,6 +240,8 @@ function saveRouteSpeedsOptions() {
 	var obj12 = getId('routespeeds-option12');
 	var obj13 = getId('routespeeds-option13');
 	var obj14 = getId('routespeeds-option14');
+        var obj15 = getId('routespeeds-option15');  // Routing Order
+        var obj16 = getId('routespeeds-option16');  // Difficult Turns
 
 	if (obj1 !== undefined) {
 		localStorage.setItem("RouteSpeedsOption1",  obj1.checked);
@@ -251,6 +258,8 @@ function saveRouteSpeedsOptions() {
 		localStorage.setItem("RouteSpeedsOption12", obj12.checked);
 		localStorage.setItem("RouteSpeedsOption13", obj13.value);
 		localStorage.setItem("RouteSpeedsOption14", true);  // ALLOW_UTURNS is by default always true
+                localStorage.setItem("RouteSpeedsOption15", obj15.checked); // Routing Order
+                localStorage.setItem("RouteSpeedsOption16", obj16.checked); // Difficult Turns
 	}
 }
 //---------------------------------------------------------------------------------------
@@ -270,6 +279,9 @@ function loadRouteSpeedsOptions() {
 	if (localStorage.RouteSpeedsOption12) routespeedsoption12 = (localStorage.RouteSpeedsOption12 == "true");
 	if (localStorage.RouteSpeedsOption13) routespeedsoption13 = (localStorage.RouteSpeedsOption13);
 	if (localStorage.RouteSpeedsOption14) routespeedsoption14 = (localStorage.RouteSpeedsOption14 == "true");
+        if (localStorage.RouteSpeedsOption15) routespeedsoption15 = (localStorage.RouteSpeedsOption15 == "true");
+        if (localStorage.RouteSpeedsOption16) routespeedsoption16 = (localStorage.RouteSpeedsOption16 == "true");
+
 
 	getId('routespeeds-option1').checked  = routespeedsoption1;
 	getId('routespeeds-option2').checked  = routespeedsoption2;
@@ -285,6 +297,8 @@ function loadRouteSpeedsOptions() {
 	getId('routespeeds-option12').checked = routespeedsoption12;
 	getId('routespeeds-option13').value   = routespeedsoption13;
 	getId('routespeeds-option14').checked = routespeedsoption14;
+        getId('routespeeds-option15').checked = routespeedsoption15;
+        getId('routespeeds-option16').checked = routespeedsoption16;
 
 	update_adv_switches();
 }
@@ -1345,7 +1359,7 @@ function requestRouteFromLiveMap(x1, y1, x2, y2)
 
 	var numRoutes = 1;
 	if (routespeedsoption5) numRoutes = parseInt(routespeedsoption6);
-	var numPaths = (routespeedsoption5 && routespeedsoption12) ? numRoutes * 10 : numRoutes;
+	var numPaths = (routespeedsoption5 && routespeedsoption12 && !routespeedsoption15) ? numRoutes * 10 : numRoutes; //Routing Order - last condition disables Try More option
 
 	var routeType = (routespeedsoption13 === 2)	? "DISTANCE" : (routespeedsoption13 === 3) ? "TIME" : "HISTORIC_TIME";
 
@@ -1354,6 +1368,7 @@ function requestRouteFromLiveMap(x1, y1, x2, y2)
 	var avoidTrails     = routespeedsoption10;
 	var avoidLongTrails = routespeedsoption11;
 	var allowUTurns     = routespeedsoption14;
+        var avoidDifficult  = routespeedsoption16;
 
 	var options = {
 		data: [],
@@ -1372,6 +1387,7 @@ function requestRouteFromLiveMap(x1, y1, x2, y2)
 
 	options.add("AVOID_TOLL_ROADS",  avoidTollRoads,  false);
 	options.add("AVOID_PRIMARIES",   avoidPrimaries,  false);
+        options.add("AVOID_DANGEROUS_TURNS", avoidDifficult, false);
 	if (avoidLongTrails) 	{ options.put("AVOID_LONG_TRAILS", true);  }
 	else if (avoidTrails)	{ options.put("AVOID_TRAILS",      true);  }
 	else 					{ options.put("AVOID_LONG_TRAILS", false); }
@@ -1445,7 +1461,8 @@ function requestRouteFromLiveMap(x1, y1, x2, y2)
 
 					var sortByField = (routespeedsoption13 === 2) ? "length" : routespeedsoption7 ? "crossTime"	: "crossTimeWithoutRealTime";
 
-					json.alternatives.sort(function(a, b) {
+					if (!routespeedsoption15) {                                    // Routing Order
+                        json.alternatives.sort(function(a, b) {
 							var valField = "total_" + sortByField;
 							var val = function(r) {
 								if (r[valField] !== undefined) return r[valField];
@@ -1457,6 +1474,7 @@ function requestRouteFromLiveMap(x1, y1, x2, y2)
 							};
 							return val(a.response) - val(b.response);
 						});
+                    }                                                             //Routing Order
 
 
 						if (json.alternatives.length > numRoutes) {
@@ -1551,11 +1569,11 @@ function get_coords_from_livemap_link(link) {
 	var lat1 = '';
 	var lon2 = '';
 	var lat2 = '';
-
+	
 	var opt = link.split('&');
 	for(var i=0; i<opt.length; i++) {
 		var o = opt[i];
-
+		
 		if (o.indexOf('from_lon=')===0) lon1 =        o.substring(9, 30);
 		if (o.indexOf('from_lat=')===0) lat1 = ', ' + o.substring(9, 30);
 		if (o.indexOf('to_lon=')===0)   lon2 =        o.substring(7, 30);
@@ -1570,7 +1588,7 @@ function livemapRoute() {
 
 	if (routespeedsoption1) return;
 	if (routewait) return;
-
+	
 	routewsp1 = [];
 	routeodc1 = [];
 	routewsp2 = [];
@@ -1584,16 +1602,20 @@ function livemapRoute() {
 
 	var stra = getId('sidepanel-routespeeds-a').value;
 	var strb = getId('sidepanel-routespeeds-b').value;
-
+	
 	var pastedlink = false;
 
 	//sprawdzenie czy wklejono link z LiveMap, jeżeli tak to sparsowanie i przeformatowanie współrzędnych oraz przeniesienie widoku mapy na miejsce wklejonej trasy
 	if (stra.indexOf('livemap?')>=0 || stra.indexOf('livemap/?')>=0) {
 		get_coords_from_livemap_link(stra);
+		stra = getId('sidepanel-routespeeds-a').value;
+		strb = getId('sidepanel-routespeeds-b').value;
 		pastedlink = true;
 	}
 	else if (strb.indexOf('livemap?')>=0 || strb.indexOf('livemap/?')>=0) {
 		get_coords_from_livemap_link(strb);
+		stra = getId('sidepanel-routespeeds-a').value;
+		strb = getId('sidepanel-routespeeds-b').value;
 		pastedlink = true;
 	}
 
@@ -1601,7 +1623,7 @@ function livemapRoute() {
 	strb = getId('sidepanel-routespeeds-b').value;
 	if (stra === "") return;
 	if (strb === "") return;
-
+	
 	var p1 = stra.split(",");
 	var p2 = strb.split(",");
 
@@ -1632,7 +1654,7 @@ function livemapRoute() {
 	objprog1.style.backgroundColor = '#FF8000';
 
 	createMarkers(x1, y1, x2, y2, true);
-
+	
 	if (pastedlink) {
 		clickA();
 	}
@@ -1705,7 +1727,7 @@ function resetOptions() {
 	getId('routespeeds-option12').checked = routespeedsoption12 = false;
 
 	getId('routespeeds-option7').checked  = routespeedsoption7  = false;
-
+	
 	getId('routespeeds-option13').value   = routespeedsoption13 = 1;
 
 	getId('routespeeds-option8').checked  = routespeedsoption8  = false;
@@ -1713,7 +1735,9 @@ function resetOptions() {
 	getId('routespeeds-option10').checked = routespeedsoption10 = true;
 	getId('routespeeds-option11').checked = routespeedsoption11 = false;
 	getId('routespeeds-option14').checked = routespeedsoption14 = true;
-
+        getId('routespeeds-option15').checked = routespeedsoption15 = false;
+        getId('routespeeds-option16').checked = routespeedsoption16 = false;
+	
 	update_adv_switches();
 }
 //--------------------------------------------------------------------------------------------------------
@@ -1855,7 +1879,7 @@ function clickOption9()
 function clickOption10()
 {
 	routespeedsoption10 = (getId('routespeeds-option10').checked === true);
-
+	
 	routespeedsoption11 = false;
 	getId('routespeeds-option11').checked = false;
 
@@ -1890,6 +1914,18 @@ function clickOption14()
 {
 	routespeedsoption14 = (getId('routespeeds-option14').checked === true);
 	livemapRoute();
+}
+//--------------------------------------------------------------------------------------------------------
+function clickOption15()
+{
+    routespeedsoption15 = (getId('routespeeds-option15').checked === true);
+    livemapRoute();
+}
+//--------------------------------------------------------------------------------------------------------
+function clickOption16()
+{
+    routespeedsoption16 = (getId('routespeeds-option16').checked === true);
+    livemapRoute();
 }
 //--------------------------------------------------------------------------------------------------------
 function clickRoute1() { toggleRoute(1); }
@@ -2204,7 +2240,7 @@ function initialiseWMERouteSpeeds()
         '<option value="1350">22:30</option>' +
         '<option value="1380">23:00</option>' +
         '<option value="1410">23:30</option>' +
-        '</select>'	+
+        '</select>'	+ 
         '<select id=routespeeds-day style="margin-left:5px;" >'	+
         '<option value="today">Today</option>'	+
         '<option value="1">Monday</option>'	+
@@ -2261,7 +2297,10 @@ function initialiseWMERouteSpeeds()
         '<label class=""><input id=routespeeds-option8 type="checkbox"/>Tolls</label>'	+
         line_div_break	+
         '<label class=""><input id=routespeeds-option9 type="checkbox"/>Freeways</label>'	+
+         line_div_break	+
+        '<label class=""><input id=routespeeds-option16 type="checkbox"/>Difficult Turns</label>'	+
         '</div>'	+
+
         '<div style="margin-left:55px">'	+
         '<label class=""><input id=routespeeds-option10 type="checkbox"/>Dirt roads</label>'	+
         '<span id=routespeeds-option10-span style="display:none;">'	+
@@ -2273,6 +2312,12 @@ function initialiseWMERouteSpeeds()
         '<div style="min-width:55px; display:inline-block;"><b>Allow:</b></div>'	+
         '<label class=""><input id=routespeeds-option14  type="checkbox"/>U-Turns</label>'	+
         '</div>'	+
+
+        '<br>' +
+        '<div>'+
+        '<div style="margin-left:55px"></div>'	+
+        '<label class=""><b>Use Routing Order <b><input id="routespeeds-option15" type="checkbox"/></label>'   +
+        '</div>' +                                                                                                 // New Checkbox for Routing Order
 
         '<b><p id=routespeeds-error style="color:#FF0000"></p></b>'	+
 
@@ -2316,7 +2361,7 @@ function initialiseWMERouteSpeeds()
 
 function init()
 {
-    resetOptions();
+	resetOptions();
 	loadRouteSpeedsOptions();
 
 	if (routespeedsoption1) getId('sidepanel-routespeeds').style.color = "#A0A0A0";
@@ -2339,6 +2384,8 @@ function init()
 	getId('routespeeds-option12').onclick       = clickOption12;
 	getId('routespeeds-option13').onchange      = clickOption13;
 	getId('routespeeds-option14').onclick       = clickOption14;
+        getId('routespeeds-option15').onclick       = clickOption15;  // Routing Order
+        getId('routespeeds-option16').onclick       = clickOption16;  // Difficult Turns
 
 	getId('routespeeds-summary1').onclick       = clickRoute1;
 	getId('routespeeds-summary2').onclick       = clickRoute2;
@@ -2359,7 +2406,7 @@ function init()
 	getId('routespeeds-button-A').onclick       = clickA;
 	getId('routespeeds-button-B').onclick       = clickB;
 
-    window.Waze.map.events.register("zoomend", null, rezoom);
+	window.Waze.map.events.register("zoomend", null, rezoom);
 
 	window.setInterval(loopWMERouteSpeeds, 500);
 	window.setInterval(panningWMERouteSpeeds, 100);
