@@ -1,11 +1,11 @@
 var meta = function () {/*
 // ==UserScript==
-// @name                WME Route Speeds (MapOMatic fork with Ferries)
+// @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
 // @version             2017.12.09.001
 // @grant               none
-
+// @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js?version=229392
 // @author              wlodek76 (forked by MapOMatic)
 // @copyright           2014, 2015 wlodek76
