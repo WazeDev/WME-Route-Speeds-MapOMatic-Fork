@@ -3,7 +3,7 @@ var meta = function () {/*
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2017.12.09.001
+// @version             2018.02.22.001
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js?version=229392
@@ -103,8 +103,8 @@ var meta = function () {/*
 
 var wmech_version = meta.toString().match(/@version\s+(\S+)/)[1];
 
-var epsg900913 = new OpenLayers.Projection("EPSG:900913");
-var epsg4326   = new OpenLayers.Projection("EPSG:4326");
+var epsg900913 = new OL.Projection("EPSG:900913");
+var epsg4326   = new OL.Projection("EPSG:4326");
 
 var selected = 0;
 var routewsp1 = [];
@@ -181,7 +181,7 @@ var leftHand = false;
 //------------------------------------------------------------------------------------------------
 function bootstrapWMERouteSpeeds()
 {
-	if(!window.Waze.map) {
+	if(!window.W.map) {
 		console.log('WME Route Speeds: Waiting for WME...');
 		setTimeout(bootstrapWMERouteSpeeds, 1000);
 		return;
@@ -193,9 +193,9 @@ function bootstrapWMERouteSpeeds()
 }
 //------------------------------------------------------------------------------------------------
 function panningWMERouteSpeeds() {
-	var WM = window.Waze.map;
+	var WM = window.W.map;
 
-	//var operationPending = Waze.vent._events.listeners.operationPending[0];
+	//var operationPending = W.vent._events.listeners.operationPending[0];
 	//if (operationPending == undefined) return;
 	//var pending = operationPending.obj.pending[0];
 
@@ -318,9 +318,9 @@ function update_adv_switches() {
 }
 //---------------------------------------------------------------------------------------
 function getRoutingManager() {
-	if (Waze.model.countries.get(235) || Waze.model.countries.get(40)) { // US & Canada
+	if (W.model.countries.get(235) || W.model.countries.get(40)) { // US & Canada
 		return '/RoutingManager/routingRequest';
-	} else if (Waze.model.countries.get(106)) { // Israel
+	} else if (W.model.countries.get(106)) { // Israel
 		return '/il-RoutingManager/routingRequest';
 	} else {
 		return '/row-RoutingManager/routingRequest';
@@ -338,7 +338,7 @@ function getSegmentMidPoint(seg, end) {
 
 		x = p1.x + (p2.x - p1.x) * 0.5;
 		y = p1.y + (p2.y - p1.y) * 0.5;
-		return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
+		return OL.Layer.SphericalMercator.inverseMercator(x, y);
 	}
 
 	var length = 0;
@@ -365,7 +365,7 @@ function getSegmentMidPoint(seg, end) {
 			var proc = (midlen - length1) / (length2 - length1);
 			x = p1.x + (p2.x - p1.x) * proc;
 			y = p1.y + (p2.y - p1.y) * proc;
-			return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
+			return OL.Layer.SphericalMercator.inverseMercator(x, y);
 		}
 	}
 
@@ -380,7 +380,7 @@ function getSegmentMidPoint(seg, end) {
 
 	x = p1.x + (p2.x - p1.x) * 0.5;
 	y = p1.y + (p2.y - p1.y) * 0.5;
-	return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
+	return OL.Layer.SphericalMercator.inverseMercator(x, y);
 }
 //------------------------------------------------------------------------------------------------
 function getColor(speed) {
@@ -438,8 +438,8 @@ function addLabel(lines, speedtekst, routespeedsoption2, odctime, odclen, routes
 
 		if (routespeedsoption2) speedtekst = odctime + "s ";
 
-		pt = new OpenLayers.Geometry.Point(sx, sy);
-		textFeature = new OpenLayers.Feature.Vector( pt, {labelText: speedtekst, fontColor: kolor1, pointRadius: 0 } );
+		pt = new OL.Geometry.Point(sx, sy);
+		textFeature = new OL.Feature.Vector( pt, {labelText: speedtekst, fontColor: kolor1, pointRadius: 0 } );
 		return textFeature;
 	}
 	else if (numlines==1) {
@@ -451,8 +451,8 @@ function addLabel(lines, speedtekst, routespeedsoption2, odctime, odclen, routes
 
 		if (routespeedsoption2) speedtekst = odctime + "s ";
 
-		pt = new OpenLayers.Geometry.Point(sx, sy);
-		textFeature = new OpenLayers.Feature.Vector( pt, {labelText: speedtekst, fontColor: kolor1, pointRadius: 0 } );
+		pt = new OL.Geometry.Point(sx, sy);
+		textFeature = new OL.Feature.Vector( pt, {labelText: speedtekst, fontColor: kolor1, pointRadius: 0 } );
 		return textFeature;
 	}
 	else return null;
@@ -490,8 +490,8 @@ function panmap(draggingobj, x, y)
 //------------------------------------------------------------------------------------------------
 function createMarkers(lon1, lat1, lon2, lat2, disp) {
 
-	var WM = window.Waze.map;
-	var OL = window.OpenLayers;
+	var WM = window.W.map;
+	var OL = window.OL;
 
 	var mlayers = WM.getLayersBy("uniqueName","__DrawRouteSpeedsMarkers");
 	var markerLayer = mlayers[0];
@@ -625,7 +625,7 @@ function createMarkers(lon1, lat1, lon2, lat2, disp) {
 //------------------------------------------------------------------------------------------------
 function showLayers(disp)
 {
-	var WM = window.Waze.map;
+	var WM = window.W.map;
 
 	var rlayers1 = WM.getLayersBy("uniqueName","__DrawRouteSpeeds1");
 	var rlayers2 = WM.getLayersBy("uniqueName","__DrawRouteSpeeds2");
@@ -653,7 +653,7 @@ function showLayers(disp)
 //--------------------------------------------------------------------------------------------------------
 function showMarkers(disp)
 {
-	var WM = window.Waze.map;
+	var WM = window.W.map;
 
 	var mlayers = WM.getLayersBy("uniqueName","__DrawRouteSpeedsMarkers");
 	var markerLayer = mlayers[0];
@@ -670,7 +670,7 @@ function showMarkers(disp)
 //------------------------------------------------------------------------------------------------
 function reverseMarkers()
 {
-	var WM = window.Waze.map;
+	var WM = window.W.map;
 
 	var mlayers = WM.getLayersBy("uniqueName","__DrawRouteSpeedsMarkers");
 	var markerLayer = mlayers[0];
@@ -718,8 +718,8 @@ function loopWMERouteSpeeds() {
 	//if (routespeedsbutton_ofsW == 0 || routespeedsbutton_ofsH==0) return;
 
 
-	var WM = window.Waze.map;
-	var OL = window.OpenLayers;
+	var WM = window.W.map;
+	var OL = window.OL;
 
 	var rlayers = WM.getLayersBy("uniqueName","__DrawRouteSpeeds1");
 	if(rlayers.length === 0) {
@@ -933,9 +933,9 @@ function loopWMERouteSpeeds() {
 		}
 	}
 
-	var numSelected = Waze.selectionManager.selectedItems.length;
-	var seg1 = Waze.selectionManager.selectedItems[0];
-	var seg2 = Waze.selectionManager.selectedItems[1];
+	var numSelected = W.selectionManager.selectedItems.length;
+	var seg1 = W.selectionManager.selectedItems[0];
+	var seg2 = W.selectionManager.selectedItems[1];
 
 	if (seg1 !== undefined && seg2 !== undefined) {
 		if (!selected) {
@@ -992,8 +992,8 @@ function loopWMERouteSpeeds() {
 //--------------------------------------------------------------------------------------------------------
 function createRouteFeatures(id, routewsp, routeodc) {
 
-	var WM = window.Waze.map;
-	var OL = window.OpenLayers;
+	var WM = window.W.map;
+	var OL = window.OL;
 
 	var layers;
 	if (id==1) rlayers = WM.getLayersBy("uniqueName","__DrawRouteSpeeds1");
@@ -1064,7 +1064,7 @@ function createRouteFeatures(id, routewsp, routeodc) {
 
 	var doubletrafficoffset = 0;
 	if (doubletraffic) {
-		doubletrafficoffset = 11 * Math.pow(2.0, 5-Waze.map.zoom);
+		doubletrafficoffset = 11 * Math.pow(2.0, 5-W.map.zoom);
 	}
 
 
@@ -1076,18 +1076,18 @@ function createRouteFeatures(id, routewsp, routeodc) {
 			ptA.x = wsp1.x;
 			ptA.y = wsp1.y;
 			ptA = ptA.transform(epsg4326, epsg900913);
-			//var p = new drc_OpenLayers.Geometry.Point(wsp1.x, wsp1.y).transform(epsg4326, epsg900913);
-			//var pt = new drc_OpenLayers.Geometry.Point(p.x, p.y);
-			//var textFeature = new drc_OpenLayers.Feature.Vector( ptA, {labelText: "A", pointRadius: 8, fontColor: '#FFFFFF' } );
+			//var p = new drc_OL.Geometry.Point(wsp1.x, wsp1.y).transform(epsg4326, epsg900913);
+			//var pt = new drc_OL.Geometry.Point(p.x, p.y);
+			//var textFeature = new drc_OL.Feature.Vector( ptA, {labelText: "A", pointRadius: 8, fontColor: '#FFFFFF' } );
 			//labelFeatures.push(textFeature);
 		}
 		if (i === routewsp.length-2) {
 			ptB.x = wsp2.x;
 			ptB.y = wsp2.y;
 			ptB = ptB.transform(epsg4326, epsg900913);
-			//var p = new drc_OpenLayers.Geometry.Point(wsp2.x, wsp2.y).transform(epsg4326, epsg900913);
-			//var pt = new drc_OpenLayers.Geometry.Point(p.x, p.y);
-			//var textFeature = new drc_OpenLayers.Feature.Vector( ptB, {labelText: "B", pointRadius: 8, fontColor: '#FFFFFF' } );
+			//var p = new drc_OL.Geometry.Point(wsp2.x, wsp2.y).transform(epsg4326, epsg900913);
+			//var pt = new drc_OL.Geometry.Point(p.x, p.y);
+			//var textFeature = new drc_OL.Feature.Vector( ptB, {labelText: "B", pointRadius: 8, fontColor: '#FFFFFF' } );
 			//labelFeatures.push(textFeature);
 		}
 
@@ -1547,7 +1547,7 @@ function handleRouteRequestError(message)
 	getId('routespeeds-summary4').style.visibility = 'hidden';
 	getId('routespeeds-summary5').style.visibility = 'hidden';
 
-	var WM = window.Waze.map;
+	var WM = window.W.map;
 	var rlayers1 = WM.getLayersBy("uniqueName","__DrawRouteSpeeds1");
 	var rlayers2 = WM.getLayersBy("uniqueName","__DrawRouteSpeeds2");
 	var rlayers3 = WM.getLayersBy("uniqueName","__DrawRouteSpeeds3");
@@ -1780,14 +1780,14 @@ function gotoMarker(marker) {
 	if (routespeedsoption1 || marker === undefined || !marker.created) return;
 
 	var pt = marker.lonlat.toPoint();
-	var zoom = window.Waze.map.getZoom();
+	var zoom = window.W.map.getZoom();
 
-	window.Waze.map.setCenter([pt.x, pt.y], zoom);
+	window.W.map.setCenter([pt.x, pt.y], zoom);
 }
 //--------------------------------------------------------------------------------------------------------
 function clickOption1()
 {
-	var WM = window.Waze.map;
+	var WM = window.W.map;
 
 	routespeedsoption1 = (getId('routespeeds-option1').checked === true);
 
@@ -1961,8 +1961,8 @@ function toggleRoute(routeNo) {
 //--------------------------------------------------------------------------------------------------------
 function switchRoute()
 {
-	var WM = window.Waze.map;
-	var OL = window.OpenLayers;
+	var WM = window.W.map;
+	var OL = window.OL;
 
 	if (routeSelected==1)   getId('routespeeds-summary1').className = 'routespeeds_summary_classB';
 	else                    getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
@@ -2094,8 +2094,8 @@ function showClosures(mode) {
 //--------------------------------------------------------------------------------------------------------
 function rezoom() {
 
-	var WM = window.Waze.map;
-	var OL = window.OpenLayers;
+	var WM = window.W.map;
+	var OL = window.OL;
 
 	var rlayers1 = WM.getLayersBy("uniqueName","__DrawRouteSpeeds1");
 	var rlayers2 = WM.getLayersBy("uniqueName","__DrawRouteSpeeds2");
@@ -2170,10 +2170,10 @@ function initialiseWMERouteSpeeds()
 		line_div_break += '<div style="margin-left:55px">';
 
 	if (typeof Waze === 'undefined')              Waze = window.Waze;
-	if (typeof Waze.loginManager === 'undefined') Waze.loginManager = window.Waze.loginManager;
-	if (typeof Waze.loginManager === 'undefined') Waze.loginManager = window.loginManager;
-	if (Waze.loginManager !== null && Waze.loginManager.isLoggedIn()) {
-		var user = Waze.loginManager.user;
+	if (typeof W.loginManager === 'undefined') W.loginManager = window.W.loginManager;
+	if (typeof W.loginManager === 'undefined') W.loginManager = window.loginManager;
+	if (W.loginManager !== null && W.loginManager.isLoggedIn()) {
+		var user = W.loginManager.user;
 		//console.log(user);
 
 		//wlodek76: I prefer more condensed lines for avoid options, so I've added a personal switch here
@@ -2428,7 +2428,7 @@ function init()
 	getId('routespeeds-button-A').onclick       = clickA;
 	getId('routespeeds-button-B').onclick       = clickB;
 
-	window.Waze.map.events.register("zoomend", null, rezoom);
+	window.W.map.events.register("zoomend", null, rezoom);
 
 	window.setInterval(loopWMERouteSpeeds, 500);
 	window.setInterval(panningWMERouteSpeeds, 100);
