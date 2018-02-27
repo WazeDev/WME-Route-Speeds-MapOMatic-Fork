@@ -3,7 +3,7 @@ var meta = function () {/*
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2018.02.22.001
+// @version             2018.02.27.001
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js?version=229392
@@ -2169,7 +2169,7 @@ function initialiseWMERouteSpeeds()
 		line_div_break += '</div>';
 		line_div_break += '<div style="margin-left:55px">';
 
-	if (typeof Waze === 'undefined')              Waze = window.Waze;
+	if (typeof W === 'undefined')              W = window.W;
 	if (typeof W.loginManager === 'undefined') W.loginManager = window.W.loginManager;
 	if (typeof W.loginManager === 'undefined') W.loginManager = window.loginManager;
 	if (W.loginManager !== null && W.loginManager.isLoggedIn()) {
