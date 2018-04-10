@@ -3,10 +3,10 @@ var meta = function () {/*
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2018.02.27.001
+// @version             2018.04.10.001
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
-// @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js?version=229392
+// @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @author              wlodek76 (forked by MapOMatic)
 // @copyright           2014, 2015 wlodek76
 // @contributor         2014, 2015 FZ69617
@@ -933,9 +933,9 @@ function loopWMERouteSpeeds() {
 		}
 	}
 
-	var numSelected = W.selectionManager.selectedItems.length;
-	var seg1 = W.selectionManager.selectedItems[0];
-	var seg2 = W.selectionManager.selectedItems[1];
+	var numSelected = WazeWrap.getSelectedFeatures().length;
+	var seg1 = WazeWrap.getSelectedFeatures()[0];
+	var seg2 = WazeWrap.getSelectedFeatures()[1];
 
 	if (seg1 !== undefined && seg2 !== undefined) {
 		if (!selected) {
