@@ -3,7 +3,7 @@ var meta = function () {/*
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2018.04.10.001
+// @version             2018.06.11.001
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
