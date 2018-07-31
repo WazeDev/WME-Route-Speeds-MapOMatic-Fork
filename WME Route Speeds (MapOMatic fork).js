@@ -3,7 +3,7 @@ var meta = function () {/*
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2018.06.11.001
+// @version             2018.07.31.001
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -318,9 +318,9 @@ function update_adv_switches() {
 }
 //---------------------------------------------------------------------------------------
 function getRoutingManager() {
-	if (W.model.countries.get(235) || W.model.countries.get(40)) { // US & Canada
+	if (W.model.countries.getObjectById(235) || W.model.countries.getObjectById(40)) { // US & Canada
 		return '/RoutingManager/routingRequest';
-	} else if (W.model.countries.get(106)) { // Israel
+	} else if (W.model.countries.getObjectById(106)) { // Israel
 		return '/il-RoutingManager/routingRequest';
 	} else {
 		return '/row-RoutingManager/routingRequest';
