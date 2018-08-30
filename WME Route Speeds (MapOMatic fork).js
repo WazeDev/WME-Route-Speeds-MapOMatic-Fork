@@ -3,7 +3,7 @@ var meta = function () {/*
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2018.07.31.001
+// @version             2018.08.30.001
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -2188,7 +2188,7 @@ function initialiseWMERouteSpeeds()
 	var addon       = document.createElement('section');
 	addon.id        = "routespeeds-addon";
 	addon.innerHTML = '' +
-        '<b style="margin:0px; padding:0px;"><a href="https://greasyfork.org/en/scripts/5402-wme-route-speeds" target="_blank"><u>WME Route Speeds</u></a></b> &nbsp; v' + wmech_version +
+        '<b style="margin:0px; padding:0px;"><a href="https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork" target="_blank"><u>WME Route Speeds</u></a></b> &nbsp; v' + wmech_version +
         '<style>\n'	+
         '#sidepanel-routespeeds select { margin-left:20px; font-size:12px; height:22px; border:1px solid; border-color:rgb(169, 169, 169); border-radius:4px; border: 1px solid; border-color: rgb(169, 169, 169); -webkit-border-radius:4px; -moz-border-radius:4px; }\n' +
         '#sidepanel-routespeeds select, #sidepanel-routespeeds input { margin-top:2px; margin-bottom:2px; width:initial; }\n' +
