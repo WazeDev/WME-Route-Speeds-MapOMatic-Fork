@@ -3,7 +3,7 @@ var meta = function () {/*
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment's speed in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2018.08.30.001
+// @version             2018.11.13.001
 // @grant               none
 // @namespace           https://greasyfork.org/pl/scripts/4393-wme-route-speeds
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -181,7 +181,7 @@ var leftHand = false;
 //------------------------------------------------------------------------------------------------
 function bootstrapWMERouteSpeeds()
 {
-	if(!window.W.map) {
+	if(!window.W.map && !WazeWrap.Ready) {
 		console.log('WME Route Speeds: Waiting for WME...');
 		setTimeout(bootstrapWMERouteSpeeds, 1000);
 		return;
