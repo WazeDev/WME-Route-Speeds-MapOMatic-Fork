@@ -274,8 +274,8 @@ function saveRouteSpeedsOptions() {
 		localStorage.setItem("RouteSpeedsOption12", obj12.checked);
 		localStorage.setItem("RouteSpeedsOption13", obj13.value);
 		localStorage.setItem("RouteSpeedsOption14", true);  // ALLOW_UTURNS is by default always true
-        localStorage.setItem("RouteSpeedsOption15", obj15.checked);
-        localStorage.setItem("RouteSpeedsOption16", obj16.checked);
+                localStorage.setItem("RouteSpeedsOption15", obj15.checked);
+                localStorage.setItem("RouteSpeedsOption16", obj16.checked);
 		localStorage.setItem("RouteSpeedsOption17", obj17.checked);
 		localStorage.setItem("RouteSpeedsOption18", obj18.value);
 		localStorage.setItem("RouteSpeedsOption19", obj19.value);
@@ -319,8 +319,8 @@ function loadRouteSpeedsOptions() {
 	getId('routespeeds-option12').checked = routespeedsoption12;
 	getId('routespeeds-option13').value   = routespeedsoption13;
 	getId('routespeeds-option14').checked = routespeedsoption14;
-    getId('routespeeds-option15').checked = routespeedsoption15;
-    getId('routespeeds-option16').checked = routespeedsoption16;
+        getId('routespeeds-option15').checked = routespeedsoption15;
+        getId('routespeeds-option16').checked = routespeedsoption16;
 	getId('routespeeds-option17').checked = routespeedsoption17;
 	getId('routespeeds-option18').value   = routespeedsoption18;
 	getId('routespeeds-option19').value   = routespeedsoption19;
@@ -2286,8 +2286,8 @@ function initialiseWMERouteSpeeds()
         '<option value="960">16:00</option>' +
         '<option value="990">16:30</option>' +
         '<option value="1020">17:00</option>' +
-		'<option value="1050">17:30</option>' +
-		'<option value="1080">18:00</option>' +
+	'<option value="1050">17:30</option>' +
+	'<option value="1080">18:00</option>' +
         '<option value="1110">18:30</option>' +
         '<option value="1140">19:00</option>' +
         '<option value="1170">19:30</option>' +
@@ -2448,7 +2448,8 @@ function init()
 
 	getId('routespeeds-option6').value  = routespeedsoption6;
 	getId('routespeeds-option13').value = routespeedsoption13;
-    getId('routespeeds-option18').value = routespeedsoption18;
+        getId('routespeeds-option18').value = routespeedsoption18;
+	getId('routespeeds-option19').value = routespeedsoption19;
 
 	getId('routespeeds-option1').onclick        = clickOption1;
 	getId('routespeeds-option2').onclick        = clickOption2;
@@ -2464,11 +2465,11 @@ function init()
 	getId('routespeeds-option12').onclick       = clickOption12;
 	getId('routespeeds-option13').onchange      = clickOption13;
 	getId('routespeeds-option14').onclick       = clickOption14;
-    getId('routespeeds-option15').onclick       = clickOption15;
-    getId('routespeeds-option16').onclick       = clickOption16;
-    getId('routespeeds-option17').onclick       = clickOption17;
-    getId('routespeeds-option18').onchange      = clickOption18;
-    getId('routespeeds-option19').onchange      = clickOption19;
+        getId('routespeeds-option15').onclick       = clickOption15;
+        getId('routespeeds-option16').onclick       = clickOption16;
+        getId('routespeeds-option17').onclick       = clickOption17;
+        getId('routespeeds-option18').onchange      = clickOption18;
+        getId('routespeeds-option19').onchange      = clickOption19;
 
 	getId('routespeeds-summary1').onclick       = clickRoute1;
 	getId('routespeeds-summary2').onclick       = clickRoute2;
