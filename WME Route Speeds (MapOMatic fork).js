@@ -3,7 +3,7 @@
 // @name                WME Route Speeds (Passes, Permits, and Vehicles, oh my!)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2018.12.14.000.ppv
+// @version             2019.03.05.001.ppv
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -18,7 +18,7 @@
 /* global _ */
 
 /*Version history:
- * 2018 December - branch development - base code updated to 2018.12.13.001
+ * 2019.03.05.001
  *  - New: support for vehicle types
  *  - New: pass/permit support
  *  - Remove shortest route option- no longer supported by routing server
@@ -120,7 +120,7 @@
 	}
 
 	let _settings;
-	let _modelPasses;
+	let _modelPasses = [];
 
 	var wmech_version = GM_info.script.version;
 
@@ -353,9 +353,6 @@
 				_settings[prop] = DEFAULT_SETTINGS[prop];
 			}
 		}
-
-		_modelPasses.forEach(pass => $(`#routespeeds-pass-${pass.key}`).prop('checked', _settings.passes.indexOf(pass.key) > -1));
-		updatePassesLabel();
 
 		update_adv_switches();
 	}
@@ -1807,8 +1804,6 @@
 		getId('routespeeds-option17').checked = routespeedsoption17 = false;
 		getId('routespeeds-option18').value = routespeedsoption18 = 'PRIVATE';
 
-		_modelPasses.forEach(pass => (getId(`routespeeds-pass-${pass.key}`).checked = false));
-
 		update_adv_switches();
 	}
 	//--------------------------------------------------------------------------------------------------------
@@ -1816,6 +1811,9 @@
 		if (routewait) return;
 
 		resetOptions();
+
+		_modelPasses.forEach(pass => (getId(`routespeeds-pass-${pass.key}`).checked = false));
+		_settings.passes = [];
 
 		livemapRoute();
 	}
@@ -2247,16 +2245,6 @@
 			}
 		}
 
-		let passesObj = W.model.getRestrictionSubscriptions();
-		_modelPasses = Object.keys(passesObj).map(key => { return { key: key, name: passesObj[key] } }).sort((a, b) => {
-			if (a.name > b.name) {
-				return 1;
-			} else if (a.name < b.name) {
-				return -1;
-			}
-			return 0;
-		});
-
 		var addon = document.createElement('section');
 		addon.id = "routespeeds-addon";
 		addon.innerHTML = '' +
@@ -2413,22 +2401,7 @@
 			'<table style="margin-top:3px;"><tbody><tr><td style="vertical-align:top; padding-right:4px;"><b>Allow:</b></td><td>' +
 			getCheckboxHtml('option14', 'U-Turns') +
 			'</td></tr></tbody></table>' +
-			(_modelPasses.length ?
-				'<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
-				'  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
-				'    <i class="fa fa-fw fa-chevron-down" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>' +
-				'    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Express Passes</span>' +
-				'  </legend>' +
-				'  <div id="routespeeds-passes-internal-container" class="controls-container" style="padding-top:0px;">' +
-				_modelPasses.map(pass => {
-					let id = 'routespeeds-pass-' + pass.key;
-					return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
-						'      <input id="' + id + '" type="checkbox">' +
-						'      <label for="' + id + '" style="white-space:pre-line">' + pass.name + '</label>' +
-						'    </div>';
-				}).join(' ') : '') +
-			'  </div>' +
-			'</fieldset>' +
+			'<div id="routespeeds-passes-container"></div>' +
 			'<style>' +
 			'.routespeedsmarkerA                  { display:block; width:27px; height:36px; margin-left:-13px; margin-top:-34px; }' +
 			'.routespeedsmarkerB                  { display:block; width:27px; height:36px; margin-left:-13px; margin-top:-34px; }' +
@@ -2460,6 +2433,73 @@
 		new WazeWrap.Interface.Tab('Route Speeds', addon.innerHTML, init);
 
 		window.addEventListener("beforeunload", saveRouteSpeedsOptions, true);
+	}
+
+	let _lastTopCountryId;
+	function buildExpressPassesDiv() {
+		console.log('rebuilding express passes for ' + _lastTopCountryId + '...');
+		$('#routespeeds-passes-container').empty();
+		let passesObj = W.model.countries.top.restrictionSubscriptions;
+		if (passesObj) {
+			_modelPasses = Object.keys(passesObj).map(key => { return { key: key, name: passesObj[key] } }).sort((a, b) => {
+				if (a.name > b.name) {
+					return 1;
+				} else if (a.name < b.name) {
+					return -1;
+				}
+				return 0;
+			});
+		} else {
+			_modelPasses = [];
+		}
+
+		if (_modelPasses.length) {
+			$('#routespeeds-passes-container').append(
+				'<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
+				'  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
+				'    <i class="fa fa-fw fa-chevron-down" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>' +
+				'    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Express Passes</span>' +
+				'  </legend>' +
+				'  <div id="routespeeds-passes-internal-container" class="controls-container" style="padding-top:0px;">' +
+				_modelPasses.map(pass => {
+					let id = 'routespeeds-pass-' + pass.key;
+					return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
+						'      <input id="' + id + '" type="checkbox">' +
+						'      <label for="' + id + '" style="white-space:pre-line">' + pass.name + '</label>' +
+						'    </div>';
+				}).join(' ') +
+				'  </div>' +
+				'</fieldset>'
+			);
+
+			_modelPasses.forEach(pass => {
+				$(`#routespeeds-pass-${pass.key}`).click(clickPassOption);
+			});
+
+			$('#routespeeds-passes-legend').click(function () {
+				let $this = $(this);
+				$($this.children()[0])
+					.toggleClass('fa fa-fw fa-chevron-down')
+					.toggleClass('fa fa-fw fa-chevron-right');
+				$($this.siblings()[0]).toggleClass('collapse');
+			})
+
+			_modelPasses.forEach(pass => $(`#routespeeds-pass-${pass.key}`).prop('checked', _settings.passes.indexOf(pass.key) > -1));
+			updatePassesLabel();
+		}
+	}
+
+
+	function onModelMergeEnd() {
+		// Detect when the "top" country changes and update the list of Express Passes.
+		try {
+			if (W.model.countries.top && W.model.countries.top.id !== _lastTopCountryId) {
+				_lastTopCountryId = W.model.countries.top.id;
+				buildExpressPassesDiv();
+			}
+		} catch (ex) {
+			console.error('WME Route Speeds error: ', ex);
+		}
 	}
 
 	function init() {
@@ -2511,21 +2551,13 @@
 		getId('routespeeds-button-A').onclick = clickA;
 		getId('routespeeds-button-B').onclick = clickB;
 
-
-		if (_modelPasses.length) {
-			_modelPasses.forEach(pass => {
-				$(`#routespeeds-pass-${pass.key}`).click(clickPassOption);
-			});
-
-			$('#routespeeds-passes-legend').click(function () {
-				let $this = $(this);
-				$($this.children()[0]).toggleClass('fa fa-fw fa-chevron-down');
-				$($this.children()[0]).toggleClass('fa fa-fw fa-chevron-right');
-				$($this.siblings()[0]).toggleClass('collapse');
-			})
+		if (W.model.countries.top) {
+			_lastTopCountryId = W.model.countries.top.id;
+			buildExpressPassesDiv();
 		}
 
 		window.W.map.events.register("zoomend", null, rezoom);
+		W.model.events.register('mergeend', null, onModelMergeEnd);
 
 		window.setInterval(loopWMERouteSpeeds, 500);
 		window.setInterval(panningWMERouteSpeeds, 100);
