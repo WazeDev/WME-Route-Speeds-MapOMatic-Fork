@@ -1,9 +1,8 @@
-/* eslint-disable */
 // ==UserScript==
-// @name                WME Route Speeds (Passes, Permits, and Vehicles, oh my!)
+// @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2019.03.05.001.ppv
+// @version             2019.03.05.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -15,8 +14,8 @@
 /* global $ */
 /* global W */
 /* global OL */
-/* global _ */
 
+/* eslint-disable */
 /*Version history:
  * 2019.03.05.001
  *  - New: support for vehicle types
