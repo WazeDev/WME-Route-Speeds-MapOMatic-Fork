@@ -439,7 +439,7 @@
 	//-----------------------------------------------------------------------------------------------
 	function updatePassesLabel() {
 		let count = _modelPasses.filter(pass => _settings.passes.indexOf(pass.key) > -1).length;
-		$('#routespeeds-passes-label').text(`Express Passes (${count} of ${_modelPasses.length})`);
+		$('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${_modelPasses.length})`);
 	}
 	//------------------------------------------------------------------------------------------------
 	function addLabel(lines, speedtekst, routespeedsoption2, odctime, odclen, routespeedsoption4, id) {
@@ -2436,8 +2436,7 @@
 	}
 
 	let _lastTopCountryId;
-	function buildExpressPassesDiv() {
-		console.log('rebuilding express passes for ' + _lastTopCountryId + '...');
+	function buildPassesDiv() {
 		$('#routespeeds-passes-container').empty();
 		let passesObj = W.model.countries.top.restrictionSubscriptions;
 		if (passesObj) {
@@ -2458,9 +2457,9 @@
 				'<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
 				'  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
 				'    <i class="fa fa-fw fa-chevron-down" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>' +
-				'    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Express Passes</span>' +
+				'    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
 				'  </legend>' +
-				'  <div id="routespeeds-passes-internal-container" class="controls-container" style="padding-top:0px;">' +
+				'  <div id="routespeeds-passes-internal-container" style="padding-top:0px;">' +
 				_modelPasses.map(pass => {
 					let id = 'routespeeds-pass-' + pass.key;
 					return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
@@ -2491,11 +2490,11 @@
 
 
 	function onModelMergeEnd() {
-		// Detect when the "top" country changes and update the list of Express Passes.
+		// Detect when the "top" country changes and update the list of passes.
 		try {
 			if (W.model.countries.top && W.model.countries.top.id !== _lastTopCountryId) {
 				_lastTopCountryId = W.model.countries.top.id;
-				buildExpressPassesDiv();
+				buildPassesDiv();
 			}
 		} catch (ex) {
 			console.error('WME Route Speeds error: ', ex);
@@ -2553,7 +2552,7 @@
 
 		if (W.model.countries.top) {
 			_lastTopCountryId = W.model.countries.top.id;
-			buildExpressPassesDiv();
+			buildPassesDiv();
 		}
 
 		window.W.map.events.register("zoomend", null, rezoom);
