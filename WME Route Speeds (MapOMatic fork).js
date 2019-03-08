@@ -2429,6 +2429,12 @@
 	addon.className = "tab-pane";
 	tabContent.appendChild(addon);*/
 
+		$('head').append([
+			'<style>',
+			'label[for^="routespeeds-"] { margin-right: 10px;padding-left: 19px; }',
+			'.hidden { display:none; }',
+			'</style>'
+		].join('\n'));
 		new WazeWrap.Interface.Tab('Route Speeds', addon.innerHTML, init);
 
 		window.addEventListener("beforeunload", saveRouteSpeedsOptions, true);
@@ -2462,7 +2468,7 @@
 				_modelPasses.map(pass => {
 					let id = 'routespeeds-pass-' + pass.key;
 					return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
-						'      <input id="' + id + '" type="checkbox">' +
+						'      <input id="' + id + '" type="checkbox" class="routespeeds-pass-checkbox">' +
 						'      <label for="' + id + '" style="white-space:pre-line">' + pass.name + '</label>' +
 						'    </div>';
 				}).join(' ') +
@@ -2476,10 +2482,21 @@
 
 			$('#routespeeds-passes-legend').click(function () {
 				let $this = $(this);
-				$($this.children()[0])
+				let $chevron = $($this.children()[0]);
+				$chevron
 					.toggleClass('fa fa-fw fa-chevron-down')
 					.toggleClass('fa fa-fw fa-chevron-right');
-				$($this.siblings()[0]).toggleClass('collapse');
+				let collapse = $chevron.hasClass('fa-chevron-right');
+				let checkboxDivs = $('input.routespeeds-pass-checkbox:not(:checked)').parent();
+				if (collapse) {
+					checkboxDivs.addClass('hidden');
+				} else {
+					checkboxDivs.removeClass('hidden');
+				}
+				// $($this.children()[0])
+				// 	.toggleClass('fa fa-fw fa-chevron-down')
+				// 	.toggleClass('fa fa-fw fa-chevron-right');
+				// $($this.siblings()[0]).toggleClass('collapse');
 			})
 
 			_modelPasses.forEach(pass => $(`#routespeeds-pass-${pass.key}`).prop('checked', _settings.passes.indexOf(pass.key) > -1));
