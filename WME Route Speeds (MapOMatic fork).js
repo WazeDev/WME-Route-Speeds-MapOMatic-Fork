@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2019.05.03.001
+// @version             2019.05.27.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -17,6 +17,10 @@
 
 /* eslint-disable */
 /*Version history:
+ * 2019.05.27.001
+ *  - New: Passes section stays collapsed between sessions, if previously collapsed.
+ *  - New: Disable Script checkbox is highlighted red when checked.
+ * 
  * 2019.03.05.001
  *  - New: support for vehicle types
  *  - New: pass/permit support
@@ -115,7 +119,8 @@
 
 	const SCRIPT_STORE = 'wme_routespeeds';
 	const DEFAULT_SETTINGS = {
-		passes: []
+		passes: [],
+		passesCollapsed: false
 	}
 
 	let _settings;
@@ -298,6 +303,7 @@
 			localStorage.setItem("RouteSpeedsOption17", obj17.checked);
 			localStorage.setItem("RouteSpeedsOption18", obj18.value);
 		}
+		localStorage.setItem("RouteSpeedsOptionPassesCollapsed", _settings.passesCollapsed);
 
 		localStorage.setItem(SCRIPT_STORE, JSON.stringify(_settings));
 	}
@@ -342,6 +348,8 @@
 		getId('routespeeds-option16').checked = routespeedsoption16;
 		getId('routespeeds-option17').checked = routespeedsoption17;
 		getId('routespeeds-option18').value = routespeedsoption18;
+
+		updateDisableScriptCheckbox();
 
 		// Create the global object where settings will be stored in memory.
 		_settings = $.parseJSON(localStorage.getItem(SCRIPT_STORE)) || {};
@@ -1840,6 +1848,13 @@
 		window.W.map.setCenter([pt.x, pt.y], zoom);
 	}
 	//--------------------------------------------------------------------------------------------------------
+	function updateDisableScriptCheckbox() {
+		const checkbox = getId('routespeeds-option1');
+		const backgroundColor = checkbox.checked ? '#F00' : '';
+		const color = checkbox.checked ? '#FFF' : '';
+		$('label[for="routespeeds-option1"').css({ backgroundColor, color });
+	}
+	//--------------------------------------------------------------------------------------------------------
 	function clickOption1() {
 		var WM = window.W.map;
 
@@ -1886,6 +1901,7 @@
 			if (showMarkers(true)) livemapRoute();
 			showClosures(1);
 		}
+		updateDisableScriptCheckbox();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption2() {
@@ -2224,6 +2240,15 @@
 		).css(divCss)[0].outerHTML;
 	}
 	//--------------------------------------------------------------------------------------------------------
+	function updatePassCheckboxesVisible() {
+		let checkboxDivs = $('input.routespeeds-pass-checkbox:not(:checked)').parent();
+		if (_settings.passesCollapsed) {
+			checkboxDivs.addClass('hidden');
+		} else {
+			checkboxDivs.removeClass('hidden');
+		}
+	}
+	//--------------------------------------------------------------------------------------------------------
 	function initialiseWMERouteSpeeds() {
 		var line_div_break = '<br>';
 		line_div_break += '</div>';
@@ -2348,7 +2373,7 @@
 			'<a id="routespeeds-reset-options-to-livemap-route" onclick="return false;" style="cursor:pointer; float:right; margin-right:20px;" title="Reset routing options to the Livemap Route equivalents">Reset to Livemap Route</a>' +
 			'</div>' +
 
-			getCheckboxHtml('option1', 'Disable script') +
+			getCheckboxHtml('option1', 'Disable script', '', {}, { 'padding-right': '4px', 'border-radius': '5px' }) +
 			getCheckboxHtml('option3', 'Hide labels') +
 			getCheckboxHtml('option2', 'Show cross-times through segments') +
 			getCheckboxHtml('option4', 'Speed in mph') +
@@ -2461,7 +2486,7 @@
 			$('#routespeeds-passes-container').append(
 				'<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
 				'  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
-				'    <i class="fa fa-fw fa-chevron-down" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>' +
+				`    <i id="routespeeds-passes-collapse" class="fa fa-fw ${_settings.passesCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>` +
 				'    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
 				'  </legend>' +
 				'  <div id="routespeeds-passes-internal-container" style="padding-top:0px;">' +
@@ -2481,29 +2506,19 @@
 			});
 
 			$('#routespeeds-passes-legend').click(function () {
-				let $this = $(this);
-				let $chevron = $($this.children()[0]);
+				let $chevron = $('#routespeeds-passes-collapse');
 				$chevron
 					.toggleClass('fa fa-fw fa-chevron-down')
 					.toggleClass('fa fa-fw fa-chevron-right');
-				let collapse = $chevron.hasClass('fa-chevron-right');
-				let checkboxDivs = $('input.routespeeds-pass-checkbox:not(:checked)').parent();
-				if (collapse) {
-					checkboxDivs.addClass('hidden');
-				} else {
-					checkboxDivs.removeClass('hidden');
-				}
-				// $($this.children()[0])
-				// 	.toggleClass('fa fa-fw fa-chevron-down')
-				// 	.toggleClass('fa fa-fw fa-chevron-right');
-				// $($this.siblings()[0]).toggleClass('collapse');
+				_settings.passesCollapsed = $('#routespeeds-passes-collapse').hasClass('fa-chevron-right');
+				updatePassCheckboxesVisible();
 			})
 
 			_modelPasses.forEach(pass => $(`#routespeeds-pass-${pass.key}`).prop('checked', _settings.passes.indexOf(pass.key) > -1));
 			updatePassesLabel();
+			updatePassCheckboxesVisible();
 		}
 	}
-
 
 	function onModelMergeEnd() {
 		// Detect when the "top" country changes and update the list of passes.
