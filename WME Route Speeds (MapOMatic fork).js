@@ -2466,9 +2466,14 @@
 	}
 
 	let _lastTopCountryId;
+	function getTopCountry() {
+		// 2019-06-02 Polyfill for upcoming removal of W.model.countries.top property.
+		return W.model.countries.top || (W.model.getTopCountry && W.model.getTopCountry());
+	}
 	function buildPassesDiv() {
 		$('#routespeeds-passes-container').empty();
-		let passesObj = W.model.countries.top.restrictionSubscriptions;
+		const topCountry = getTopCountry();
+		let passesObj = topCountry && topCountry.restrictionSubscriptions;
 		if (passesObj) {
 			_modelPasses = Object.keys(passesObj).map(key => { return { key: key, name: passesObj[key] } }).sort((a, b) => {
 				if (a.name > b.name) {
@@ -2523,8 +2528,9 @@
 	function onModelMergeEnd() {
 		// Detect when the "top" country changes and update the list of passes.
 		try {
-			if (W.model.countries.top && W.model.countries.top.id !== _lastTopCountryId) {
-				_lastTopCountryId = W.model.countries.top.id;
+			const topCountry = getTopCountry();
+			if (topCountry && topCountry.id !== _lastTopCountryId) {
+				_lastTopCountryId = topCountry.id;
 				buildPassesDiv();
 			}
 		} catch (ex) {
@@ -2581,8 +2587,9 @@
 		getId('routespeeds-button-A').onclick = clickA;
 		getId('routespeeds-button-B').onclick = clickB;
 
-		if (W.model.countries.top) {
-			_lastTopCountryId = W.model.countries.top.id;
+		const topCountry = getTopCountry();
+		if (topCountry) {
+			_lastTopCountryId = getTopCountry.id;
 			buildPassesDiv();
 		}
 
