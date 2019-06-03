@@ -211,7 +211,7 @@
 	//------------------------------------------------------------------------------------------------
 	function bootstrapWMERouteSpeeds(tries = 1) {
 		// Need to wait for countries to load, otherwise restrictionSubscriptions are not available yet.
-		if (W && W.loginManager && W.map && W.loginManager.user && W.model && W.model.countries.getObjectArray().length) {
+		if (WazeWrap.Ready && W && W.loginManager && W.map && W.loginManager.user && W.model && W.model.countries.getObjectArray().length) {
 			log('Initializing...');
 			initialiseWMERouteSpeeds();
 			log(wmech_version + " loaded.");
