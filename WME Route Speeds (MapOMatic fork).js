@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2019.05.03.001
+// @version             2019.07.25.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -17,6 +17,8 @@
 
 /* eslint-disable */
 /*Version history:
+ * 2019.07.25.001
+ *  - Minor update to support change from W.model.countries.top to W.model.getTopCountry()
  * 2019.03.05.001
  *  - New: support for vehicle types
  *  - New: pass/permit support
@@ -2443,7 +2445,7 @@
 	let _lastTopCountryId;
 	function buildPassesDiv() {
 		$('#routespeeds-passes-container').empty();
-		let passesObj = W.model.countries.top.restrictionSubscriptions;
+		let passesObj = W.model.getTopCountry().restrictionSubscriptions;
 		if (passesObj) {
 			_modelPasses = Object.keys(passesObj).map(key => { return { key: key, name: passesObj[key] } }).sort((a, b) => {
 				if (a.name > b.name) {
@@ -2508,8 +2510,9 @@
 	function onModelMergeEnd() {
 		// Detect when the "top" country changes and update the list of passes.
 		try {
-			if (W.model.countries.top && W.model.countries.top.id !== _lastTopCountryId) {
-				_lastTopCountryId = W.model.countries.top.id;
+			const topCountry = W.model.getTopCountry();
+			if (topCountry && topCountry.id !== _lastTopCountryId) {
+				_lastTopCountryId = topCountry.id;
 				buildPassesDiv();
 			}
 		} catch (ex) {
@@ -2566,8 +2569,9 @@
 		getId('routespeeds-button-A').onclick = clickA;
 		getId('routespeeds-button-B').onclick = clickB;
 
-		if (W.model.countries.top) {
-			_lastTopCountryId = W.model.countries.top.id;
+		const topCountry = W.model.getTopCountry();
+		if (topCountry) {
+			_lastTopCountryId = topCountry.id;
 			buildPassesDiv();
 		}
 
