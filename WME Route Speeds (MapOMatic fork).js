@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2019.07.25.001
+// @version             2019.10.30.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -17,6 +17,8 @@
 
 /* eslint-disable */
 /*Version history:
+ * 2019.10.30.001
+ *  - Minor update to support change to WazeWrap registration of events in W.map.
  * 2019.07.25.001
  *  - Minor update to support change from W.model.countries.top to W.model.getTopCountry()
  * 2019.03.05.001
@@ -2575,7 +2577,8 @@
 			buildPassesDiv();
 		}
 
-		window.W.map.events.register("zoomend", null, rezoom);
+		// window.W.map.events.register("zoomend", null, rezoom);
+		WazeWrap.Events.register('zoomend', null, rezoom);
 		W.model.events.register('mergeend', null, onModelMergeEnd);
 
 		window.setInterval(loopWMERouteSpeeds, 500);
