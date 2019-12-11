@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2019.11.21.001
+// @version             2019.12.11.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -17,6 +17,8 @@
 
 /* eslint-disable */
 /*Version history:
+ * 2019.12.11.001
+    - Minor update to fix bug for WazeWrap not being ready before full init.
  * 2019.11.21.001
     - Minor update to support change in WME v2.43-40-gf367bffa4
  * 2019.10.30.001
@@ -212,7 +214,7 @@
 	//------------------------------------------------------------------------------------------------
 	function bootstrapWMERouteSpeeds(tries = 1) {
 		// Need to wait for countries to load, otherwise restrictionSubscriptions are not available yet.
-		if (W && W.loginManager && W.map && W.loginManager.user && W.model && W.model.countries.getObjectArray().length) {
+		if (W && W.loginManager && W.map && W.loginManager.user && W.model && W.model.countries.getObjectArray().length && WazeWrap.Ready) {
 			log('Initializing...');
 			initialiseWMERouteSpeeds();
 			log(wmech_version + " loaded.");
