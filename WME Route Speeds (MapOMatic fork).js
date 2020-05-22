@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2020.03.25.001
+// @version             2020.05.22.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -13,7 +13,7 @@
 
 /* global $ */
 /* global W */
-/* global OL */
+/* global OpenLayers */
 
 /* eslint-disable */
 /*Version history:
@@ -131,8 +131,8 @@
 
 	var wmech_version = GM_info.script.version;
 
-	var epsg900913 = new OL.Projection("EPSG:900913");
-	var epsg4326 = new OL.Projection("EPSG:4326");
+	var epsg900913 = new OpenLayers.Projection("EPSG:900913");
+	var epsg4326 = new OpenLayers.Projection("EPSG:4326");
 
 	var selected = 0;
 	var routewsp1 = [];
@@ -392,7 +392,7 @@
 
 			x = p1.x + (p2.x - p1.x) * 0.5;
 			y = p1.y + (p2.y - p1.y) * 0.5;
-			return OL.Layer.SphericalMercator.inverseMercator(x, y);
+			return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
 		}
 
 		var length = 0;
@@ -419,7 +419,7 @@
 				var proc = (midlen - length1) / (length2 - length1);
 				x = p1.x + (p2.x - p1.x) * proc;
 				y = p1.y + (p2.y - p1.y) * proc;
-				return OL.Layer.SphericalMercator.inverseMercator(x, y);
+				return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
 			}
 		}
 
@@ -434,7 +434,7 @@
 
 		x = p1.x + (p2.x - p1.x) * 0.5;
 		y = p1.y + (p2.y - p1.y) * 0.5;
-		return OL.Layer.SphericalMercator.inverseMercator(x, y);
+		return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
 	}
 	//------------------------------------------------------------------------------------------------
 	function getColor(speed) {
@@ -497,8 +497,8 @@
 
 			if (routespeedsoption2) speedtekst = odctime + "s ";
 
-			pt = new OL.Geometry.Point(sx, sy);
-			textFeature = new OL.Feature.Vector(pt, { labelText: speedtekst, fontColor: kolor1, pointRadius: 0 });
+			pt = new OpenLayers.Geometry.Point(sx, sy);
+			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: speedtekst, fontColor: kolor1, pointRadius: 0 });
 			return textFeature;
 		}
 		else if (numlines == 1) {
@@ -510,8 +510,8 @@
 
 			if (routespeedsoption2) speedtekst = odctime + "s ";
 
-			pt = new OL.Geometry.Point(sx, sy);
-			textFeature = new OL.Feature.Vector(pt, { labelText: speedtekst, fontColor: kolor1, pointRadius: 0 });
+			pt = new OpenLayers.Geometry.Point(sx, sy);
+			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: speedtekst, fontColor: kolor1, pointRadius: 0 });
 			return textFeature;
 		}
 		else return null;
@@ -560,14 +560,14 @@
 			var iconA = new di("routespeedsmarkerA");
 			var iconB = new di("routespeedsmarkerB");
 
-			p1 = new OL.Geometry.Point(lon1, lat1).transform(epsg4326, epsg900913);
-			p2 = new OL.Geometry.Point(lon2, lat2).transform(epsg4326, epsg900913);
+			p1 = new OpenLayers.Geometry.Point(lon1, lat1).transform(epsg4326, epsg900913);
+			p2 = new OpenLayers.Geometry.Point(lon2, lat2).transform(epsg4326, epsg900913);
 
-			var lonlatA = new OL.LonLat(p1.x, p1.y);
-			var lonlatB = new OL.LonLat(p2.x, p2.y);
+			var lonlatA = new OpenLayers.LonLat(p1.x, p1.y);
+			var lonlatB = new OpenLayers.LonLat(p2.x, p2.y);
 
-			markerA = new OL.Marker(lonlatA, iconA);
-			markerB = new OL.Marker(lonlatB, iconB);
+			markerA = new OpenLayers.Marker(lonlatA, iconA);
+			markerB = new OpenLayers.Marker(lonlatB, iconB);
 
 			var wh = WazeWrap.Require.DragElement();//require("Waze/Handler/DragElement");
 			markerA.dragging = new wh(WM);
@@ -608,8 +608,8 @@
 				panningX = 0;
 				panningY = 0;
 
-				var lonlatA = new OL.LonLat(markerA.lonlat.lon, markerA.lonlat.lat).transform(epsg900913, epsg4326);
-				var lonlatB = new OL.LonLat(markerB.lonlat.lon, markerB.lonlat.lat).transform(epsg900913, epsg4326);
+				var lonlatA = new OpenLayers.LonLat(markerA.lonlat.lon, markerA.lonlat.lat).transform(epsg900913, epsg4326);
+				var lonlatB = new OpenLayers.LonLat(markerB.lonlat.lon, markerB.lonlat.lat).transform(epsg900913, epsg4326);
 
 				lon1 = parseInt(lonlatA.lon * 1000000.0 + 0.5) / 1000000.0;
 				lat1 = parseInt(lonlatA.lat * 1000000.0 + 0.5) / 1000000.0;
@@ -633,8 +633,8 @@
 				panningX = 0;
 				panningY = 0;
 
-				var lonlatA = new OL.LonLat(markerA.lonlat.lon, markerA.lonlat.lat).transform(epsg900913, epsg4326);
-				var lonlatB = new OL.LonLat(markerB.lonlat.lon, markerB.lonlat.lat).transform(epsg900913, epsg4326);
+				var lonlatA = new OpenLayers.LonLat(markerA.lonlat.lon, markerA.lonlat.lat).transform(epsg900913, epsg4326);
+				var lonlatB = new OpenLayers.LonLat(markerB.lonlat.lon, markerB.lonlat.lat).transform(epsg900913, epsg4326);
 
 				lon1 = parseInt(lonlatA.lon * 1000000.0 + 0.5) / 1000000.0;
 				lat1 = parseInt(lonlatA.lat * 1000000.0 + 0.5) / 1000000.0;
@@ -662,8 +662,8 @@
 			markerLayer.addMarker(markerB);
 		}
 		else {
-			p1 = new OL.Geometry.Point(lon1, lat1).transform(epsg4326, epsg900913);
-			p2 = new OL.Geometry.Point(lon2, lat2).transform(epsg4326, epsg900913);
+			p1 = new OpenLayers.Geometry.Point(lon1, lat1).transform(epsg4326, epsg900913);
+			p2 = new OpenLayers.Geometry.Point(lon2, lat2).transform(epsg4326, epsg900913);
 
 			markerA.lonlat.lon = p1.x;
 			markerA.lonlat.lat = p1.y;
@@ -779,7 +779,7 @@
 		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
 		if (rlayers.length === 0) {
 
-			var drc_style1 = new OL.Style({
+			var drc_style1 = new OpenLayers.Style({
 				strokeDashstyle: 'solid',
 				strokeColor: "${strokeColor}",
 				strokeOpacity: 1.0,
@@ -797,7 +797,7 @@
 				display: 'block'
 			});
 
-			var drc_style2 = new OL.Style({
+			var drc_style2 = new OpenLayers.Style({
 				strokeDashstyle: 'solid',
 				strokeColor: "${strokeColor}",
 				strokeOpacity: 1.0,
@@ -815,7 +815,7 @@
 				display: 'block'
 			});
 
-			var drc_style3 = new OL.Style({
+			var drc_style3 = new OpenLayers.Style({
 				strokeDashstyle: 'solid',
 				strokeColor: "${strokeColor}",
 				strokeOpacity: 1.0,
@@ -833,7 +833,7 @@
 				display: 'block'
 			});
 
-			var drc_style4 = new OL.Style({
+			var drc_style4 = new OpenLayers.Style({
 				strokeDashstyle: 'solid',
 				strokeColor: "${strokeColor}",
 				strokeOpacity: 1.0,
@@ -851,7 +851,7 @@
 				display: 'block'
 			});
 
-			var drc_style5 = new OL.Style({
+			var drc_style5 = new OpenLayers.Style({
 				strokeDashstyle: 'solid',
 				strokeColor: "${strokeColor}",
 				strokeOpacity: 1.0,
@@ -869,34 +869,34 @@
 				display: 'block'
 			});
 
-			var drc_mapLayer1 = new OL.Layer.Vector("Route Speeds", {
+			var drc_mapLayer1 = new OpenLayers.Layer.Vector("Route Speeds", {
 				displayInLayerSwitcher: true,
 				uniqueName: "__DrawRouteSpeeds1",
-				styleMap: new OL.StyleMap(drc_style1)
+				styleMap: new OpenLayers.StyleMap(drc_style1)
 			});
 
-			var drc_mapLayer2 = new OL.Layer.Vector("Route Speeds 2", {
+			var drc_mapLayer2 = new OpenLayers.Layer.Vector("Route Speeds 2", {
 				displayInLayerSwitcher: false,
 				uniqueName: "__DrawRouteSpeeds2",
-				styleMap: new OL.StyleMap(drc_style2)
+				styleMap: new OpenLayers.StyleMap(drc_style2)
 			});
 
-			var drc_mapLayer3 = new OL.Layer.Vector("Route Speeds 3", {
+			var drc_mapLayer3 = new OpenLayers.Layer.Vector("Route Speeds 3", {
 				displayInLayerSwitcher: false,
 				uniqueName: "__DrawRouteSpeeds3",
-				styleMap: new OL.StyleMap(drc_style3)
+				styleMap: new OpenLayers.StyleMap(drc_style3)
 			});
 
-			var drc_mapLayer4 = new OL.Layer.Vector("Route Speeds 4", {
+			var drc_mapLayer4 = new OpenLayers.Layer.Vector("Route Speeds 4", {
 				displayInLayerSwitcher: false,
 				uniqueName: "__DrawRouteSpeeds4",
-				styleMap: new OL.StyleMap(drc_style4)
+				styleMap: new OpenLayers.StyleMap(drc_style4)
 			});
 
-			var drc_mapLayer5 = new OL.Layer.Vector("Route Speeds 5", {
+			var drc_mapLayer5 = new OpenLayers.Layer.Vector("Route Speeds 5", {
 				displayInLayerSwitcher: false,
 				uniqueName: "__DrawRouteSpeeds5",
-				styleMap: new OL.StyleMap(drc_style5)
+				styleMap: new OpenLayers.StyleMap(drc_style5)
 			});
 
 			I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeeds1"] = "Route Speeds";
@@ -923,7 +923,7 @@
 		var mlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsMarkers");
 		if (mlayers.length === 0) {
 
-			var drc_mapLayer = new OL.Layer.Markers("Route Speeds Markers", {
+			var drc_mapLayer = new OpenLayers.Layer.Markers("Route Speeds Markers", {
 				displayInLayerSwitcher: false,
 				uniqueName: "__DrawRouteSpeedsMarkers"
 			});
@@ -1081,8 +1081,8 @@
 		var speedtekst = parseInt(speed);
 		var kolor = getColor(speed);
 
-		var ptA = new OL.Geometry.Point(0, 0);
-		var ptB = new OL.Geometry.Point(0, 0);
+		var ptA = new OpenLayers.Geometry.Point(0, 0);
+		var ptB = new OpenLayers.Geometry.Point(0, 0);
 
 		var doubletraffic = false;
 		var p1 = null;
@@ -1132,18 +1132,18 @@
 				ptA.x = wsp1.x;
 				ptA.y = wsp1.y;
 				ptA = ptA.transform(epsg4326, epsg900913);
-				//var p = new drc_OL.Geometry.Point(wsp1.x, wsp1.y).transform(epsg4326, epsg900913);
-				//var pt = new drc_OL.Geometry.Point(p.x, p.y);
-				//var textFeature = new drc_OL.Feature.Vector( ptA, {labelText: "A", pointRadius: 8, fontColor: '#FFFFFF' } );
+				//var p = new drc_OpenLayers.Geometry.Point(wsp1.x, wsp1.y).transform(epsg4326, epsg900913);
+				//var pt = new drc_OpenLayers.Geometry.Point(p.x, p.y);
+				//var textFeature = new drc_OpenLayers.Feature.Vector( ptA, {labelText: "A", pointRadius: 8, fontColor: '#FFFFFF' } );
 				//labelFeatures.push(textFeature);
 			}
 			if (i === routewsp.length - 2) {
 				ptB.x = wsp2.x;
 				ptB.y = wsp2.y;
 				ptB = ptB.transform(epsg4326, epsg900913);
-				//var p = new drc_OL.Geometry.Point(wsp2.x, wsp2.y).transform(epsg4326, epsg900913);
-				//var pt = new drc_OL.Geometry.Point(p.x, p.y);
-				//var textFeature = new drc_OL.Feature.Vector( ptB, {labelText: "B", pointRadius: 8, fontColor: '#FFFFFF' } );
+				//var p = new drc_OpenLayers.Geometry.Point(wsp2.x, wsp2.y).transform(epsg4326, epsg900913);
+				//var pt = new drc_OpenLayers.Geometry.Point(p.x, p.y);
+				//var textFeature = new drc_OpenLayers.Feature.Vector( ptB, {labelText: "B", pointRadius: 8, fontColor: '#FFFFFF' } );
 				//labelFeatures.push(textFeature);
 			}
 
@@ -1183,8 +1183,8 @@
 
 			if (dlon < 0.0000001 && dlat < 0.0000001) continue;
 
-			var p3 = new OL.Geometry.Point(wsp1.x, wsp1.y).transform(epsg4326, epsg900913);
-			var p4 = new OL.Geometry.Point(wsp2.x, wsp2.y).transform(epsg4326, epsg900913);
+			var p3 = new OpenLayers.Geometry.Point(wsp1.x, wsp1.y).transform(epsg4326, epsg900913);
+			var p4 = new OpenLayers.Geometry.Point(wsp2.x, wsp2.y).transform(epsg4326, epsg900913);
 
 			if (doubletraffic) {
 				dx = p4.x - p3.x;
@@ -1251,10 +1251,10 @@
 			points.push(p3);
 			points.push(p4);
 
-			var line = new OL.Geometry.LineString(points);
+			var line = new OpenLayers.Geometry.LineString(points);
 			lines.push(line);
 
-			var lineFeature = new OL.Feature.Vector(line, { strokeColor: kolor, labelText: '', strokeWidth: 10 });
+			var lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: kolor, labelText: '', strokeWidth: 10 });
 
 			lineFeatures.push(lineFeature);
 
@@ -1268,8 +1268,8 @@
 		}
 		while (lines.length > 0) lines.pop();
 
-		var outlinestring = new OL.Geometry.LineString(outlinepoints);
-		var outlineFeature = new OL.Feature.Vector(outlinestring, { strokeColor: '#404040', labelText: '', strokeWidth: 12 });
+		var outlinestring = new OpenLayers.Geometry.LineString(outlinepoints);
+		var outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { strokeColor: '#404040', labelText: '', strokeWidth: 12 });
 		routeLayer.addFeatures(outlineFeature);
 
 		routeLayer.addFeatures(lineFeatures);
