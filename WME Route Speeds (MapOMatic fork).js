@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2020.05.22.001
+// @version             2020.07.27.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -17,6 +17,10 @@
 
 /* eslint-disable */
 /*Version history:
+ * 2020.07.27.001
+    - WME map object references.
+ * 2020.05.22.001
+    - Change OL to OpenLayers.
  * 2019.12.11.001
     - Minor update to fix bug for WazeWrap not being ready before full init.
  * 2019.11.21.001
@@ -1120,7 +1124,7 @@
 
 		var doubletrafficoffset = 0;
 		if (doubletraffic) {
-			doubletrafficoffset = 11 * Math.pow(2.0, 5 - W.map.getOLMap().getZoom());
+			doubletrafficoffset = 11 * Math.pow(2.0, 5 - W.map.getZoom());
 		}
 
 
@@ -1843,9 +1847,9 @@
 		if (routespeedsoption1 || marker === undefined || !marker.created) return;
 
 		var pt = marker.lonlat.toPoint();
-		var zoom = window.W.map.getOLMap().getZoom();
+		var zoom = window.W.map.getZoom();
 
-		window.W.map.getOLMap().setCenter([pt.x, pt.y], zoom);
+		window.W.map.setCenter([pt.x, pt.y], zoom);
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption1() {
