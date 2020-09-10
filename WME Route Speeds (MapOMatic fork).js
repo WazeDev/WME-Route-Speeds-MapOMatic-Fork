@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2020.07.27.001
+// @version             2020.09.10.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -17,6 +17,8 @@
 
 /* eslint-disable */
 /*Version history:
+ * 2020.09.10.001
+    - Updating viewPortDiv references and minor code cleanup
  * 2020.07.27.001
     - WME map object references.
  * 2020.05.22.001
@@ -522,12 +524,13 @@
 	}
 	//------------------------------------------------------------------------------------------------
 	function panmap(draggingobj, x, y) {
-		var maxX = draggingobj.map.viewPortDiv.clientWidth;
-		var maxY = draggingobj.map.viewPortDiv.clientHeight;
-		var lastx = draggingobj.last.x;
-		var lasty = draggingobj.last.y;
-		var mx = x - lastx;
-		var my = y - lasty;
+        let viewPortDiv = draggingobj.map.getViewport();
+		let maxX = viewPortDiv.clientWidth;
+		let maxY = viewPortDiv.clientHeight;
+		let lastx = draggingobj.last.x;
+		let lasty = draggingobj.last.y;
+		let mx = x - lastx;
+		let my = y - lasty;
 
 		if (x < accelerationmargin) {
 			if (mx < 0) panningX = x - accelerationmargin;
@@ -553,7 +556,6 @@
 	function createMarkers(lon1, lat1, lon2, lat2, disp) {
 
 		var WM = window.W.map;
-		var OL = window.OL;
 
 		var mlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsMarkers");
 		var markerLayer = mlayers[0];
@@ -778,7 +780,6 @@
 
 
 		var WM = window.W.map;
-		var OL = window.OL;
 
 		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
 		if (rlayers.length === 0) {
@@ -1052,7 +1053,6 @@
 	function createRouteFeatures(id, routewsp, routeodc) {
 
 		var WM = window.W.map;
-		var OL = window.OL;
 
 		var rlayers;
 		if (id == 1) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
@@ -1251,14 +1251,14 @@
 			outlinepoints.push(p3);
 			outlinepoints.push(p4);
 
-			var points = [];
+			let points = [];
 			points.push(p3);
 			points.push(p4);
 
-			var line = new OpenLayers.Geometry.LineString(points);
+			let line = new OpenLayers.Geometry.LineString(points);
 			lines.push(line);
 
-			var lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: kolor, labelText: '', strokeWidth: 10 });
+			let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: kolor, labelText: '', strokeWidth: 10 });
 
 			lineFeatures.push(lineFeature);
 
@@ -1272,8 +1272,8 @@
 		}
 		while (lines.length > 0) lines.pop();
 
-		var outlinestring = new OpenLayers.Geometry.LineString(outlinepoints);
-		var outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { strokeColor: '#404040', labelText: '', strokeWidth: 12 });
+		let outlinestring = new OpenLayers.Geometry.LineString(outlinepoints);
+		let outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { strokeColor: '#404040', labelText: '', strokeWidth: 12 });
 		routeLayer.addFeatures(outlineFeature);
 
 		routeLayer.addFeatures(lineFeatures);
@@ -1281,55 +1281,55 @@
 
 
 
-		var summarylen = 0;
-		var summarysec = 0;
+		let summarylen = 0;
+		let summarysec = 0;
 		if (routespeedsoption7) {
-			for (i = 0; i < routeodc.length; i++) {
+			for (let i = 0; i < routeodc.length; i++) {
 				summarylen += routeodc[i].length;
 				summarysec += routeodc[i].crossTime;
 			}
 		}
 		else {
-			for (i = 0; i < routeodc.length; i++) {
+			for (let i = 0; i < routeodc.length; i++) {
 				summarylen += routeodc[i].length;
 				summarysec += routeodc[i].crossTimeWithoutRealTime;
 			}
 		}
 		len = summarylen / 1000.0;
-		var sec = summarysec % 60;
-		var min = (summarysec - sec) % 3600;
-		var hou = (summarysec - sec - min) % 216000;
+		let sec = summarysec % 60;
+		let min = (summarysec - sec) % 3600;
+		let hou = (summarysec - sec - min) % 216000;
 		min = (min / 60) % 60;
 		hou = (hou / 3600);
 
-		var t = '';
+		let t = '';
 		if (hou < 10) t += '0' + hou + ":"; else t += hou + ":";
 		if (min < 10) t += '0' + min + ":"; else t += min + ":";
 		if (sec < 10) t += '0' + sec;
 		else t += sec;
 
-		var lenmph = len / 1.609;
+		let lenmph = len / 1.609;
 
-		var avgspeed = (summarylen / 1000.0) / (summarysec / 3600.0);
+		let avgspeed = (summarylen / 1000.0) / (summarysec / 3600.0);
 		if (routespeedsoption4) avgspeed = avgspeed / 1.609;
 
-		var summaryobj;
+		let summaryobj;
 		if (id == 1) summaryobj = getId('routespeeds-summary1');
 		if (id == 2) summaryobj = getId('routespeeds-summary2');
 		if (id == 3) summaryobj = getId('routespeeds-summary3');
 		if (id == 4) summaryobj = getId('routespeeds-summary4');
 		if (id == 5) summaryobj = getId('routespeeds-summary5');
 
-		var html;
+		let html;
 		if (id == 1) html = '<div class=routespeeds_header style="background: #4d4dcd; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route 1</span> ';
 		if (id == 2) html = '<div class=routespeeds_header style="background: #d34f8a; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route 2</span> ';
 		if (id == 3) html = '<div class=routespeeds_header style="background: #188984; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route 3</span> ';
 		if (id == 4) html = '<div class=routespeeds_header style="background: #cafa27; color: #404040; "></div>' + '<span style="color: #404040;">Route 4</span> ';
 		if (id == 5) html = '<div class=routespeeds_header style="background: #ffca3f; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route 5</span> ';
 
-		var lenstr = precFloat(len, 2);
-		var u1 = 'km';
-		var u2 = 'km&#47;h';
+		let lenstr = precFloat(len, 2);
+		let u1 = 'km';
+		let u2 = 'km&#47;h';
 		if (routespeedsoption4) {
 			lenstr = precFloat(lenmph, 2);
 			u1 = 'miles';
@@ -1349,15 +1349,13 @@
 	function precFloat(f, prec) {
 		if (!isFinite(f)) return "&mdash;";
 
-		if (f < 0) {
+		if (f < 0)
 			f -= Math.pow(0.1, prec) * 0.5;
-		}
-		else {
+		else
 			f += Math.pow(0.1, prec) * 0.5;
-		}
 
-		var ipart = parseInt(f);
-		var fpart = Math.abs(f - ipart);
+		let ipart = parseInt(f);
+		let fpart = Math.abs(f - ipart);
 		f = ipart;
 
 		if (fpart === '0') fpart = '0.0';
@@ -1382,17 +1380,17 @@
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function getnowtoday() {
-		var hour = getId('routespeeds-hour').value;
-		var day = getId('routespeeds-day').value;
+		let hour = getId('routespeeds-hour').value;
+		let day = getId('routespeeds-day').value;
 		if (hour === '---') hour = 'now';
 		if (day === '---') day = 'today';
 		if (hour === '') hour = 'now';
 		if (day === '') day = 'today';
 
-		var t = new Date();
-		var thour = (t.getHours() * 60) + t.getMinutes();
-		var tnow = (t.getDay() * 1440) + thour;
-		var tsel = tnow;
+		let t = new Date();
+		let thour = (t.getHours() * 60) + t.getMinutes();
+		let tnow = (t.getDay() * 1440) + thour;
+		let tsel = tnow;
 
 		if (hour === 'now') {
 			if (day === "0") tsel = (parseInt(day) * 1440) + thour;
@@ -1497,13 +1495,13 @@
 				return data.replace(/NaN/g, '0');
 			},
 			error: function (req, textStatus, errorThrown) {
-				var str = "Route request failed" + (textStatus !== null ? " with " + textStatus : "") + "!";
+				let str = "Route request failed" + (textStatus !== null ? " with " + textStatus : "") + "!";
 				str += "<br>" + errorThrown;
 				handleRouteRequestError(str);
 			},
 			success: function (json) {
 				if (json.error !== undefined) {
-					var str = json.error;
+					let str = json.error;
 					str = str.replace("|", "<br>");
 					handleRouteRequestError(str);
 				}
@@ -1538,11 +1536,11 @@
 
 						if (!routespeedsoption15) {                                    // Routing Order
 							json.alternatives.sort(function (a, b) {
-								var valField = "total_" + sortByField;
-								var val = function (r) {
+								let valField = "total_" + sortByField;
+								let val = function (r) {
 									if (r[valField] !== undefined) return r[valField];
-									var val = 0;
-									for (var i = 0; i < r.results.length; ++i) {
+									let val = 0;
+									for (let i = 0; i < r.results.length; ++i) {
 										val += r.results[i][sortByField];
 									}
 									return r[valField] = val;
@@ -1559,7 +1557,7 @@
 						if (routeSelectedLast) routeSelected = routeSelectedLast;
 						if (routeSelected > json.alternatives.length) routeSelected = json.alternatives.length;
 
-						for (var n = 0; n < json.alternatives.length; n++) {
+						for (let n = 0; n < json.alternatives.length; n++) {
 
 							if (n === 0) routewsp1 = json.alternatives[n].coords;
 							if (n === 0) routeodc1 = json.alternatives[n].response.results;
@@ -1610,17 +1608,17 @@
 		getId('routespeeds-summary4').style.visibility = 'hidden';
 		getId('routespeeds-summary5').style.visibility = 'hidden';
 
-		var WM = window.W.map;
-		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		var rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-		var rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-		var rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-		var rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
-		var routeLayer1 = rlayers1[0];
-		var routeLayer2 = rlayers2[0];
-		var routeLayer3 = rlayers3[0];
-		var routeLayer4 = rlayers4[0];
-		var routeLayer5 = rlayers5[0];
+		let WM = window.W.map;
+		let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
+		let rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
+		let rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
+		let rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
+		let rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
+		let routeLayer1 = rlayers1[0];
+		let routeLayer2 = rlayers2[0];
+		let routeLayer3 = rlayers3[0];
+		let routeLayer4 = rlayers4[0];
+		let routeLayer5 = rlayers5[0];
 		if (routeLayer1 !== undefined) routeLayer1.removeAllFeatures();
 		if (routeLayer2 !== undefined) routeLayer2.removeAllFeatures();
 		if (routeLayer3 !== undefined) routeLayer3.removeAllFeatures();
@@ -1638,15 +1636,14 @@
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function get_coords_from_livemap_link(link) {
+		let lon1 = '';
+		let lat1 = '';
+		let lon2 = '';
+		let lat2 = '';
 
-		var lon1 = '';
-		var lat1 = '';
-		var lon2 = '';
-		var lat2 = '';
-
-		var opt = link.split('&');
-		for (var i = 0; i < opt.length; i++) {
-			var o = opt[i];
+		let opt = link.split('&');
+		for (let i = 0; i < opt.length; i++) {
+			let o = opt[i];
 
 			if (o.indexOf('from_lon=') === 0) lon1 = o.substring(9, 30);
 			if (o.indexOf('from_lat=') === 0) lat1 = ', ' + o.substring(9, 30);
@@ -1674,10 +1671,10 @@
 		routewsp5 = [];
 		routeodc5 = [];
 
-		var stra = getId('sidepanel-routespeeds-a').value;
-		var strb = getId('sidepanel-routespeeds-b').value;
+		let stra = getId('sidepanel-routespeeds-a').value;
+		let strb = getId('sidepanel-routespeeds-b').value;
 
-		var pastedlink = false;
+		let pastedlink = false;
 
 		//sprawdzenie czy wklejono link z LiveMap, jeżeli tak to sparsowanie i przeformatowanie współrzędnych oraz przeniesienie widoku mapy na miejsce wklejonej trasy
 		//(checking if the link from LiveMap has been pasted, if yes, paring and reformatting the coordinates and moving the map view to the location of the pasted route)
@@ -1699,16 +1696,16 @@
 		if (stra === "") return;
 		if (strb === "") return;
 
-		var p1 = stra.split(",");
-		var p2 = strb.split(",");
+		let p1 = stra.split(",");
+		let p2 = strb.split(",");
 
 		if (p1.length < 2) return;
 		if (p2.length < 2) return;
 
-		var x1 = p1[0].trim();
-		var y1 = p1[1].trim();
-		var x2 = p2[0].trim();
-		var y2 = p2[1].trim();
+		let x1 = p1[0].trim();
+		let y1 = p1[1].trim();
+		let x2 = p2[0].trim();
+		let y2 = p2[1].trim();
 
 		x1 = parseFloat(x1);
 		y1 = parseFloat(y1);
@@ -1725,7 +1722,7 @@
 		if (y1 < -90 || y1 > 90) y1 = 0;
 		if (y2 < -90 || y2 > 90) y2 = 0;
 
-		var objprog1 = getId('routespeeds-button-livemap');
+		let objprog1 = getId('routespeeds-button-livemap');
 		objprog1.style.backgroundColor = '#FF8000';
 
 		createMarkers(x1, y1, x2, y2, true);
@@ -1753,24 +1750,24 @@
 		routewsp5 = [];
 		routeodc5 = [];
 
-		var stra = getId('sidepanel-routespeeds-b').value;
-		var strb = getId('sidepanel-routespeeds-a').value;
+		let stra = getId('sidepanel-routespeeds-b').value;
+		let strb = getId('sidepanel-routespeeds-a').value;
 		if (stra === "") return;
 		if (strb === "") return;
 
 		getId('sidepanel-routespeeds-a').value = stra;
 		getId('sidepanel-routespeeds-b').value = strb;
 
-		var p1 = stra.split(",");
-		var p2 = strb.split(",");
+		let p1 = stra.split(",");
+		let p2 = strb.split(",");
 
 		if (p1.length < 2) return;
 		if (p2.length < 2) return;
 
-		var x1 = p1[0].trim();
-		var y1 = p1[1].trim();
-		var x2 = p2[0].trim();
-		var y2 = p2[1].trim();
+		let x1 = p1[0].trim();
+		let y1 = p1[1].trim();
+		let x2 = p2[0].trim();
+		let y2 = p2[1].trim();
 
 		x1 = parseFloat(x1);
 		y1 = parseFloat(y1);
@@ -1787,7 +1784,7 @@
 		if (y1 < -90 || y1 > 90) y1 = 0;
 		if (y2 < -90 || y2 > 90) y2 = 0;
 
-		var objprog2 = getId('routespeeds-button-reverse');
+		let objprog2 = getId('routespeeds-button-reverse');
 		objprog2.style.backgroundColor = '#FF8000';
 
 		createMarkers(x1, y1, x2, y2, true);
@@ -1846,8 +1843,8 @@
 
 		if (routespeedsoption1 || marker === undefined || !marker.created) return;
 
-		var pt = marker.lonlat.toPoint();
-		var zoom = window.W.map.getZoom();
+		let pt = marker.lonlat.toPoint();
+		let zoom = window.W.map.getZoom();
 
 		window.W.map.setCenter([pt.x, pt.y], zoom);
 	}
@@ -1872,16 +1869,16 @@
 			getId('routespeeds-summary4').style.visibility = 'hidden';
 			getId('routespeeds-summary5').style.visibility = 'hidden';
 
-			var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-			var rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-			var rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-			var rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-			var rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
-			var routeLayer1 = rlayers1[0];
-			var routeLayer2 = rlayers2[0];
-			var routeLayer3 = rlayers3[0];
-			var routeLayer4 = rlayers4[0];
-			var routeLayer5 = rlayers5[0];
+			let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
+			let rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
+			let rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
+			let rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
+			let rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
+			let routeLayer1 = rlayers1[0];
+			let routeLayer2 = rlayers2[0];
+			let routeLayer3 = rlayers3[0];
+			let routeLayer4 = rlayers4[0];
+			let routeLayer5 = rlayers5[0];
 
 			if (routeLayer1 !== undefined) routeLayer1.removeAllFeatures();
 			if (routeLayer2 !== undefined) routeLayer2.removeAllFeatures();
@@ -2027,7 +2024,6 @@
 	//--------------------------------------------------------------------------------------------------------
 	function switchRoute() {
 		var WM = window.W.map;
-		var OL = window.OL;
 
 		if (routeSelected == 1) getId('routespeeds-summary1').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
@@ -2040,39 +2036,39 @@
 		if (routeSelected == 5) getId('routespeeds-summary5').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
 
-		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		var rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-		var rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-		var rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-		var rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
-		var routeLayer1 = rlayers1[0];
-		var routeLayer2 = rlayers2[0];
-		var routeLayer3 = rlayers3[0];
-		var routeLayer4 = rlayers4[0];
-		var routeLayer5 = rlayers5[0];
+		let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
+		let rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
+		let rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
+		let rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
+		let rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
+		let routeLayer1 = rlayers1[0];
+		let routeLayer2 = rlayers2[0];
+		let routeLayer3 = rlayers3[0];
+		let routeLayer4 = rlayers4[0];
+		let routeLayer5 = rlayers5[0];
 		if (routeLayer1 === undefined) return;
 		if (routeLayer2 === undefined) return;
 		if (routeLayer3 === undefined) return;
 		if (routeLayer4 === undefined) return;
 		if (routeLayer5 === undefined) return;
 
-		var style1 = routeLayer1.styleMap.styles.default.defaultStyle;
-		var style2 = routeLayer2.styleMap.styles.default.defaultStyle;
-		var style3 = routeLayer3.styleMap.styles.default.defaultStyle;
-		var style4 = routeLayer4.styleMap.styles.default.defaultStyle;
-		var style5 = routeLayer5.styleMap.styles.default.defaultStyle;
+		let style1 = routeLayer1.styleMap.styles.default.defaultStyle;
+		let style2 = routeLayer2.styleMap.styles.default.defaultStyle;
+		let style3 = routeLayer3.styleMap.styles.default.defaultStyle;
+		let style4 = routeLayer4.styleMap.styles.default.defaultStyle;
+		let style5 = routeLayer5.styleMap.styles.default.defaultStyle;
 
-		var s1 = style1.strokeColor;
-		var s2 = style2.strokeColor;
-		var s3 = style3.strokeColor;
-		var s4 = style4.strokeColor;
-		var s5 = style5.strokeColor;
+		let s1 = style1.strokeColor;
+		let s2 = style2.strokeColor;
+		let s3 = style3.strokeColor;
+		let s4 = style4.strokeColor;
+		let s5 = style5.strokeColor;
 
-		var t1 = style1.label;
-		var t2 = style2.label;
-		var t3 = style3.label;
-		var t4 = style4.label;
-		var t5 = style5.label;
+		let t1 = style1.label;
+		let t2 = style2.label;
+		let t3 = style3.label;
+		let t4 = style4.label;
+		let t5 = style5.label;
 
 		style1.strokeColor = '#4d4dcd';
 		style2.strokeColor = '#d34f8a';
@@ -2106,12 +2102,12 @@
 		if (routeSelected === 0 || routeSelected === 4) { style4.strokeColor = '${strokeColor}'; style4.strokeWidth = '${strokeWidth}'; style4.label = '${labelText}'; }
 		if (routeSelected === 0 || routeSelected === 5) { style5.strokeColor = '${strokeColor}'; style5.strokeWidth = '${strokeWidth}'; style5.label = '${labelText}'; }
 
-		var z1 = parseInt(routeLayer1.getZIndex());
-		var z2 = parseInt(routeLayer2.getZIndex());
-		var z3 = parseInt(routeLayer3.getZIndex());
-		var z4 = parseInt(routeLayer4.getZIndex());
-		var z5 = parseInt(routeLayer5.getZIndex());
-		var z;
+		let z1 = parseInt(routeLayer1.getZIndex());
+		let z2 = parseInt(routeLayer2.getZIndex());
+		let z3 = parseInt(routeLayer3.getZIndex());
+		let z4 = parseInt(routeLayer4.getZIndex());
+		let z5 = parseInt(routeLayer5.getZIndex());
+		let z;
 
 		if (z1 > z2) { z = z1; z1 = z2; z2 = z; }
 		if (z1 > z3) { z = z1; z1 = z3; z3 = z; }
@@ -2126,7 +2122,7 @@
 
 		//wlodek76: finding closure layer and changing its zindex to hide it under Route Speeds layer
 		//          we cannot easily set route speed layer over markers because it will block access to elements on these layers
-		var clayers = WM.getLayersBy("uniqueName", "closures");
+		let clayers = WM.getLayersBy("uniqueName", "closures");
 		if (clayers[0] !== undefined && closurelayer === null) {
 
 			closurelayer = clayers[0];
@@ -2160,7 +2156,6 @@
 	function rezoom() {
 
 		var WM = window.W.map;
-		var OL = window.OL;
 
 		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
 		var rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
