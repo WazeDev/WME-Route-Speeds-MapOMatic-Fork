@@ -2374,7 +2374,7 @@
 
                 '<div>' +
                 getCheckboxHtml('option5', 'Alternative routes', '', { display: 'inline-block' }) +
-                '<select id=routespeeds-option6 style="margin-left:10px; display:inline-block; height:18px;" >' +
+                '<select id=routespeeds-option6 style="margin-left:10px; display:inline-block; " >' +
                 '<option id=routespeeds-option6 value="1">1</option>' +
                 '<option id=routespeeds-option6 value="2">2</option>' +
                 '<option id=routespeeds-option6 value="3">3</option>' +
