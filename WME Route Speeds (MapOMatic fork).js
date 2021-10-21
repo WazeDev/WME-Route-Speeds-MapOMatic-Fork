@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2021.10.17.001
+// @version             2021.10.21.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -22,7 +22,7 @@
     - Remove obsolete "Try more" option
     - Swap lon/lat to lat/lon in start and endpoints boxes
     - bugfixes and small improvements
-    - KNOWN ISSUES: Sort is currently disabled - default is "Use Routing Order", "Center map on A and B markers" currently non-functional
+    - KNOWN ISSUES: Sort is temporarily disabled - default is "Use Routing Order", "Center map on A and B markers" currently non-functional
  * 2020.09.10.001
     - Updating viewPortDiv references and minor code cleanup
  * 2020.07.27.001
@@ -1539,8 +1539,6 @@
     */
                         if (json.response !== undefined) {
                             console.log("WME Route Speeds: " + json.response.length + " route(s) received" + " (" + numPaths + " requested)");
-                            console.log("Begin street name: " + json.response[0].street_name[json.response[0].result[0].street]);
-                            console.log("End street name: " + json.response[0].street_name[json.response[0].result[json.response[0].result.length - 1].street]);
 
                             var sortByField = routespeedsoption7 ? "cross_time" : "cross_time_without_real_time";
 
