@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2023.03.17.002
+// @version             2023.03.17.003
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -2225,8 +2225,8 @@
 	function getCheckboxHtml(idSuffix, text, title, divCss = {}, labelCss = {}) {
 		let id = 'routespeeds-' + idSuffix;
 		return $('<div>', { class: 'controls-container' }).append(
-			$('<input>', { id: id, type: 'checkbox', title: title }),
-			$('<label>', { for: id }).text(text).css(labelCss)
+			$('<input>', { id: id, type: 'checkbox' }),
+			$('<label>', { for: id, title: title }).text(text).css(labelCss)
 		).css(divCss)[0].outerHTML;
 	}
 	//--------------------------------------------------------------------------------------------------------
@@ -2371,12 +2371,12 @@
 			'</select>' +
 
 			'<span id="routespeeds-option5-span" style="display:none;">' +
-			getCheckboxHtml('option12', 'Try more', 'When enabled, ten times more alternative routes are requested from the routing server.&#13;This usually increases the request time, but sometimes provides interesting routes...',
+			getCheckboxHtml('option12', 'Try more', 'When enabled, ten times more alternative routes are requested from the routing server.\nThis usually increases the request time, but sometimes provides interesting routes...',
 				{ display: 'inline-block' }, { marginLeft: '10px', paddingLeft: '17px' }) +
 			'</span>' +
 			'</div>' +
 
-			getCheckboxHtml('option7', 'Real-Time Traffic', 'note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
+			getCheckboxHtml('option7', 'Real-Time Traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
 			getCheckboxHtml('option15', 'Use Routing Order', 'Sorts routes in the same order they would appear in the app or livemap') +
 
 			'<div>' +
