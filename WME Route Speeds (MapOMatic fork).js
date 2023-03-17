@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2020.09.10.001
+// @version             2023.03.17.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -11,7 +11,6 @@
 // @contributor         2014, 2015 FZ69617
 // ==/UserScript==
 
-/* global $ */
 /* global W */
 /* global OpenLayers */
 
@@ -218,11 +217,11 @@
 		console.log('WME Route Speeds:', msg);
 	}
 	//------------------------------------------------------------------------------------------------
-	function bootstrapWMERouteSpeeds(tries = 1) {
+	async function bootstrapWMERouteSpeeds(tries = 1) {
 		// Need to wait for countries to load, otherwise restrictionSubscriptions are not available yet.
 		if (W && W.loginManager && W.map && W.loginManager.user && W.model && W.model.countries.getObjectArray().length && WazeWrap.Ready) {
 			log('Initializing...');
-			initialiseWMERouteSpeeds();
+			await initialiseWMERouteSpeeds();
 			log(wmech_version + " loaded.");
 		} else {
 			if (tries === 100) {
@@ -752,7 +751,7 @@
 
 		if (routespeedsoption1) return;
 
-		var tabOpen = $('#user-tabs > .nav-tabs > li > a[href="#sidepanel-routespeeds"]').attr('aria-expanded') == "true";
+		var tabOpen = $('#routespeeds-tab-label').parent().parent().attr('aria-expanded') == "true";
 		if (!tabOpen) {
 			if (tabswitched !== 1) {
 				tabswitched = 1;
@@ -763,6 +762,7 @@
 			return;
 		}
 		else {
+			debugger;
 			if (tabswitched !== 2) {
 				tabswitched = 2;
 				showLayers(true);
@@ -1843,10 +1843,10 @@
 
 		if (routespeedsoption1 || marker === undefined || !marker.created) return;
 
-		let pt = marker.lonlat.toPoint();
-		let zoom = window.W.map.getZoom();
+		let pt = marker.lonlat;
+		let zoom = W.map.getZoom();
 
-		window.W.map.setCenter([pt.x, pt.y], zoom);
+		W.map.getOLMap().setCenter([pt.lon, pt.lat], zoom);
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption1() {
@@ -2231,7 +2231,7 @@
 		).css(divCss)[0].outerHTML;
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function initialiseWMERouteSpeeds() {
+	async function initialiseWMERouteSpeeds() {
 		var line_div_break = '<br>';
 		line_div_break += '</div>';
 		line_div_break += '<div style="margin-left:55px">';
@@ -2254,6 +2254,7 @@
 		var addon = document.createElement('section');
 		addon.id = "routespeeds-addon";
 		addon.innerHTML = '' +
+			'<div id="sidepanel-routespeeds" style="margin: 0px 8px; width: auto;">' +
 			'<div style="margin-bottom:4px; padding:0px;"><a href="https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork" target="_blank">' +
 			'<span style="font-weight:bold; text-decoration:underline">WME Route Speeds</span></a><span style="margin-left:6px; color:#888; font-size:11px;">v' + wmech_version + '</span>' +
 			'</div>' +
@@ -2422,7 +2423,8 @@
 			'.routespeeds_summary_classA:hover    { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
 			'.routespeeds_summary_classB:hover    { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
 			'.routespeeds_header                  { display:inline-block; width:14px; height:14px; text-align:center; border-radius:2px; margin-right:2px; position:relative; top:2px; }' +
-			'</style>';
+			'</style>' +
+			'</div>';
 
         /*var userTabs = getId('user-info');
 	var navTabs = getElementsByClassName('nav-tabs', userTabs)[0];
@@ -2442,7 +2444,8 @@
 			'.hidden { display:none; }',
 			'</style>'
 		].join('\n'));
-		new WazeWrap.Interface.Tab('Route Speeds', addon.innerHTML, init);
+
+		WazeWrap.Interface.Tab('Route Speeds', addon.innerHTML, init, '<span id="routespeeds-tab-label">Route Speeds</span>');
 
 		window.addEventListener("beforeunload", saveRouteSpeedsOptions, true);
 	}
