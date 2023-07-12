@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2023.03.17.003
+// @version             2023.07.12.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -1016,8 +1016,8 @@
 				createMarkers(lon1, lat1, lon2, lat2, true);
 
 				leftHand = false;
-				if (seg1.model.model.isLeftHand) leftHand = true;
-				if (seg2.model.model.isLeftHand) leftHand = true;
+				if (W.model.isLeftHand) leftHand = true;
+				if (W.model.isLeftHand) leftHand = true;
 
 				requestRouteFromLiveMap(lon1, lat1, lon2, lat2);
 			}
