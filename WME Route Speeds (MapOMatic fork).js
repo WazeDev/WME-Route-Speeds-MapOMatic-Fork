@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2023.07.12.001
+// @version             2023.09.02.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -2452,7 +2452,7 @@
 	let _lastTopCountryId;
 	function buildPassesDiv() {
 		$('#routespeeds-passes-container').empty();
-		let passesObj = W.model.getTopCountry().restrictionSubscriptions;
+		let passesObj = W.model.getTopCountry().attributes.restrictionSubscriptions;
 		if (passesObj) {
 			_modelPasses = Object.keys(passesObj).map(key => { return { key: key, name: passesObj[key] } }).sort((a, b) => {
 				if (a.name > b.name) {
