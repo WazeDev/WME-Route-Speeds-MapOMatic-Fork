@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2023.09.02.001
+// @version             2023.09.12.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -1711,7 +1711,7 @@
 
 		resetOptions();
 
-		_modelPasses.forEach(pass => (getId(`routespeeds-pass-${pass.key}`).checked = false));
+		$(`.routespeeds-pass-checkbox`).prop( "checked", false );;
 		_settings.passes = [];
 
 		livemapRoute();
@@ -1891,7 +1891,7 @@
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickPassOption() {
-		let passKey = this.id.match(/^routespeeds-pass-(.*)/i)[1];
+		let passKey = $(this).data('pass-key');
 		if (this.checked) {
 			_settings.passes.push(passKey);
 		} else {
@@ -2366,20 +2366,18 @@
 				'    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
 				'  </legend>' +
 				'  <div id="routespeeds-passes-internal-container" style="padding-top:0px;">' +
-				_modelPasses.map(pass => {
-					let id = 'routespeeds-pass-' + pass.key;
+				_modelPasses.map((pass, i) => {
+					//let id = 'routespeeds-pass-' + pass.key;
 					return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
-						'      <input id="' + id + '" type="checkbox" class="routespeeds-pass-checkbox">' +
-						'      <label for="' + id + '" style="white-space:pre-line">' + pass.name + '</label>' +
+						'      <input id="routespeeds-pass-' + i + '" type="checkbox" class="routespeeds-pass-checkbox" data-pass-key = "' + pass.key + '">' +
+						'      <label for="routespeeds-pass-' + i + '" style="white-space:pre-line">' + pass.name + '</label>' +
 						'    </div>';
 				}).join(' ') +
 				'  </div>' +
 				'</fieldset>'
 			);
 
-			_modelPasses.forEach(pass => {
-				$(`#routespeeds-pass-${pass.key}`).click(clickPassOption);
-			});
+			$('.routespeeds-pass-checkbox').click(clickPassOption);
 
 			$('#routespeeds-passes-legend').click(function () {
 				let $this = $(this);
@@ -2400,7 +2398,11 @@
 				// $($this.siblings()[0]).toggleClass('collapse');
 			})
 
-			_modelPasses.forEach(pass => $(`#routespeeds-pass-${pass.key}`).prop('checked', _settings.passes.indexOf(pass.key) > -1));
+			$('.routespeeds-pass-checkbox').each((i, elem) => {
+				const $elem = $(elem);
+				const passKey = $elem.data('pass-key');	
+				$elem.prop('checked', _settings.passes.includes(passKey));
+			});
 			updatePassesLabel();
 		}
 	}
