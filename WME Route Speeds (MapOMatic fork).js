@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2023.09.12.001
+// @version             2023.10.15.001
 // @grant               none
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -28,8 +28,8 @@
 
 	var wmech_version = GM_info.script.version;
 
-	var epsg900913 = new OpenLayers.Projection("EPSG:900913");
-	var epsg4326 = new OpenLayers.Projection("EPSG:4326");
+	var epsg900913;
+	var epsg4326;
 
 	var selected = 0;
 	var routewsp1 = [];
@@ -2141,6 +2141,9 @@
 				}
 			}
 		}
+
+		epsg900913 = new OpenLayers.Projection("EPSG:900913");
+		epsg4326 = new OpenLayers.Projection("EPSG:4326");
 
 		var addon = document.createElement('section');
 		addon.id = "routespeeds-addon";
