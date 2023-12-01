@@ -2,13 +2,14 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2023.10.15.001
-// @grant               none
+// @version             2023.12.01.001
+// @grant               GM_xmlhttpRequest
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @author              wlodek76 (forked by MapOMatic)
 // @copyright           2014, 2015 wlodek76
 // @contributor         2014, 2015 FZ69617
+// @connect             greasyfork.org
 // ==/UserScript==
 
 /* global W */
@@ -18,10 +19,13 @@
 (function () {
 	"use strict";
 
-	const SCRIPT_STORE = 'wme_routespeeds';
+	const SETTINGS_KEY = 'wme_routespeeds';
 	const DEFAULT_SETTINGS = {
 		passes: []
 	}
+	const DOWNLOAD_URL = 'https://update.greasyfork.org/scripts/369630/WME%20Route%20Speeds%20%28MapOMatic%20fork%29.user.js';
+    const SCRIPT_VERSION = GM_info.script.version.toString();
+    const SCRIPT_NAME = GM_info.script.name;
 
 	let _settings;
 	let _modelPasses = [];
@@ -108,26 +112,48 @@
 	function log(msg) {
 		console.log('WME Route Speeds:', msg);
 	}
-	//------------------------------------------------------------------------------------------------
-	async function bootstrapWMERouteSpeeds(tries = 1) {
-		// Need to wait for countries to load, otherwise restrictionSubscriptions are not available yet.
-		if (W && W.loginManager && W.map && W.loginManager.user && W.model && W.model.countries.getObjectArray().length && WazeWrap.Ready) {
+
+	async function onWmeReady(tries = 0) {
+        if (WazeWrap && WazeWrap.Ready) {
+			startScriptUpdateMonitor();
 			log('Initializing...');
 			await initialiseWMERouteSpeeds();
 			log(wmech_version + " loaded.");
-		} else {
-			if (tries === 100) {
-				log('Bootstrap timeout. Script has failed to load.');
+        } else {
+			if (tries === 0) {
+				log('Waiting for WazeWrap...');
+			} else if (tries === 300) {
+				console.error('WME Route Speeds:', 'WazeWrap loading failed. Giving up.');
 				return;
-			} else if (tries % 10 === 0) {
-				log('Bootstrap failed. Trying again...');
 			}
-			setTimeout(() => bootstrapWMERouteSpeeds(++tries), 300);
-		}
+            setTimeout(onWmeReady, 100, ++tries);
+        }
+    }
+
+	function startScriptUpdateMonitor() {
+		log('Checking for script updates...');
+        let updateMonitor;
+        try {
+            updateMonitor = new WazeWrap.Alerts.ScriptUpdateMonitor(SCRIPT_NAME, SCRIPT_VERSION, DOWNLOAD_URL, GM_xmlhttpRequest);
+            updateMonitor.start();
+        } catch (ex) {
+            // Report, but don't stop if ScriptUpdateMonitor fails.
+            console.error(SCRIPT_NAME, ex);
+        }
 	}
+
+    function bootstrap() {
+		log('Waiting for WME...');
+        if (typeof W === 'object' && W.userscripts?.state.isReady) {
+            onWmeReady();
+        } else {
+            document.addEventListener('wme-ready', onWmeReady, { once: true });
+        }
+    }
+
 	//------------------------------------------------------------------------------------------------
 	function panningWMERouteSpeeds() {
-		var WM = window.W.map;
+		var WM = W.map;
 
 		//var operationPending = W.vent._events.listeners.operationPending[0];
 		//if (operationPending == undefined) return;
@@ -157,7 +183,7 @@
 			if (accelX > accelerationmax) accelX = accelerationmax;
 			if (accelY > accelerationmax) accelY = accelerationmax;
 
-			WM.pan(accelX, accelY);
+			WM.getOLMap().pan(accelX, accelY);
 		}
 		//}
 	}
@@ -204,7 +230,7 @@
 			localStorage.setItem("RouteSpeedsOption18", obj18.value);
 		}
 
-		localStorage.setItem(SCRIPT_STORE, JSON.stringify(_settings));
+		localStorage.setItem(SETTINGS_KEY, JSON.stringify(_settings));
 	}
 	//---------------------------------------------------------------------------------------
 	function loadRouteSpeedsOptions() {
@@ -249,7 +275,13 @@
 		getId('routespeeds-option18').value = routespeedsoption18;
 
 		// Create the global object where settings will be stored in memory.
-		_settings = $.parseJSON(localStorage.getItem(SCRIPT_STORE)) || {};
+		try {
+			_settings = $.parseJSON(localStorage.getItem(SETTINGS_KEY)) || {};
+		} catch {
+			// Sometimes the settings get saved as "undefined". I have not figured out why, yet.
+			log('Error loading some settings. Using default settings.');
+			_settings = {};
+		}
 
 		// Fill in any missing settings from the DEFAULT_SETTINGS object
 		for (let prop in DEFAULT_SETTINGS) {
@@ -446,7 +478,7 @@
 	//------------------------------------------------------------------------------------------------
 	function createMarkers(lon1, lat1, lon2, lat2, disp) {
 
-		var WM = window.W.map;
+		var WM = W.map;
 
 		var mlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsMarkers");
 		var markerLayer = mlayers[0];
@@ -579,7 +611,7 @@
 	}
 	//------------------------------------------------------------------------------------------------
 	function showLayers(disp) {
-		var WM = window.W.map;
+		var WM = W.map;
 
 		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
 		var rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
@@ -606,7 +638,7 @@
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function showMarkers(disp) {
-		var WM = window.W.map;
+		var WM = W.map;
 
 		var mlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsMarkers");
 		var markerLayer = mlayers[0];
@@ -622,7 +654,7 @@
 	}
 	//------------------------------------------------------------------------------------------------
 	function reverseMarkers() {
-		var WM = window.W.map;
+		var WM = W.map;
 
 		var mlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsMarkers");
 		var markerLayer = mlayers[0];
@@ -670,7 +702,7 @@
 		//if (routespeedsbutton_ofsW == 0 || routespeedsbutton_ofsH==0) return;
 
 
-		var WM = window.W.map;
+		var WM = W.map;
 
 		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
 		if (rlayers.length === 0) {
@@ -943,7 +975,7 @@
 	//--------------------------------------------------------------------------------------------------------
 	function createRouteFeatures(id, routewsp, routeodc) {
 
-		var WM = window.W.map;
+		var WM = W.map;
 
 		var rlayers;
 		if (id == 1) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
@@ -1499,7 +1531,7 @@
 		getId('routespeeds-summary4').style.visibility = 'hidden';
 		getId('routespeeds-summary5').style.visibility = 'hidden';
 
-		let WM = window.W.map;
+		let WM = W.map;
 		let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
 		let rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
 		let rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
@@ -1741,7 +1773,7 @@
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption1() {
-		var WM = window.W.map;
+		var WM = W.map;
 
 		routespeedsoption1 = (getId('routespeeds-option1').checked === true);
 
@@ -1914,7 +1946,7 @@
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function switchRoute() {
-		var WM = window.W.map;
+		var WM = W.map;
 
 		if (routeSelected == 1) getId('routespeeds-summary1').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
@@ -2046,7 +2078,7 @@
 	//--------------------------------------------------------------------------------------------------------
 	function rezoom() {
 
-		var WM = window.W.map;
+		var WM = W.map;
 
 		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
 		var rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
@@ -2127,9 +2159,6 @@
 		line_div_break += '</div>';
 		line_div_break += '<div style="margin-left:55px">';
 
-		if (typeof W === 'undefined') W = window.W;
-		if (typeof W.loginManager === 'undefined') W.loginManager = window.W.loginManager;
-		if (typeof W.loginManager === 'undefined') W.loginManager = window.loginManager;
 		if (W.loginManager !== null && W.loginManager.user) {
 			var user = W.loginManager.user;
 			//console.log(user);
@@ -2479,7 +2508,7 @@
 			buildPassesDiv();
 		}
 
-		// window.W.map.events.register("zoomend", null, rezoom);
+		// W.map.events.register("zoomend", null, rezoom);
 		WazeWrap.Events.register('zoomend', null, rezoom);
 		W.model.events.register('mergeend', null, onModelMergeEnd);
 
@@ -2487,5 +2516,5 @@
 		window.setInterval(panningWMERouteSpeeds, 100);
 	}
 	//--------------------------------------------------------------------------------------------------------------
-	bootstrapWMERouteSpeeds();
+	bootstrap();
 })();
