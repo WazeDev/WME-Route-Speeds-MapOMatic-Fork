@@ -313,11 +313,12 @@
 	function getSegmentMidPoint(seg, end) {
 
 		var points, p1, p2, dx, dy, x, y;
-		points = seg.geometry.components.length;
+		var olGeo = W.userscripts.toOLGeometry(seg.getGeometry());
+		points = olGeo.components.length;
 
 		if (points == 2) {
-			p1 = seg.geometry.components[0];
-			p2 = seg.geometry.components[1];
+			p1 = olGeo.components[0];
+			p2 = olGeo.components[1];
 
 			x = p1.x + (p2.x - p1.x) * 0.5;
 			y = p1.y + (p2.y - p1.y) * 0.5;
@@ -326,8 +327,8 @@
 
 		var length = 0;
 		for (var i = 0; i < points - 1; i++) {
-			p1 = seg.geometry.components[i + 0];
-			p2 = seg.geometry.components[i + 1];
+			p1 = olGeo.components[i + 0];
+			p2 = olGeo.components[i + 1];
 			dx = p2.x - p1.x;
 			dy = p2.y - p1.y;
 			length += Math.sqrt(dx * dx + dy * dy);
@@ -337,8 +338,8 @@
 		var length1 = 0;
 		var length2 = 0;
 		for (i = 0; i < points - 1; i++) {
-			p1 = seg.geometry.components[i + 0];
-			p2 = seg.geometry.components[i + 1];
+			p1 = olGeo.components[i + 0];
+			p2 = olGeo.components[i + 1];
 			dx = p2.x - p1.x;
 			dy = p2.y - p1.y;
 			length1 = length2;
@@ -353,12 +354,12 @@
 		}
 
 		if (end === 0) {
-			p1 = seg.geometry.components[0];
-			p2 = seg.geometry.components[1];
+			p1 = olGeo.components[0];
+			p2 = olGeo.components[1];
 		}
 		else {
-			p1 = seg.geometry.components[points - 2];
-			p2 = seg.geometry.components[points - 1];
+			p1 = olGeo.components[points - 2];
+			p2 = olGeo.components[points - 1];
 		}
 
 		x = p1.x + (p2.x - p1.x) * 0.5;
@@ -503,27 +504,27 @@
 			markerB.dragging = new wh(WM);
 
 			markerA.dragging.down = function (e) {
-				lonlat = this.map.getLonLatFromViewPortPx(e.xy);
+				lonlat = this.map.getOLMap().getLonLatFromViewPortPx(e.xy ?? e);
 				if (lonlat === null) return;
 				markerA_offset_click[0] = markerA.lonlat.lon - lonlat.lon;
 				markerA_offset_click[1] = markerA.lonlat.lat - lonlat.lat;
 			};
 			markerB.dragging.down = function (e) {
-				lonlat = this.map.getLonLatFromViewPortPx(e.xy);
+				lonlat = this.map.getOLMap().getLonLatFromViewPortPx(e.xy ?? e);
 				if (lonlat === null) return;
 				markerB_offset_click[0] = markerB.lonlat.lon - lonlat.lon;
 				markerB_offset_click[1] = markerB.lonlat.lat - lonlat.lat;
 			};
 
 			markerA.dragging.move = function (e) {
-				lonlat = this.map.getLonLatFromViewPortPx(e.xy);
+				lonlat = this.map.getOLMap().getLonLatFromViewPortPx(e.xy);
 				markerA.lonlat.lon = lonlat.lon + markerA_offset_click[0];
 				markerA.lonlat.lat = lonlat.lat + markerA_offset_click[1];
 				markerLayer.drawMarker(markerA);
 				panmap(this, e.xy.x, e.xy.y);
 			};
 			markerB.dragging.move = function (e) {
-				lonlat = this.map.getLonLatFromViewPortPx(e.xy);
+				lonlat = this.map.getOLMap().getLonLatFromViewPortPx(e.xy);
 				markerB.lonlat.lon = lonlat.lon + markerB_offset_click[0];
 				markerB.lonlat.lat = lonlat.lat + markerB_offset_click[1];
 				markerLayer.drawMarker(markerB);
@@ -916,9 +917,9 @@
 			}
 		}
 
-		var numSelected = WazeWrap.getSelectedFeatures().length;
-		var seg1 = WazeWrap.getSelectedFeatures()[0];
-		var seg2 = WazeWrap.getSelectedFeatures()[1];
+		var numSelected = WazeWrap.getSelectedDataModelObjects().length;
+		var seg1 = WazeWrap.getSelectedDataModelObjects()[0];
+		var seg2 = WazeWrap.getSelectedDataModelObjects()[1];
 
 		if (seg1 !== undefined && seg2 !== undefined) {
 			if (!selected) {
