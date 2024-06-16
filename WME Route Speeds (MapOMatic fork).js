@@ -1816,24 +1816,24 @@
 		else {
 			getId('sidepanel-routespeeds').style.color = "";
 
-			if (showMarkers(true)) livemapRoute();
+			if (showMarkers(true)) rezoom();
 			showClosures(1);
 		}
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption2() {
 		routespeedsoption2 = (getId('routespeeds-option2').checked === true);
-		livemapRoute();
+		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption3() {
 		routespeedsoption3 = (getId('routespeeds-option3').checked === true);
-		livemapRoute();
+		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption4() {
 		routespeedsoption4 = (getId('routespeeds-option4').checked === true);
-		livemapRoute();
+		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption5() {
