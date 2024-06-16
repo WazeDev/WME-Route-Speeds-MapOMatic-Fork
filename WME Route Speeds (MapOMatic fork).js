@@ -1816,7 +1816,7 @@
 		else {
 			getId('sidepanel-routespeeds').style.color = "";
 
-			if (showMarkers(true)) livemapRoute();
+			if (showMarkers(true)) rezoom();
 			showClosures(1);
 		}
 	}
