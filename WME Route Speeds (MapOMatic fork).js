@@ -10,6 +10,8 @@
 // @copyright           2014, 2015 wlodek76
 // @contributor         2014, 2015 FZ69617
 // @connect             greasyfork.org
+// @downloadURL https://update.greasyfork.org/scripts/369630/WME%20Route%20Speeds%20%28MapOMatic%20fork%29.user.js
+// @updateURL https://update.greasyfork.org/scripts/369630/WME%20Route%20Speeds%20%28MapOMatic%20fork%29.meta.js
 // ==/UserScript==
 
 /* global W */
@@ -1823,17 +1825,17 @@
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption2() {
 		routespeedsoption2 = (getId('routespeeds-option2').checked === true);
-		livemapRoute();
+		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption3() {
 		routespeedsoption3 = (getId('routespeeds-option3').checked === true);
-		livemapRoute();
+		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption4() {
 		routespeedsoption4 = (getId('routespeeds-option4').checked === true);
-		livemapRoute();
+		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickOption5() {
