@@ -201,66 +201,18 @@
 	//------------------------------------------------------------------------------------------------
 	function saveRouteSpeedsOptions() {
 
-		var obj1 = getId('routespeeds-option1');
-		var obj2 = getId('routespeeds-option2');
-		var obj3 = getId('routespeeds-option3');
-		var obj4 = getId('routespeeds-option4');
-		var obj5 = getId('routespeeds-option5');
-		var obj6 = getId('routespeeds-option6');
-		var obj7 = getId('routespeeds-option7');
-		var obj8 = getId('routespeeds-option8');
-		var obj9 = getId('routespeeds-option9');
-		var obj10 = getId('routespeeds-option10');
-		var obj11 = getId('routespeeds-option11');
-		var obj13 = getId('routespeeds-option13');
-		var obj14 = getId('routespeeds-option14');
-		var obj15 = getId('routespeeds-option15');
-		var obj16 = getId('routespeeds-option16');
-		var obj17 = getId('routespeeds-option17');
-		var obj18 = getId('routespeeds-option18');
-
-		if (obj1 !== undefined) {
-			localStorage.setItem("RouteSpeedsOption1", obj1.checked);
-			localStorage.setItem("RouteSpeedsOption2", obj2.checked);
-			localStorage.setItem("RouteSpeedsOption3", obj3.checked);
-			localStorage.setItem("RouteSpeedsOption4", obj4.checked);
-			localStorage.setItem("RouteSpeedsOption5", obj5.checked);
-			localStorage.setItem("RouteSpeedsOption6", obj6.value);
-			localStorage.setItem("RouteSpeedsOption7", obj7.checked);
-			localStorage.setItem("RouteSpeedsOption8", obj8.checked);
-			localStorage.setItem("RouteSpeedsOption9", obj9.checked);
-			localStorage.setItem("RouteSpeedsOption10", obj10.checked);
-			localStorage.setItem("RouteSpeedsOption11", obj11.checked);
-			localStorage.setItem("RouteSpeedsOption13", obj13.value);
-			localStorage.setItem("RouteSpeedsOption14", true);  // ALLOW_UTURNS is by default always true
-			localStorage.setItem("RouteSpeedsOption15", obj15.checked);
-			localStorage.setItem("RouteSpeedsOption16", obj16.checked);
-			localStorage.setItem("RouteSpeedsOption17", obj17.checked);
-			localStorage.setItem("RouteSpeedsOption18", obj18.value);
-		}
+        localStorage.setItem("RouteSpeedsOptions", JSON.stringify(options));
 
 		localStorage.setItem(SETTINGS_KEY, JSON.stringify(_settings));
 	}
 	//---------------------------------------------------------------------------------------
 	function loadRouteSpeedsOptions() {
 
-		if (localStorage.RouteSpeedsOption1) options.enableScript = (localStorage.RouteSpeedsOption1 == "true");
-		if (localStorage.RouteSpeedsOption2) options.showLabels = (localStorage.RouteSpeedsOption2 == "true");
-		if (localStorage.RouteSpeedsOption3) options.showSpeeds = (localStorage.RouteSpeedsOption3 == "true");
-		if (localStorage.RouteSpeedsOption4) options.useMiles = (localStorage.RouteSpeedsOption4 == "true");
-		if (localStorage.RouteSpeedsOption5) options.getAlternatives = (localStorage.RouteSpeedsOption5 == "true");
-		if (localStorage.RouteSpeedsOption6) options.maxRoutes = (localStorage.RouteSpeedsOption6);
-		if (localStorage.RouteSpeedsOption7) options.liveTraffic = (localStorage.RouteSpeedsOption7 == "true");
-		if (localStorage.RouteSpeedsOption8) options.avoidTolls = (localStorage.RouteSpeedsOption8 == "true");
-		if (localStorage.RouteSpeedsOption9) options.avoidFreeways = (localStorage.RouteSpeedsOption9 == "true");
-		if (localStorage.RouteSpeedsOption10) options.avoidUnpaved = (localStorage.RouteSpeedsOption10 == "true");
-		if (localStorage.RouteSpeedsOption11) options.avoidLongUnpaved = (localStorage.RouteSpeedsOption11 == "true");
-		if (localStorage.RouteSpeedsOption13) options.routeType = (localStorage.RouteSpeedsOption13);
-		if (localStorage.RouteSpeedsOption14) options.allowUTurns = (localStorage.RouteSpeedsOption14 == "true");
-		if (localStorage.RouteSpeedsOption15) options.routingOrder = (localStorage.RouteSpeedsOption15 == "true");
-		if (localStorage.RouteSpeedsOption16) options.avoidDifficult = (localStorage.RouteSpeedsOption16 == "true");
-		if (localStorage.RouteSpeedsOption17) options.avoidFerries = (localStorage.RouteSpeedsOption17 == "true");
-		if (localStorage.RouteSpeedsOption18) options.vehicleType = (localStorage.RouteSpeedsOption18);
+        try {
+            Object.assign(options, JSON.parse(localStorage.RouteSpeedsOptions));
+        } catch {
+            log("Error loading options.")
+        }
 
 
 		getId('routespeeds-option1').checked = options.enableScript;
