@@ -19,18 +19,35 @@
 (function () {
 	"use strict";
 
-	const SETTINGS_KEY = 'wme_routespeeds';
-	const DEFAULT_SETTINGS = {
-		passes: []
-	}
 	const DOWNLOAD_URL = 'https://update.greasyfork.org/scripts/369630/WME%20Route%20Speeds%20%28MapOMatic%20fork%29.user.js';
     const SCRIPT_VERSION = GM_info.script.version.toString();
     const SCRIPT_NAME = GM_info.script.name;
 
     const KM_PER_MILE = 1.609344;
 
-	let _settings;
-	let _modelPasses = [];
+    const SAVED_OPTIONS_KEY = "RouteSpeedsOptions";
+    const options = {
+        enableScript: true,
+        showLabels: true,
+        showSpeeds: true,
+        useMiles: false,
+        getAlternatives: true,
+        maxRoutes: 3,
+        liveTraffic: true,
+        routingOrder: true,
+        routeType: 1,
+        vehicleType: 'PRIVATE',
+        avoidTolls: false,
+        avoidFreeways: false,
+        avoidDifficult: false,
+        avoidFerries: false,
+        avoidUnpaved: true,
+        avoidLongUnpaved: false,
+        allowUTurns: true,
+        passes: []
+    };
+
+	let countryPassList = [];
 
 	var wmech_version = GM_info.script.version;
 
@@ -57,26 +74,6 @@
 	var markerB;
 	var markerA_offset_click = [0, 0];
 	var markerB_offset_click = [0, 0];
-
-    const options = {
-        enableScript: true,
-        showLabels: true,
-        showSpeeds: true,
-        useMiles: false,
-        getAlternatives: true,
-        maxRoutes: 3,
-        liveTraffic: true,
-        routingOrder: true,
-        routeType: 1,
-        vehicleType: 'PRIVATE',
-        avoidTolls: false,
-        avoidFreeways: false,
-        avoidDifficult: false,
-        avoidFerries: false,
-        avoidUnpaved: true,
-        avoidLongUnpaved: false,
-        allowUTurns: true
-    };
 
 	var lastmapcenter = [0, 0];
 	var panningX = 0;
@@ -201,9 +198,8 @@
 	//------------------------------------------------------------------------------------------------
 	function saveRouteSpeedsOptions() {
 
-        localStorage.setItem("RouteSpeedsOptions", JSON.stringify(options));
+        localStorage.setItem(SAVED_OPTIONS_KEY, JSON.stringify(options));
 
-		localStorage.setItem(SETTINGS_KEY, JSON.stringify(_settings));
 	}
 	//---------------------------------------------------------------------------------------
 	function loadRouteSpeedsOptions() {
@@ -211,9 +207,8 @@
         try {
             Object.assign(options, JSON.parse(localStorage.RouteSpeedsOptions));
         } catch {
-            log("Error loading options.")
+            log("Error loading saved options. Using defaults.")
         }
-
 
 		getId('routespeeds-option1').checked = options.enableScript;
 		getId('routespeeds-option2').checked = options.showLabels;
@@ -232,22 +227,6 @@
 		getId('routespeeds-option16').checked = options.avoidDifficult;
 		getId('routespeeds-option17').checked = options.avoidFerries;
 		getId('routespeeds-option18').value = options.vehicleType;
-
-		// Create the global object where settings will be stored in memory.
-		try {
-			_settings = $.parseJSON(localStorage.getItem(SETTINGS_KEY)) || {};
-		} catch {
-			// Sometimes the settings get saved as "undefined". I have not figured out why, yet.
-			log('Error loading some settings. Using default settings.');
-			_settings = {};
-		}
-
-		// Fill in any missing settings from the DEFAULT_SETTINGS object
-		for (let prop in DEFAULT_SETTINGS) {
-			if (!_settings.hasOwnProperty(prop)) {
-				_settings[prop] = DEFAULT_SETTINGS[prop];
-			}
-		}
 
 		update_adv_switches();
 	}
@@ -332,8 +311,8 @@
 	}
 	//-----------------------------------------------------------------------------------------------
 	function updatePassesLabel() {
-		let count = _modelPasses.filter(pass => _settings.passes.indexOf(pass.key) > -1).length;
-		$('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${_modelPasses.length})`);
+		let count = countryPassList.filter(pass => options.passes.indexOf(pass.key) > -1).length;
+		$('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${countryPassList.length})`);
 	}
 	//------------------------------------------------------------------------------------------------
 	function addLabel(lines, speedtekst, odctime, odclen, id) {
@@ -1337,7 +1316,7 @@
 
 
 		var url = getRoutingManager();
-		let expressPass = _settings.passes.map(key => key);
+		let expressPass = options.passes.map(key => key);
 		var data = {
 			from: "x:" + x1 + " y:" + y1,
 			to: "x:" + x2 + " y:" + y2,
@@ -1695,7 +1674,7 @@
 		resetOptions();
 
 		$(`.routespeeds-pass-checkbox`).prop( "checked", false );;
-		_settings.passes = [];
+		options.passes = [];
 
 		livemapRoute();
 	}
@@ -1870,9 +1849,9 @@
 	function clickPassOption() {
 		let passKey = $(this).data('pass-key');
 		if (this.checked) {
-			_settings.passes.push(passKey);
+			options.passes.push(passKey);
 		} else {
-			_settings.passes = _settings.passes.filter(key => key !== passKey)
+			options.passes = options.passes.filter(key => key !== passKey)
 		}
 		updatePassesLabel();
 		livemapRoute();
@@ -2318,7 +2297,7 @@
 		$('#routespeeds-passes-container').empty();
 		let passesObj = W.model.getTopCountry().attributes.restrictionSubscriptions;
 		if (passesObj) {
-			_modelPasses = Object.keys(passesObj).map(key => { return { key: key, name: passesObj[key] } }).sort((a, b) => {
+			countryPassList = Object.keys(passesObj).map(key => { return { key: key, name: passesObj[key] } }).sort((a, b) => {
 				if (a.name > b.name) {
 					return 1;
 				} else if (a.name < b.name) {
@@ -2327,10 +2306,10 @@
 				return 0;
 			});
 		} else {
-			_modelPasses = [];
+			countryPassList = [];
 		}
 
-		if (_modelPasses.length) {
+		if (countryPassList.length) {
 			$('#routespeeds-passes-container').append(
 				'<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
 				'  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
@@ -2338,7 +2317,7 @@
 				'    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
 				'  </legend>' +
 				'  <div id="routespeeds-passes-internal-container" style="padding-top:0px;">' +
-				_modelPasses.map((pass, i) => {
+				countryPassList.map((pass, i) => {
 					//let id = 'routespeeds-pass-' + pass.key;
 					return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
 						'      <input id="routespeeds-pass-' + i + '" type="checkbox" class="routespeeds-pass-checkbox" data-pass-key = "' + pass.key + '">' +
@@ -2373,7 +2352,7 @@
 			$('.routespeeds-pass-checkbox').each((i, elem) => {
 				const $elem = $(elem);
 				const passKey = $elem.data('pass-key');
-				$elem.prop('checked', _settings.passes.includes(passKey));
+				$elem.prop('checked', options.passes.includes(passKey));
 			});
 			updatePassesLabel();
 		}
