@@ -103,6 +103,14 @@
 		"#670055"   // 200 km/h
 	];
 
+    var routeColors = [
+        '#4d4dcd', // route 1
+        '#d34f8a', // route 2
+        '#188984', // route 3
+        '#cafa27', // route 4
+        '#ffca3f'  // route 5
+    ];
+
 	var jqueryinfo = 0;
 	var tabswitched = 0;
 	var closurelayer = null;
@@ -1244,12 +1252,7 @@
 		if (id == 4) summaryobj = getId('routespeeds-summary4');
 		if (id == 5) summaryobj = getId('routespeeds-summary5');
 
-		let html;
-		if (id == 1) html = '<div class=routespeeds_header style="background: #4d4dcd; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route 1</span> ';
-		if (id == 2) html = '<div class=routespeeds_header style="background: #d34f8a; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route 2</span> ';
-		if (id == 3) html = '<div class=routespeeds_header style="background: #188984; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route 3</span> ';
-		if (id == 4) html = '<div class=routespeeds_header style="background: #cafa27; color: #404040; "></div>' + '<span style="color: #404040;">Route 4</span> ';
-		if (id == 5) html = '<div class=routespeeds_header style="background: #ffca3f; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route 5</span> ';
+		let html = '<div class=routespeeds_header style="background: ' + routeColors[id-1] + '; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route ' + id + '</span> ';
 
 		let lenstr = precFloat(len, 2);
 		let u1 = 'km';
@@ -1994,11 +1997,11 @@
 		let t4 = style4.label;
 		let t5 = style5.label;
 
-		style1.strokeColor = '#4d4dcd';
-		style2.strokeColor = '#d34f8a';
-		style3.strokeColor = '#188984';
-		style4.strokeColor = '#cafa27';
-		style5.strokeColor = '#ffca3f';
+		style1.strokeColor = routeColors[0];
+		style2.strokeColor = routeColors[1];
+		style3.strokeColor = routeColors[2];
+		style4.strokeColor = routeColors[3];
+		style5.strokeColor = routeColors[4];
 		//style1.strokeColor = '#76768f';
 		//style2.strokeColor = '#917682';
 		//style3.strokeColor = '#6b8a88';
