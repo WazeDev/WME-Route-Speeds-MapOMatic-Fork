@@ -2209,8 +2209,8 @@
 			getCheckboxHtml('usemiles', 'Use miles and mph') +
 
 			'<div>' +
-			getCheckboxHtml('getalternatives', 'Alternative routes', '', { display: 'inline-block' }) +
-			'<select id=routespeeds-maxroutes style="margin-left:10px; display:inline-block; height:18px;" >' +
+			getCheckboxHtml('getalternatives', 'Alternative routes: up to', '', { display: 'inline-block' }) +
+			'<select id=routespeeds-maxroutes style="margin-left:-4px; display:inline-block;" >' +
 			'<option id=routespeeds-maxroutes value="1">1</option>' +
 			'<option id=routespeeds-maxroutes value="2">2</option>' +
 			'<option id=routespeeds-maxroutes value="3">3</option>' +
