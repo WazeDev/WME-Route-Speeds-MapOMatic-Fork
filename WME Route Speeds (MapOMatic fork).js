@@ -84,23 +84,23 @@
 	var accelerationmargin = 30;
 	var accelerationbackstop = 3;
 
-	var koloractive = [
-		"#808080",  // 0 km/h
-		"#271308",  // 10 km/h
-		"#813b27",  // 20 km/h
-		"#e22700",  // 30 km/h
-		"#ef7200",  // 40 km/h
-		"#ffd307",  // 50 km/h
-		"#6cf104",  // 60 km/h
-		"#2fa035",  // 70 km/h
-		"#0bbbe9",  // 80 km/h
-		"#0f77e0",  // 90 km/h
-		"#0346fc",  // 100 km/h
-		"#3918d7",  // 110 km/h
-		"#8c07f7",  // 120 km/h
-		"#ea0ae7",  // 130 km/h
-		"#b00094",  // 140 km/h
-		"#670055"   // 200 km/h
+	var speedColors = [
+		"#808080",  // invalid speed
+		"#271308",  // <= 10.5 km/h
+		"#813b27",  // <= 20.5 km/h
+		"#e22700",  // <= 30.5 km/h
+		"#ef7200",  // <= 40.5 km/h
+		"#ffd307",  // <= 50.5 km/h
+		"#6cf104",  // <= 60.5 km/h
+		"#2fa035",  // <= 70.5 km/h
+		"#0bbbe9",  // <= 80.5 km/h
+		"#0f77e0",  // <= 90.5 km/h
+		"#0346fc",  // <= 100.5 km/h
+		"#3918d7",  // <= 110.5 km/h
+		"#8c07f7",  // <= 120.5 km/h
+		"#ea0ae7",  // <= 130.5 km/h
+		"#b00094",  // <= 140.5 km/h
+		"#670055"   // > 140.5 km/h
 	];
 
     var routeColors = [
@@ -303,11 +303,16 @@
 		return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
 	}
 	//------------------------------------------------------------------------------------------------
-	function getColor(speed) {
-		if (speed === 0) return koloractive[0];
-		var k = parseInt(speed / 10.0) + 1;
+	function getSpeed(length_m, time_s) {
+        if (time_s == 0) return 0;
+        else return 3.6 * length_m / time_s;
+	}
+	//-----------------------------------------------------------------------------------------------
+	function getSpeedColor(speed) {
+		if (speed === 0) return speedColors[0]; // invalid speed
+		var k = Math.ceil((speed - 0.5) / 10);
 		if (k > 15) k = 15;
-		return koloractive[k];
+		return speedColors[k];
 	}
 	//-----------------------------------------------------------------------------------------------
 	function updatePassesLabel() {
@@ -315,18 +320,28 @@
 		$('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${countryPassList.length})`);
 	}
 	//------------------------------------------------------------------------------------------------
-	function addLabel(lines, speedtekst, odctime, odclen, id) {
+	function addLabel(lines, time, length) {
 
-		var speed = parseInt(speedtekst);
+		var speed = getSpeed(length, time);
 
 		var kolor1 = '#F0F0F0';
 		var kolor2 = '#000000';
 		var p1, p2, pt, textFeature, k, sx, sy;
-		if (speed >= 40 && speed < 50) { kolor1 = '#404040'; kolor2 = '#FFFFFF'; }
-		if (speed >= 50 && speed < 60) { kolor1 = '#404040'; kolor2 = '#FFFFFF'; }
+		if (speed > 40.5 && speed <= 60.5) { kolor1 = '#404040'; kolor2 = '#FFFFFF'; }
 
-		if (options.useMiles) speedtekst = parseInt(speedtekst / KM_PER_MILE + 0.5);
-		if (speedtekst === 0) speedtekst = "?";
+        var labelText;
+        if (options.showSpeeds) {
+            if (options.useMiles) speed /= KM_PER_MILE;
+            if (speed == 0) {
+                labelText = "?";
+            } else if (speed < 1) {
+                labelText = "<1";
+            } else {
+                labelText = Math.round(speed);
+            }
+        } else {
+            labelText = time + "s";
+        }
 
 		var numlines = lines.length;
 		if (numlines >= 2) {
@@ -361,10 +376,8 @@
 			sx = p1.x + (p2.x - p1.x) * proc;
 			sy = p1.y + (p2.y - p1.y) * proc;
 
-			if (!options.showSpeeds) speedtekst = odctime + "s ";
-
 			pt = new OpenLayers.Geometry.Point(sx, sy);
-			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: speedtekst, fontColor: kolor1, pointRadius: 0 });
+			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0 });
 			return textFeature;
 		}
 		else if (numlines == 1) {
@@ -374,10 +387,8 @@
 			sx = (p1.x + p2.x) * 0.5;
 			sy = (p1.y + p2.y) * 0.5;
 
-			if (!options.showSpeeds) speedtekst = odctime + "s ";
-
 			pt = new OpenLayers.Geometry.Point(sx, sy);
-			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: speedtekst, fontColor: kolor1, pointRadius: 0 });
+			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0 });
 			return textFeature;
 		}
 		else return null;
@@ -943,7 +954,7 @@
 		var speed = 0;
 		if (odctime > 0) speed = 3.6 * odclen / odctime;
 		var speedtekst = parseInt(speed);
-		var kolor = getColor(speed);
+		var kolor = getSpeedColor(speed);
 
 		var ptA = new OpenLayers.Geometry.Point(0, 0);
 		var ptB = new OpenLayers.Geometry.Point(0, 0);
@@ -1019,7 +1030,7 @@
 			if (dx < 0.000001 && dy < 0.000001) {
 
 				if (options.showLabels) {
-					label = addLabel(lines, speedtekst, odctime, odclen, id);
+					label = addLabel(lines, odctime, odclen);
 					if (label !== null) labelFeatures.push(label);
 				}
 				while (lines.length > 0) lines.pop();
@@ -1037,7 +1048,7 @@
 					speed = 0;
 					if (odctime > 0) speed = 3.6 * odclen / odctime;
 					speedtekst = parseInt(speed);
-					kolor = getColor(speed);
+					kolor = getSpeedColor(speed);
 
 				}
 			}
@@ -1127,7 +1138,7 @@
 		}
 
 		if (options.showLabels) {
-			label = addLabel(lines, speedtekst, odctime, odclen, id);
+			label = addLabel(lines, odctime, odclen);
 			if (label !== null) labelFeatures.push(label);
 		}
 		while (lines.length > 0) lines.pop();
