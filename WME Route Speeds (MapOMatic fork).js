@@ -205,35 +205,35 @@
 	function loadRouteSpeedsOptions() {
 
         try {
-            Object.assign(options, JSON.parse(localStorage.RouteSpeedsOptions));
+            Object.assign(options, JSON.parse(localStorage.getItem(SAVED_OPTIONS_KEY)));
         } catch {
             log("Error loading saved options. Using defaults.")
         }
 
-		getId('routespeeds-option1').checked = options.enableScript;
-		getId('routespeeds-option2').checked = options.showLabels;
-		getId('routespeeds-option3').checked = options.showSpeeds;
-		getId('routespeeds-option4').checked = options.useMiles;
-		getId('routespeeds-option5').checked = options.getAlternatives;
-		getId('routespeeds-option6').value = options.maxRoutes;
-		getId('routespeeds-option7').checked = options.liveTraffic;
-		getId('routespeeds-option8').checked = options.avoidTolls;
-		getId('routespeeds-option9').checked = options.avoidFreeways;
-		getId('routespeeds-option10').checked = options.avoidUnpaved;
-		getId('routespeeds-option11').checked = options.avoidLongUnpaved;
-		getId('routespeeds-option13').value = options.routeType;
-		getId('routespeeds-option14').checked = options.allowUTurns;
-		getId('routespeeds-option15').checked = options.routingOrder;
-		getId('routespeeds-option16').checked = options.avoidDifficult;
-		getId('routespeeds-option17').checked = options.avoidFerries;
-		getId('routespeeds-option18').value = options.vehicleType;
+		getId('routespeeds-enablescript').checked = options.enableScript;
+		getId('routespeeds-showLabels').checked = options.showLabels;
+		getId('routespeeds-showSpeeds').checked = options.showSpeeds;
+		getId('routespeeds-usemiles').checked = options.useMiles;
+		getId('routespeeds-getalternatives').checked = options.getAlternatives;
+		getId('routespeeds-maxroutes').value = options.maxRoutes;
+		getId('routespeeds-livetraffic').checked = options.liveTraffic;
+		getId('routespeeds-avoidtolls').checked = options.avoidTolls;
+		getId('routespeeds-avoidfreeways').checked = options.avoidFreeways;
+		getId('routespeeds-avoidunpaved').checked = options.avoidUnpaved;
+		getId('routespeeds-avoidlongunpaved').checked = options.avoidLongUnpaved;
+		getId('routespeeds-routetype').value = options.routeType;
+		getId('routespeeds-allowuturns').checked = options.allowUTurns;
+		getId('routespeeds-routingorder').checked = options.routingOrder;
+		getId('routespeeds-avoiddifficult').checked = options.avoidDifficult;
+		getId('routespeeds-avoidferries').checked = options.avoidFerries;
+		getId('routespeeds-vehicletype').value = options.vehicleType;
 
 		update_adv_switches();
 	}
 	//---------------------------------------------------------------------------------------
 	function update_adv_switches() {
 
-		getId('routespeeds-option10-span').style.display = options.avoidUnpaved ? 'inline' : 'inline';
+		getId('routespeeds-avoidunpaved-span').style.display = options.avoidUnpaved ? 'inline' : 'inline';
 	}
 	//---------------------------------------------------------------------------------------
 	function getRoutingManager() {
@@ -361,7 +361,7 @@
 			sx = p1.x + (p2.x - p1.x) * proc;
 			sy = p1.y + (p2.y - p1.y) * proc;
 
-			if (!options.showLabels) speedtekst = odctime + "s ";
+			if (!options.showSpeeds) speedtekst = odctime + "s ";
 
 			pt = new OpenLayers.Geometry.Point(sx, sy);
 			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: speedtekst, fontColor: kolor1, pointRadius: 0 });
@@ -374,7 +374,7 @@
 			sx = (p1.x + p2.x) * 0.5;
 			sy = (p1.y + p2.y) * 0.5;
 
-			if (!options.showLabels) speedtekst = odctime + "s ";
+			if (!options.showSpeeds) speedtekst = odctime + "s ";
 
 			pt = new OpenLayers.Geometry.Point(sx, sy);
 			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: speedtekst, fontColor: kolor1, pointRadius: 0 });
@@ -1018,7 +1018,7 @@
 
 			if (dx < 0.000001 && dy < 0.000001) {
 
-				if (options.showSpeeds) {
+				if (options.showLabels) {
 					label = addLabel(lines, speedtekst, odctime, odclen, id);
 					if (label !== null) labelFeatures.push(label);
 				}
@@ -1126,7 +1126,7 @@
 			p2 = p4;
 		}
 
-		if (options.showSpeeds) {
+		if (options.showLabels) {
 			label = addLabel(lines, speedtekst, odctime, odclen, id);
 			if (label !== null) labelFeatures.push(label);
 		}
@@ -1648,22 +1648,22 @@
 	//--------------------------------------------------------------------------------------------------------
 	function resetOptions() {
 
-		getId('routespeeds-option5').checked = options.getAlternatives = true;
-		getId('routespeeds-option6').value = options.maxRoutes = 3;
+		getId('routespeeds-getalternatives').checked = options.getAlternatives = true;
+		getId('routespeeds-maxroutes').value = options.maxRoutes = 3;
 
-		getId('routespeeds-option7').checked = options.liveTraffic = false;
+		getId('routespeeds-livetraffic').checked = options.liveTraffic = false;
 
-		getId('routespeeds-option13').value = options.routeType = 1;
+		getId('routespeeds-routetype').value = options.routeType = 1;
 
-		getId('routespeeds-option8').checked = options.avoidTolls = false;
-		getId('routespeeds-option9').checked = options.avoidFreeways = false;
-		getId('routespeeds-option10').checked = options.avoidUnpaved = true;
-		getId('routespeeds-option11').checked = options.avoidLongUnpaved = false;
-		getId('routespeeds-option14').checked = options.allowUTurns = true;
-		getId('routespeeds-option15').checked = options.routingOrder = true;
-		getId('routespeeds-option16').checked = options.avoidDifficult = false;
-		getId('routespeeds-option17').checked = options.avoidFerries = false;
-		getId('routespeeds-option18').value = options.vehicleType = 'PRIVATE';
+		getId('routespeeds-avoidtolls').checked = options.avoidTolls = false;
+		getId('routespeeds-avoidfreeways').checked = options.avoidFreeways = false;
+		getId('routespeeds-avoidunpaved').checked = options.avoidUnpaved = true;
+		getId('routespeeds-avoidlongunpaved').checked = options.avoidLongUnpaved = false;
+		getId('routespeeds-allowuturns').checked = options.allowUTurns = true;
+		getId('routespeeds-routingorder').checked = options.routingOrder = true;
+		getId('routespeeds-avoiddifficult').checked = options.avoidDifficult = false;
+		getId('routespeeds-avoidferries').checked = options.avoidFerries = false;
+		getId('routespeeds-vehicletype').value = options.vehicleType = 'PRIVATE';
 
 		update_adv_switches();
 	}
@@ -1702,10 +1702,10 @@
 		W.map.getOLMap().setCenter([pt.lon, pt.lat], zoom);
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption1() {
+	function clickEnableScript() {
 		var WM = W.map;
 
-		options.enableScript = (getId('routespeeds-option1').checked === true);
+		options.enableScript = (getId('routespeeds-enablescript').checked === true);
 
 		if (!options.enableScript) {
 			getId('sidepanel-routespeeds').style.color = "#A0A0A0";
@@ -1750,99 +1750,99 @@
 		}
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption2() {
-		options.showLabels = (getId('routespeeds-option2').checked === true);
+	function clickShowLabels() {
+		options.showLabels = (getId('routespeeds-showLabels').checked === true);
 		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption3() {
-		options.showSpeeds = (getId('routespeeds-option3').checked === true);
+	function clickShowSpeeds() {
+		options.showSpeeds = (getId('routespeeds-showSpeeds').checked === true);
 		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption4() {
-		options.useMiles = (getId('routespeeds-option4').checked === true);
+	function clickUseMiles() {
+		options.useMiles = (getId('routespeeds-usemiles').checked === true);
 		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption5() {
+	function clickGetAlternatives() {
 		routeSelected = 1;
 		routeSelectedLast = 0;
 
-		options.getAlternatives = (getId('routespeeds-option5').checked === true);
+		options.getAlternatives = (getId('routespeeds-getalternatives').checked === true);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption6() {
-		options.getAlternatives = (getId('routespeeds-option5').checked === true);
+	function clickMaxRoutes() {
+		options.getAlternatives = (getId('routespeeds-getalternatives').checked === true);
 		update_adv_switches();
 
-		options.maxRoutes = parseInt(getId('routespeeds-option6').value);
+		options.maxRoutes = parseInt(getId('routespeeds-maxroutes').value);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption7() {
-		options.liveTraffic = (getId('routespeeds-option7').checked === true);
+	function clickLiveTraffic() {
+		options.liveTraffic = (getId('routespeeds-livetraffic').checked === true);
 		rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption8() {
-		options.avoidTolls = (getId('routespeeds-option8').checked === true);
+	function clickAvoidTolls() {
+		options.avoidTolls = (getId('routespeeds-avoidtolls').checked === true);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption9() {
-		options.avoidFreeways = (getId('routespeeds-option9').checked === true);
+	function clickAvoidFreeways() {
+		options.avoidFreeways = (getId('routespeeds-avoidfreeways').checked === true);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption10() {
-		options.avoidUnpaved = (getId('routespeeds-option10').checked === true);
+	function clickAvoidUnpaved() {
+		options.avoidUnpaved = (getId('routespeeds-avoidunpaved').checked === true);
 
 		options.avoidLongUnpaved = false;
-		getId('routespeeds-option11').checked = false;
+		getId('routespeeds-avoidlongunpaved').checked = false;
 
 		update_adv_switches();
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption11() {
-		options.avoidLongUnpaved = (getId('routespeeds-option11').checked === true);
+	function clickAvoidLongUnpaved() {
+		options.avoidLongUnpaved = (getId('routespeeds-avoidlongunpaved').checked === true);
 
 		options.avoidUnpaved = false;
-		getId('routespeeds-option10').checked = false;
+		getId('routespeeds-avoidunpaved').checked = false;
 
 		update_adv_switches();
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption13() {
-		options.routeType = parseInt(getId('routespeeds-option13').value);
+	function clickRouteType() {
+		options.routeType = parseInt(getId('routespeeds-routetype').value);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption14() {
-		options.allowUTurns = (getId('routespeeds-option14').checked === true);
+	function clickAllowUTurns() {
+		options.allowUTurns = (getId('routespeeds-allowuturns').checked === true);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption15() {
-		options.routingOrder = (getId('routespeeds-option15').checked === true);
+	function clickRoutingOrder() {
+		options.routingOrder = (getId('routespeeds-routingorder').checked === true);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption16() {
-		options.avoidDifficult = (getId('routespeeds-option16').checked === true);
+	function clickAvoidDifficult() {
+		options.avoidDifficult = (getId('routespeeds-avoiddifficult').checked === true);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption17() {
-		options.avoidFerries = (getId('routespeeds-option17').checked === true);
+	function clickAvoidFerries() {
+		options.avoidFerries = (getId('routespeeds-avoidferries').checked === true);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickOption18() {
-		options.vehicleType = (getId('routespeeds-option18').value);
+	function clickVehicleType() {
+		options.vehicleType = (getId('routespeeds-vehicletype').value);
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
@@ -2203,52 +2203,52 @@
 			'<a id="routespeeds-reset-options-to-livemap-route" onclick="return false;" style="cursor:pointer; float:right; margin-right:20px;" title="Reset routing options to the Livemap Route equivalents">Reset to Livemap Route</a>' +
 			'</div>' +
 
-			getCheckboxHtml('option1', 'Enable script') +
-			getCheckboxHtml('option3', 'Show segment labels') +
-			getCheckboxHtml('option2', 'Show speed on labels') +
-			getCheckboxHtml('option4', 'Use miles and mph') +
+			getCheckboxHtml('enablescript', 'Enable script') +
+			getCheckboxHtml('showLabels', 'Show segment labels') +
+			getCheckboxHtml('showSpeeds', 'Show speed on labels') +
+			getCheckboxHtml('usemiles', 'Use miles and mph') +
 
 			'<div>' +
-			getCheckboxHtml('option5', 'Alternative routes', '', { display: 'inline-block' }) +
-			'<select id=routespeeds-option6 style="margin-left:10px; display:inline-block; height:18px;" >' +
-			'<option id=routespeeds-option6 value="1">1</option>' +
-			'<option id=routespeeds-option6 value="2">2</option>' +
-			'<option id=routespeeds-option6 value="3">3</option>' +
-			'<option id=routespeeds-option6 value="4">4</option>' +
-			'<option id=routespeeds-option6 value="5">5</option>' +
+			getCheckboxHtml('getalternatives', 'Alternative routes', '', { display: 'inline-block' }) +
+			'<select id=routespeeds-maxroutes style="margin-left:10px; display:inline-block; height:18px;" >' +
+			'<option id=routespeeds-maxroutes value="1">1</option>' +
+			'<option id=routespeeds-maxroutes value="2">2</option>' +
+			'<option id=routespeeds-maxroutes value="3">3</option>' +
+			'<option id=routespeeds-maxroutes value="4">4</option>' +
+			'<option id=routespeeds-maxroutes value="5">5</option>' +
 			'</select>' +
 			'</div>' +
 
-			getCheckboxHtml('option7', 'Real-Time Traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
-			getCheckboxHtml('option15', 'Use Routing Order', 'Sorts routes in the same order they would appear in the app or livemap') +
+			getCheckboxHtml('livetraffic', 'Real-Time Traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
+			getCheckboxHtml('routingorder', 'Use Routing Order', 'Sorts routes in the same order they would appear in the app or livemap') +
 
 			'<div>' +
 			'<label class="" style="display:inline-block;">' +
-			'Route type:<select id=routespeeds-option13 style="margin-left:10px;" >' +
+			'Route type:<select id=routespeeds-routetype style="margin-left:10px;" >' +
 			'<option value="1">Fastest</option>' +
 			'<option value="3">Fastest (no history)</option>' +
 			'</select>' +
 			'<br>' +
-			'Vehicle type:<select id=routespeeds-option18 style="margin-left:10px;" >' +
-			'<option id=routespeeds-option18 value="PRIVATE">Private</option>' +
-			'<option id=routespeeds-option18 value="TAXI">Taxi</option>' +
-			'<option id=routespeeds-option18 value="MOTORCYCLE">Motorcycle</option>' +
+			'Vehicle type:<select id=routespeeds-vehicletype style="margin-left:10px;" >' +
+			'<option id=routespeeds-vehicletype value="PRIVATE">Private</option>' +
+			'<option id=routespeeds-vehicletype value="TAXI">Taxi</option>' +
+			'<option id=routespeeds-vehicletype value="MOTORCYCLE">Motorcycle</option>' +
 			'</select>' +
 			'</div>' +
 
 			'<table><tbody><tr><td style="vertical-align:top; padding-right:4px;"><b>Avoid:</b></td><td>' +
-			getCheckboxHtml('option8', 'Tolls') +
-			getCheckboxHtml('option9', 'Freeways') +
-			getCheckboxHtml('option16', 'Difficult turns') +
-			getCheckboxHtml('option17', 'Ferries') +
-			getCheckboxHtml('option10', 'Unpaved') +
-			'<div id="routespeeds-option10-span" style="display:none;">' +
-			getCheckboxHtml('option11', 'Long unpaved roads', '', { marginLeft: '10px' }) +
+			getCheckboxHtml('avoidtolls', 'Tolls') +
+			getCheckboxHtml('avoidfreeways', 'Freeways') +
+			getCheckboxHtml('avoiddifficult', 'Difficult turns') +
+			getCheckboxHtml('avoidferries', 'Ferries') +
+			getCheckboxHtml('avoidunpaved', 'Unpaved') +
+			'<div id="routespeeds-avoidunpaved-span" style="display:none;">' +
+			getCheckboxHtml('avoidlongunpaved', 'Long unpaved roads', '', { marginLeft: '10px' }) +
 			'</div>' +
 			'</td></tr></tbody></table>' +
 
 			'<table style="margin-top:3px;"><tbody><tr><td style="vertical-align:top; padding-right:4px;"><b>Allow:</b></td><td>' +
-			getCheckboxHtml('option14', 'U-Turns') +
+			getCheckboxHtml('allowuturns', 'U-Turns') +
 			'</td></tr></tbody></table>' +
 			'<div id="routespeeds-passes-container"></div>' +
 			'<style>' +
@@ -2362,7 +2362,7 @@
 	function onModelMergeEnd() {
 		// Detect when the "top" country changes and update the list of passes.
 		try {
-            const topCountry = W.model.getTopCountry();
+			const topCountry = W.model.getTopCountry();
 			if (topCountry && topCountry.attributes.id !== _lastTopCountryId) {
 				_lastTopCountryId = topCountry.attributes.id;
 				buildPassesDiv();
@@ -2379,27 +2379,27 @@
 		if (!options.enableScript) getId('sidepanel-routespeeds').style.color = "#A0A0A0";
 		else getId('sidepanel-routespeeds').style.color = "";
 
-		getId('routespeeds-option6').value = options.maxRoutes;
-		getId('routespeeds-option13').value = options.routeType;
-		getId('routespeeds-option18').value = options.vehicleType;
+		getId('routespeeds-maxroutes').value = options.maxRoutes;
+		getId('routespeeds-routetype').value = options.routeType;
+		getId('routespeeds-vehicletype').value = options.vehicleType;
 
-		getId('routespeeds-option1').onclick = clickOption1;
-		getId('routespeeds-option2').onclick = clickOption2;
-		getId('routespeeds-option3').onclick = clickOption3;
-		getId('routespeeds-option4').onclick = clickOption4;
-		getId('routespeeds-option5').onclick = clickOption5;
-		getId('routespeeds-option6').onchange = clickOption6;
-		getId('routespeeds-option7').onclick = clickOption7;
-		getId('routespeeds-option8').onclick = clickOption8;
-		getId('routespeeds-option9').onclick = clickOption9;
-		getId('routespeeds-option10').onclick = clickOption10;
-		getId('routespeeds-option11').onclick = clickOption11;
-		getId('routespeeds-option13').onchange = clickOption13;
-		getId('routespeeds-option14').onclick = clickOption14;
-		getId('routespeeds-option15').onclick = clickOption15;
-		getId('routespeeds-option16').onclick = clickOption16;
-		getId('routespeeds-option17').onclick = clickOption17;
-		getId('routespeeds-option18').onchange = clickOption18;
+		getId('routespeeds-enablescript').onclick = clickEnableScript;
+		getId('routespeeds-showLabels').onclick = clickShowLabels;
+		getId('routespeeds-showSpeeds').onclick = clickShowSpeeds;
+		getId('routespeeds-usemiles').onclick = clickUseMiles;
+		getId('routespeeds-getalternatives').onclick = clickGetAlternatives;
+		getId('routespeeds-maxroutes').onchange = clickMaxRoutes;
+		getId('routespeeds-livetraffic').onclick = clickLiveTraffic;
+		getId('routespeeds-avoidtolls').onclick = clickAvoidTolls;
+		getId('routespeeds-avoidfreeways').onclick = clickAvoidFreeways;
+		getId('routespeeds-avoidunpaved').onclick = clickAvoidUnpaved;
+		getId('routespeeds-avoidlongunpaved').onclick = clickAvoidLongUnpaved;
+		getId('routespeeds-routetype').onchange = clickRouteType;
+		getId('routespeeds-allowuturns').onclick = clickAllowUTurns;
+		getId('routespeeds-routingorder').onclick = clickRoutingOrder;
+		getId('routespeeds-avoiddifficult').onclick = clickAvoidDifficult;
+		getId('routespeeds-avoidferries').onclick = clickAvoidFerries;
+		getId('routespeeds-vehicletype').onchange = clickVehicleType;
 
 		getId('routespeeds-summary1').onclick = clickRoute1;
 		getId('routespeeds-summary2').onclick = clickRoute2;
