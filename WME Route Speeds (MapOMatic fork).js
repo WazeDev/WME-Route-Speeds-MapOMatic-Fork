@@ -2362,6 +2362,7 @@
 	function onModelMergeEnd() {
 		// Detect when the "top" country changes and update the list of passes.
 		try {
+            const topCountry = W.model.getTopCountry();
 			if (topCountry && topCountry.attributes.id !== _lastTopCountryId) {
 				_lastTopCountryId = topCountry.attributes.id;
 				buildPassesDiv();
