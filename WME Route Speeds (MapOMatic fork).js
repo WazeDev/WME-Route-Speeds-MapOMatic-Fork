@@ -920,10 +920,10 @@
 
 		var rlayers;
 		if (id == 1) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		if (id == 2) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-		if (id == 3) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-		if (id == 4) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-		if (id == 5) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
+		if (id == 2) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
+		if (id == 3) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
+		if (id == 4) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
+		if (id == 5) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
 		var routeLayer = rlayers[0];
 		if (routeLayer === undefined) return;
 
@@ -1022,7 +1022,7 @@
 
 			if (dx < 0.000001 && dy < 0.000001) {
 
-				if (options.showLabels) {
+				if (options.showLabels && routeSelected == id) {
 					label = addLabel(lines, odctime, odclen);
 					if (label !== null) labelFeatures.push(label);
 				}
@@ -1122,7 +1122,7 @@
 			let line = new OpenLayers.Geometry.LineString(points);
 			lines.push(line);
 
-			let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: kolor, labelText: '', strokeWidth: 10 });
+			let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: (routeSelected == id ? kolor : routeColors[id-1]), labelText: '', strokeWidth: (routeSelected == id ? 10 : 5) });
 
 			lineFeatures.push(lineFeature);
 
@@ -1130,7 +1130,7 @@
 			p2 = p4;
 		}
 
-		if (options.showLabels) {
+		if (options.showLabels && routeSelected == id) {
 			label = addLabel(lines, odctime, odclen);
 			if (label !== null) labelFeatures.push(label);
 		}
@@ -1138,7 +1138,7 @@
 
 		let outlinestring = new OpenLayers.Geometry.LineString(outlinepoints);
 		let outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { strokeColor: '#404040', labelText: '', strokeWidth: 12 });
-		routeLayer.addFeatures(outlineFeature);
+		if (routeSelected == id) routeLayer.addFeatures(outlineFeature);
 
 		routeLayer.addFeatures(lineFeatures);
 		routeLayer.addFeatures(labelFeatures);
@@ -1876,7 +1876,7 @@
 		let t4 = style4.label;
 		let t5 = style5.label;
 
-		style1.strokeColor = routeColors[0];
+		//style1.strokeColor = routeColors[0];
 		style2.strokeColor = routeColors[1];
 		style3.strokeColor = routeColors[2];
 		style4.strokeColor = routeColors[3];
@@ -1891,12 +1891,12 @@
 		//style3.strokeColor = '#70a070';
 		//style4.strokeColor = '#a0a070';
 		//style5.strokeColor = '#a070a0';
-		style1.strokeWidth = 5;
+		//style1.strokeWidth = 5;
 		style2.strokeWidth = 5;
 		style3.strokeWidth = 5;
 		style4.strokeWidth = 5;
 		style5.strokeWidth = 5;
-		style1.label = '';
+		//style1.label = '';
 		style2.label = '';
 		style3.label = '';
 		style4.label = '';
@@ -1946,6 +1946,7 @@
 		if (routeSelected === 5) { routeLayer1.setZIndex(z4); routeLayer2.setZIndex(z3); routeLayer3.setZIndex(z2); routeLayer4.setZIndex(z1); routeLayer5.setZIndex(z5); }
 
 		if (t1 !== style1.label || s1 !== style1.strokeColor) routeLayer1.redraw();
+        rezoom();
 		if (t2 !== style2.label || s2 !== style2.strokeColor) routeLayer2.redraw();
 		if (t3 !== style3.label || s3 !== style3.strokeColor) routeLayer3.redraw();
 		if (t4 !== style4.label || s4 !== style4.strokeColor) routeLayer4.redraw();
@@ -1999,11 +2000,13 @@
 		getId('routespeeds-summary4').style.visibility = 'hidden';
 		getId('routespeeds-summary5').style.visibility = 'hidden';
 
-		switchRoute();
+		//switchRoute();
 
-        for (let i = 0; i < routesShown.length; i++) {
+        for (let i = routesShown.length - 1; i >= 0; i--) {
+            if (i == routeSelected-1) continue;
             createRouteFeatures(i+1, routesShown[i].coords, routesShown[i].response.results)
         }
+        createRouteFeatures(routeSelected, routesShown[routeSelected-1].coords, routesShown[routeSelected-1].response.results)
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function enterAB(ev) {
