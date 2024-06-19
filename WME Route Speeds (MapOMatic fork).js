@@ -55,16 +55,9 @@
 	var epsg4326;
 
 	var selected = 0;
-	var routewsp1 = [];
-	var routewsp2 = [];
-	var routewsp3 = [];
-	var routewsp4 = [];
-	var routewsp5 = [];
-	var routeodc1 = [];
-	var routeodc2 = [];
-	var routeodc3 = [];
-	var routeodc4 = [];
-	var routeodc5 = [];
+
+    var routesReceived = [];
+    var routesShown = [];
 
 	var routewait = 0;
 	var routeSelected = 1;
@@ -1287,7 +1280,7 @@
 		var atTime = getnowtoday();
 
 		var numRoutes = 1;
-		if (options.getAlternatives) numRoutes = parseInt(options.maxRoutes);
+		if (options.getAlternatives) numRoutes = Math.min(options.maxRoutes, 5);
 
 		var routeType = (options.routeType === 3) ? "TIME" : "HISTORIC_TIME";
 
@@ -1369,80 +1362,23 @@
 					let str = json.error;
 					str = str.replace("|", "<br>");
 					handleRouteRequestError(str);
-				}
-				else {
+				} else {
 
-					routewsp1 = [];
-					routeodc1 = [];
-					routewsp2 = [];
-					routeodc2 = [];
-					routewsp3 = [];
-					routeodc3 = [];
-					routewsp4 = [];
-					routeodc4 = [];
-					routewsp5 = [];
-					routeodc5 = [];
-
-
+                    routesReceived = [];
 
 					if (json.coords !== undefined) {
-						console.log("WME Route Speeds: 1 route received" + " (" + numRoutes + " requested)");
+						log("1 route received (" + numRoutes + " requested)");
 
 						if (routeSelected > 1) routeSelected = 1;
 
-						routewsp1 = json.coords;
-						routeodc1 = json.response.results;
-
+                        routesReceived = [json];
 					}
 					if (json.alternatives !== undefined) {
-						console.log("WME Route Speeds: " + json.alternatives.length + " routes received" + " (" + numRoutes + " requested)");
-
-						var sortByField = (options.routeType === 2) ? "length" : options.liveTraffic ? "crossTime" : "crossTimeWithoutRealTime";
-
-						if (!options.routingOrder) {                                    // Routing Order
-							json.alternatives.sort(function (a, b) {
-								let valField = "total_" + sortByField;
-								let val = function (r) {
-									if (r[valField] !== undefined) return r[valField];
-									let val = 0;
-									for (let i = 0; i < r.results.length; ++i) {
-										val += r.results[i][sortByField];
-									}
-									return r[valField] = val;
-								};
-								return val(a.response) - val(b.response);
-							});
-						}
-
-
-						if (json.alternatives.length > numRoutes) {
-							json.alternatives = json.alternatives.slice(0, numRoutes);
-						}
-
-						if (routeSelectedLast) routeSelected = routeSelectedLast;
-						if (routeSelected > json.alternatives.length) routeSelected = json.alternatives.length;
-
-						for (let n = 0; n < json.alternatives.length; n++) {
-
-							if (n === 0) routewsp1 = json.alternatives[n].coords;
-							if (n === 0) routeodc1 = json.alternatives[n].response.results;
-
-
-							if (n === 1) routewsp2 = json.alternatives[n].coords;
-							if (n === 1) routeodc2 = json.alternatives[n].response.results;
-
-							if (n === 2) routewsp3 = json.alternatives[n].coords;
-							if (n === 2) routeodc3 = json.alternatives[n].response.results;
-
-							if (n === 3) routewsp4 = json.alternatives[n].coords;
-							if (n === 3) routeodc4 = json.alternatives[n].response.results;
-
-							if (n === 4) routewsp5 = json.alternatives[n].coords;
-							if (n === 4) routeodc5 = json.alternatives[n].response.results;
-						}
+						log(json.alternatives.length + " routes received (" + numRoutes + " requested)");
+                        routesReceived = json.alternatives;
 					}
-
-					rezoom();
+                    getId('routespeeds-routecount').innerHTML = 'Received <b>' + routesReceived.length + '</b> route' + (routesReceived.length == 1 ? '' : "s") + ' from the server';
+                    sortRoutes();
 				}
 
 				getId('routespeeds-button-livemap').style.backgroundColor = '';
@@ -1454,6 +1390,31 @@
 			}
 		});
 	}
+	//--------------------------------------------------------------------------------------------------------
+    function sortRoutes() {
+        routesShown = [...routesReceived];
+        if (!options.routingOrder) {
+            let sortByField = (options.routeType === 2) ? "length" : options.liveTraffic ? "crossTime" : "crossTimeWithoutRealTime";
+            routesShown.sort(function (a, b) {
+                let valField = "total_" + sortByField;
+                let val = function (r) {
+                    if (r[valField] !== undefined) return r[valField];
+                    let val = 0;
+                    for (let i = 0; i < r.results.length; ++i) {
+                        val += r.results[i][sortByField];
+                    }
+                    return r[valField] = val;
+                };
+                return val(a.response) - val(b.response);
+            });
+        }
+        if (routesShown.length > options.maxRoutes) {
+            routesShown = routesShown.slice(0, options.maxRoutes);
+        }
+        if (routeSelectedLast) routeSelected = routeSelectedLast;
+        if (routeSelected > routesShown.length) routeSelected = routesShown.length;
+        rezoom();
+    }
 	//--------------------------------------------------------------------------------------------------------
 	function handleRouteRequestError(message) {
 		console.log("WME Route Speeds: route request error: " + message.replace("<br>", "\n"));
@@ -1491,6 +1452,7 @@
 		if (routeLayer5 !== undefined) routeLayer5.removeAllFeatures();
 
 		getId('routespeeds-error').innerHTML = "<br>" + message;
+        getId('routespeeds-routecount').innerHTML = '';
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function livemapRouteClick() {
@@ -1524,17 +1486,6 @@
 
 		if (!options.enableScript) return;
 		if (routewait) return;
-
-		routewsp1 = [];
-		routeodc1 = [];
-		routewsp2 = [];
-		routeodc2 = [];
-		routewsp3 = [];
-		routeodc3 = [];
-		routewsp4 = [];
-		routeodc4 = [];
-		routewsp5 = [];
-		routeodc5 = [];
 
 		let stra = getId('sidepanel-routespeeds-a').value;
 		let strb = getId('sidepanel-routespeeds-b').value;
@@ -1603,17 +1554,6 @@
 
 		if (!options.enableScript) return;
 		if (routewait) return;
-
-		routewsp1 = [];
-		routeodc1 = [];
-		routewsp2 = [];
-		routeodc2 = [];
-		routewsp3 = [];
-		routeodc3 = [];
-		routewsp4 = [];
-		routeodc4 = [];
-		routewsp5 = [];
-		routeodc5 = [];
 
 		let stra = getId('sidepanel-routespeeds-b').value;
 		let strb = getId('sidepanel-routespeeds-a').value;
@@ -1781,7 +1721,11 @@
 		routeSelectedLast = 0;
 
 		options.getAlternatives = (getId('routespeeds-getalternatives').checked === true);
-		livemapRoute();
+		if (options.getAlternatives && routesReceived.length < options.maxRoutes) {
+            livemapRoute();
+        } else {
+            sortRoutes();
+        }
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickMaxRoutes() {
@@ -1789,12 +1733,16 @@
 		update_adv_switches();
 
 		options.maxRoutes = parseInt(getId('routespeeds-maxroutes').value);
-		livemapRoute();
+		if (options.getAlternatives && routesReceived.length < options.maxRoutes) {
+            livemapRoute();
+        } else {
+            sortRoutes();
+        }
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickLiveTraffic() {
 		options.liveTraffic = (getId('routespeeds-livetraffic').checked === true);
-		rezoom();
+		sortRoutes();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickAvoidTolls() {
@@ -1839,7 +1787,7 @@
 	//--------------------------------------------------------------------------------------------------------
 	function clickRoutingOrder() {
 		options.routingOrder = (getId('routespeeds-routingorder').checked === true);
-		livemapRoute();
+		sortRoutes();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickAvoidDifficult() {
@@ -2053,26 +2001,9 @@
 
 		switchRoute();
 
-		if (routewsp1.length >= 2 && routeodc1.length >= 1) {
-			createRouteFeatures(1, routewsp1, routeodc1);
-		}
-
-		if (routewsp2.length >= 2 && routeodc2.length >= 1) {
-			createRouteFeatures(2, routewsp2, routeodc2);
-		}
-
-		if (routewsp3.length >= 2 && routeodc3.length >= 1) {
-			createRouteFeatures(3, routewsp3, routeodc3);
-		}
-
-		if (routewsp4.length >= 2 && routeodc4.length >= 1) {
-			createRouteFeatures(4, routewsp4, routeodc4);
-		}
-
-		if (routewsp5.length >= 2 && routeodc5.length >= 1) {
-			createRouteFeatures(5, routewsp5, routeodc5);
-
-		}
+        for (let i = 0; i < routesShown.length; i++) {
+            createRouteFeatures(i+1, routesShown[i].coords, routesShown[i].response.results)
+        }
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function enterAB(ev) {
@@ -2203,6 +2134,7 @@
 			'<button id=routespeeds-button-livemap class="waze-btn waze-btn-blue waze-btn-smaller" style="width:100%;">Calculate Route</button>' +
 			'</div>' +
 			'<b><div id=routespeeds-error style="color:#FF0000"></div></b>' +
+            '<div id=routespeeds-routecount></div>' +
 			'<div id=routespeeds-summary1 class=routespeeds_summary_classA></div>' +
 			'<div id=routespeeds-summary2 class=routespeeds_summary_classA></div>' +
 			'<div id=routespeeds-summary3 class=routespeeds_summary_classA></div>' +
@@ -2220,7 +2152,7 @@
 			getCheckboxHtml('usemiles', 'Use miles and mph') +
 
 			'<div>' +
-			getCheckboxHtml('getalternatives', 'Alternative routes: up to', '', { display: 'inline-block' }) +
+			getCheckboxHtml('getalternatives', 'Alternative routes: show up to', '', { display: 'inline-block' }) +
 			'<select id=routespeeds-maxroutes style="margin-left:-4px; display:inline-block;" >' +
 			'<option id=routespeeds-maxroutes value="1">1</option>' +
 			'<option id=routespeeds-maxroutes value="2">2</option>' +
