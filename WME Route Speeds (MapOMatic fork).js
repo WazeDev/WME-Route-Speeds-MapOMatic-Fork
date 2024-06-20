@@ -313,7 +313,23 @@
 		$('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${countryPassList.length})`);
 	}
 	//------------------------------------------------------------------------------------------------
-	function addLabel(lines, time, length) {
+    function getLabelText(length, time) {
+        var speed = getSpeed(length, time);
+        if (options.showSpeeds) {
+            if (options.useMiles) speed /= KM_PER_MILE;
+            if (speed == 0) {
+                return "?";
+            } else if (speed < 1) {
+                return "<1";
+            } else {
+                return Math.round(speed);
+            }
+        } else {
+            return time + "s";
+        }
+    }
+	//------------------------------------------------------------------------------------------------
+	function addLabel(lines, time, length, segmentID) {
 
 		var speed = getSpeed(length, time);
 
@@ -370,7 +386,7 @@
 			sy = p1.y + (p2.y - p1.y) * proc;
 
 			pt = new OpenLayers.Geometry.Point(sx, sy);
-			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0 });
+			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0, segmentID: segmentID });
 			return textFeature;
 		}
 		else if (numlines == 1) {
@@ -381,7 +397,7 @@
 			sy = (p1.y + p2.y) * 0.5;
 
 			pt = new OpenLayers.Geometry.Point(sx, sy);
-			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0 });
+			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0, segmentID: segmentID });
 			return textFeature;
 		}
 		else return null;
@@ -763,7 +779,10 @@
 		var lines = [];
 		var outlinepoints = [];
 
+        var segmentID = 0;
 		var odc = 0;
+
+        segmentID = routeodc[odc].path.segmentId;
 		var odclen = routeodc[odc].length;
 		var odctime = 0;
 		if (options.liveTraffic) odctime = routeodc[odc].crossTime;
@@ -854,13 +873,17 @@
 			if (dx < 0.000001 && dy < 0.000001) {
 
 				if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
-					label = addLabel(lines, odctime, odclen);
-					if (label !== null) labelFeatures.push(label);
+					label = addLabel(lines, odctime, odclen, segmentID);
+					if (label !== null) {
+                        if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
+                        labelFeatures.push(label);
+                    }
 				}
 				while (lines.length > 0) lines.pop();
 
 				if (odc + 1 < routeodc.length) {
 					odc++;
+                    segmentID = routeodc[odc].path.segmentId;
 					odclen = routeodc[odc].length;
 					if (options.liveTraffic) odctime = routeodc[odc].crossTime;
 					else odctime = routeodc[odc].crossTimeWithoutRealTime;
@@ -962,8 +985,11 @@
 		}
 
 		if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
-			label = addLabel(lines, odctime, odclen);
-			if (label !== null) labelFeatures.push(label);
+			label = addLabel(lines, odctime, odclen, segmentID);
+			if (label !== null) {
+                if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
+                labelFeatures.push(label);
+            }
 		}
 		while (lines.length > 0) lines.pop();
 
@@ -973,7 +999,6 @@
 
 		routeLayer.addFeatures(lineFeatures);
 		routeLayer.addFeatures(labelFeatures);
-
 
 
 		let summarylen = 0;
