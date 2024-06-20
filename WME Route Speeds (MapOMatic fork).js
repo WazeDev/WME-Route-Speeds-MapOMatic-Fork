@@ -60,8 +60,8 @@
     var routesShown = [];
 
 	var routewait = 0;
-	var routeSelected = 1;
-	var routeSelectedLast = 0;
+	var routeSelected = 0;
+	var routeSelectedLast = -1;
 
 	var markerA;
 	var markerB;
@@ -853,7 +853,7 @@
 
 			if (dx < 0.000001 && dy < 0.000001) {
 
-				if (options.showLabels && (routeSelected == id || routeSelected == 0)) {
+				if (options.showLabels && (routeSelected == id-1 || routeSelected == -1)) {
 					label = addLabel(lines, odctime, odclen);
 					if (label !== null) labelFeatures.push(label);
 				}
@@ -953,7 +953,7 @@
 			let line = new OpenLayers.Geometry.LineString(points);
 			lines.push(line);
 
-			let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: ((routeSelected == id || routeSelected == 0) ? kolor : routeColors[id-1]), labelText: '', strokeWidth: ((routeSelected == id || routeSelected == 0) ? 10 : 5) });
+			let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: ((routeSelected == id-1 || routeSelected == -1) ? kolor : routeColors[id-1]), labelText: '', strokeWidth: ((routeSelected == id-1 || routeSelected == -1) ? 10 : 5) });
 
 			lineFeatures.push(lineFeature);
 
@@ -961,7 +961,7 @@
 			p2 = p4;
 		}
 
-		if (options.showLabels && (routeSelected == id || routeSelected == 0)) {
+		if (options.showLabels && (routeSelected == id-1 || routeSelected == -1)) {
 			label = addLabel(lines, odctime, odclen);
 			if (label !== null) labelFeatures.push(label);
 		}
@@ -969,7 +969,7 @@
 
 		let outlinestring = new OpenLayers.Geometry.LineString(outlinepoints);
 		let outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { strokeColor: '#404040', labelText: '', strokeWidth: 12 });
-		if (routeSelected == id || routeSelected == 0) routeLayer.addFeatures(outlineFeature);
+		if (routeSelected == id-1 || routeSelected == -1) routeLayer.addFeatures(outlineFeature);
 
 		routeLayer.addFeatures(lineFeatures);
 		routeLayer.addFeatures(labelFeatures);
@@ -1032,7 +1032,7 @@
 
 		summaryobj.innerHTML = html;
 
-		if (id === routeSelected) summaryobj.className = 'routespeeds_summary_classB';
+		if (id-1 === routeSelected) summaryobj.className = 'routespeeds_summary_classB';
 		summaryobj.style.visibility = 'visible';
 	}
 	//--------------------------------------------------------------------------------------------------------
@@ -1200,7 +1200,7 @@
 					if (json.coords !== undefined) {
 						log("1 route received (" + numRoutes + " requested)");
 
-						if (routeSelected > 1) routeSelected = 1;
+						if (routeSelected > 0) routeSelected = 0;
 
                         routesReceived = [json];
 					}
@@ -1242,8 +1242,8 @@
         if (routesShown.length > options.maxRoutes) {
             routesShown = routesShown.slice(0, options.maxRoutes);
         }
-        if (routeSelectedLast) routeSelected = routeSelectedLast;
-        if (routeSelected > routesShown.length) routeSelected = routesShown.length;
+        if (routeSelectedLast != -1) routeSelected = routeSelectedLast;
+        if (routeSelected >= routesShown.length) routeSelected = routesShown.length - 1;
         rezoom();
     }
 	//--------------------------------------------------------------------------------------------------------
@@ -1275,8 +1275,8 @@
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function livemapRouteClick() {
-		routeSelected = 1;
-		routeSelectedLast = 0;
+		routeSelected = 0;
+		routeSelectedLast = -1;
 
 		livemapRoute();
 	}
@@ -1523,8 +1523,8 @@
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickGetAlternatives() {
-		routeSelected = 1;
-		routeSelectedLast = 0;
+		routeSelected = 0;
+		routeSelectedLast = -1;
 
 		options.getAlternatives = (getId('routespeeds-getalternatives').checked === true);
 		if (options.getAlternatives && routesReceived.length < options.maxRoutes) {
@@ -1629,23 +1629,23 @@
 	function clickRoute5() { toggleRoute(5); }
 	//--------------------------------------------------------------------------------------------------------
 	function toggleRoute(routeNo) {
-		if (routeSelected === routeNo) routeNo = 0;
-		routeSelectedLast = routeSelected = routeNo;
+		if (routeSelected === routeNo-1) routeNo = 0;
+		routeSelectedLast = routeSelected = routeNo-1;
 		switchRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function switchRoute() {
 		var WM = W.map;
 
-		if (routeSelected == 1) getId('routespeeds-summary1').className = 'routespeeds_summary_classB';
+		if (routeSelected == 0) getId('routespeeds-summary1').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
-		if (routeSelected == 2) getId('routespeeds-summary2').className = 'routespeeds_summary_classB';
+		if (routeSelected == 1) getId('routespeeds-summary2').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary2').className = 'routespeeds_summary_classA';
-		if (routeSelected == 3) getId('routespeeds-summary3').className = 'routespeeds_summary_classB';
+		if (routeSelected == 2) getId('routespeeds-summary3').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary3').className = 'routespeeds_summary_classA';
-		if (routeSelected == 4) getId('routespeeds-summary4').className = 'routespeeds_summary_classB';
+		if (routeSelected == 3) getId('routespeeds-summary4').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary4').className = 'routespeeds_summary_classA';
-		if (routeSelected == 5) getId('routespeeds-summary5').className = 'routespeeds_summary_classB';
+		if (routeSelected == 4) getId('routespeeds-summary5').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
 
 		let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
@@ -1728,10 +1728,12 @@
 		//switchRoute();
 
         for (let i = routesShown.length - 1; i >= 0; i--) {
-            if (i == routeSelected-1) continue;
+            if (i == routeSelected) continue;
             createRouteFeatures(i+1, routesShown[i].coords, routesShown[i].response.results)
         }
-        createRouteFeatures(routeSelected, routesShown[routeSelected-1].coords, routesShown[routeSelected-1].response.results)
+        if (routeSelected != -1 && routesShown.length) {
+            createRouteFeatures(routeSelected+1, routesShown[routeSelected].coords, routesShown[routeSelected].response.results)
+        }
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function enterAB(ev) {
