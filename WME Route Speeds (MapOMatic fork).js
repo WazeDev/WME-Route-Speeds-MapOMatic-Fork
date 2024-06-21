@@ -104,7 +104,7 @@
         '#ffca3f', // route 5
         '#39e440', // route 6
         '#a848e2', // '#b560e5', // route 7
-        '#e3d600', // '#fff772', // route 8
+        '#cbbf00', // '#fff772', // route 8
         '#2994f3', // '#11abef', // route 9
         '#ff3d1e', // route 10
         '#b0b7f8', // '#aa98ff', // route 11
