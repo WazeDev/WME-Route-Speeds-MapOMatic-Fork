@@ -103,20 +103,20 @@
         '#cafa27', // route 4
         '#ffca3f', // route 5
         '#39e440', // route 6
-        '#b560e5', // route 7
-        '#fff772', // route 8
-        '#11abef', // route 9
+        '#a848e2', // '#b560e5', // route 7
+        '#e3d600', // '#fff772', // route 8
+        '#2994f3', // '#11abef', // route 9
         '#ff3d1e', // route 10
-        '#aa98ff', // route 11
-        '#ffa2da', // route 12
-        '#7bdcd6', // route 13
+        '#b0b7f8', // '#aa98ff', // route 11
+        '#ffb0ba', // '#ffa2da', // route 12
+        '#71ded2', // route 13
         '#86c211', // route 14
         '#ff8500', // route 15
         '#00a842', // route 16
-        '#f6cfff', // route 17
-        '#5b00c8', // route 18
-        '#d9eaff', // route 19
-        '#ffcdcc'  // route 20
+        '#ecd4ff', // route 17
+        '#7c00ff', // route 18
+        '#caeeff', // route 19
+        '#ffdab8'  // route 20
     ];
 
 	var jqueryinfo = 0;
@@ -771,18 +771,6 @@
 					routeLayer.removeAllFeatures();
 
                     getId('routespeeds-summaries').style.visibility = 'hidden';
-
-                    getId('routespeeds-summary1').style.visibility = 'hidden';
-					getId('routespeeds-summary2').style.visibility = 'hidden';
-					getId('routespeeds-summary3').style.visibility = 'hidden';
-					getId('routespeeds-summary4').style.visibility = 'hidden';
-					getId('routespeeds-summary5').style.visibility = 'hidden';
-
-					getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
-					getId('routespeeds-summary2').className = 'routespeeds_summary_classA';
-					getId('routespeeds-summary3').className = 'routespeeds_summary_classA';
-					getId('routespeeds-summary4').className = 'routespeeds_summary_classA';
-					getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
 				}
 			}
 		}
@@ -1021,66 +1009,6 @@
 
 		routeLayer.addFeatures(lineFeatures);
 		routeLayer.addFeatures(labelFeatures);
-
-
-		let summarylen = 0;
-		let summarysec = 0;
-		if (options.liveTraffic) {
-			for (let i = 0; i < routeodc.length; i++) {
-				summarylen += routeodc[i].length;
-				summarysec += routeodc[i].crossTime;
-			}
-		}
-		else {
-			for (let i = 0; i < routeodc.length; i++) {
-				summarylen += routeodc[i].length;
-				summarysec += routeodc[i].crossTimeWithoutRealTime;
-			}
-		}
-		len = summarylen / 1000.0;
-		let sec = summarysec % 60;
-		let min = (summarysec - sec) % 3600;
-		let hou = (summarysec - sec - min) % 216000;
-		min = (min / 60) % 60;
-		hou = (hou / 3600);
-
-		let t = '';
-		if (hou < 10) t += '0' + hou + ":"; else t += hou + ":";
-		if (min < 10) t += '0' + min + ":"; else t += min + ":";
-		if (sec < 10) t += '0' + sec;
-		else t += sec;
-
-		let lenmph = len / KM_PER_MILE;
-
-		let avgspeed = (summarylen / 1000.0) / (summarysec / 3600.0);
-		if (options.useMiles) avgspeed = avgspeed / KM_PER_MILE;
-
-		let summaryobj;
-		if (id == 0) summaryobj = getId('routespeeds-summary1');
-		if (id == 1) summaryobj = getId('routespeeds-summary2');
-		if (id == 2) summaryobj = getId('routespeeds-summary3');
-		if (id == 3) summaryobj = getId('routespeeds-summary4');
-		if (id == 4) summaryobj = getId('routespeeds-summary5');
-
-		let html = '<div class=routespeeds_header style="background: ' + getRouteColor(id) + '; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route ' + (id+1) + '</span> ';
-
-		let lenstr = precFloat(len, 2);
-		let u1 = 'km';
-		let u2 = 'km&#47;h';
-		if (options.useMiles) {
-			lenstr = precFloat(lenmph, 2);
-			u1 = 'miles';
-			u2 = 'mph';
-		}
-
-		html += '<div style="min-width:50px; display:inline-block; text-align:right;" ><b>' + lenstr + '</b></div>';
-		html += '<span style="font-size:11px;"> ' + u1 + '</span> &nbsp;<b>' + t + '</b>';
-		html += '<div style="display:inline-block; min-width:40px; text-align:right; color:#404040" >' + precFloat(avgspeed, 1) + '</div> <span style="font-size:11px;">' + u2 + '</span>';
-
-		summaryobj.innerHTML = html;
-
-		if (id === routeSelected) summaryobj.className = 'routespeeds_summary_classB';
-		summaryobj.style.visibility = 'visible';
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function precFloat(f, prec) {
@@ -1306,8 +1234,6 @@
         for (let i = 0; i < routesShown.length; i++) {
             let routeDiv = getId('routespeeds-summary-' + i);
             routeDiv.onclick = function(){ toggleRoute(i) };
-            console.log(routeDiv);
-            console.log(routeDiv.onclick);
             if (routeSelected == i) routeDiv.className = 'routespeeds_summary_classB';
 
             let html = '<div class=routespeeds_header style="background: ' + getRouteColor(i) + '; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route ' + (i+1) + '</span> ';
@@ -1345,18 +1271,7 @@
 		getId('routespeeds-button-reverse').style.backgroundColor = '';
 
         getId('routespeeds-summaries').style.visibility = 'hidden';
-
-        getId('routespeeds-summary1').innerHTML = '';
-		getId('routespeeds-summary2').innerHTML = '';
-		getId('routespeeds-summary3').innerHTML = '';
-		getId('routespeeds-summary4').innerHTML = '';
-		getId('routespeeds-summary5').innerHTML = '';
-
-		getId('routespeeds-summary1').style.visibility = 'hidden';
-		getId('routespeeds-summary2').style.visibility = 'hidden';
-		getId('routespeeds-summary3').style.visibility = 'hidden';
-		getId('routespeeds-summary4').style.visibility = 'hidden';
-		getId('routespeeds-summary5').style.visibility = 'hidden';
+        getId('routespeeds-summaries').innerHTML = '';
 
 		let WM = W.map;
 		let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
@@ -1575,18 +1490,6 @@
 
             getId('routespeeds-summaries').style.visibility = 'hidden';
 
-			getId('routespeeds-summary1').innerHTML = '';
-			getId('routespeeds-summary2').innerHTML = '';
-			getId('routespeeds-summary3').innerHTML = '';
-			getId('routespeeds-summary4').innerHTML = '';
-			getId('routespeeds-summary5').innerHTML = '';
-
-			getId('routespeeds-summary1').style.visibility = 'hidden';
-			getId('routespeeds-summary2').style.visibility = 'hidden';
-			getId('routespeeds-summary3').style.visibility = 'hidden';
-			getId('routespeeds-summary4').style.visibility = 'hidden';
-			getId('routespeeds-summary5').style.visibility = 'hidden';
-
 			let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
 			let routeLayer = rlayers[0];
 			if (routeLayer !== undefined) routeLayer.removeAllFeatures();
@@ -1717,12 +1620,6 @@
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickRoute1() { toggleRoute(0); }
-	function clickRoute2() { toggleRoute(1); }
-	function clickRoute3() { toggleRoute(2); }
-	function clickRoute4() { toggleRoute(3); }
-	function clickRoute5() { toggleRoute(4); }
-	//--------------------------------------------------------------------------------------------------------
 	function toggleRoute(routeNo) {
 		if (routeSelected === routeNo) routeNo = -1;
 		routeSelectedLast = routeSelected = routeNo;
@@ -1731,17 +1628,6 @@
 	//--------------------------------------------------------------------------------------------------------
 	function switchRoute() {
 		var WM = W.map;
-
-		if (routeSelected == 0) getId('routespeeds-summary1').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
-		if (routeSelected == 1) getId('routespeeds-summary2').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary2').className = 'routespeeds_summary_classA';
-		if (routeSelected == 2) getId('routespeeds-summary3').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary3').className = 'routespeeds_summary_classA';
-		if (routeSelected == 3) getId('routespeeds-summary4').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary4').className = 'routespeeds_summary_classA';
-		if (routeSelected == 4) getId('routespeeds-summary5').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
 
         for (let i = 0; i < routesShown.length; i++) {
             let summary = getId('routespeeds-summary-' + i);
@@ -1785,24 +1671,6 @@
 		if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
         getId('routespeeds-summaries').style.visibility = 'hidden';
-
-        getId('routespeeds-summary1').innerHTML = '';
-		getId('routespeeds-summary2').innerHTML = '';
-		getId('routespeeds-summary3').innerHTML = '';
-		getId('routespeeds-summary4').innerHTML = '';
-		getId('routespeeds-summary5').innerHTML = '';
-
-		getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
-		getId('routespeeds-summary2').className = 'routespeeds_summary_classA';
-		getId('routespeeds-summary3').className = 'routespeeds_summary_classA';
-		getId('routespeeds-summary4').className = 'routespeeds_summary_classA';
-		getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
-
-		getId('routespeeds-summary1').style.visibility = 'hidden';
-		getId('routespeeds-summary2').style.visibility = 'hidden';
-		getId('routespeeds-summary3').style.visibility = 'hidden';
-		getId('routespeeds-summary4').style.visibility = 'hidden';
-		getId('routespeeds-summary5').style.visibility = 'hidden';
 
 		//switchRoute();
 
@@ -1946,11 +1814,6 @@
             '<div id=routespeeds-routecount></div>' +
 
             '<div id=routespeeds-summaries></div>' +
-			'<div id=routespeeds-summary1 class=routespeeds_summary_classA></div>' +
-			'<div id=routespeeds-summary2 class=routespeeds_summary_classA></div>' +
-			'<div id=routespeeds-summary3 class=routespeeds_summary_classA></div>' +
-			'<div id=routespeeds-summary4 class=routespeeds_summary_classA></div>' +
-			'<div id=routespeeds-summary5 class=routespeeds_summary_classA></div>' +
 
 			'<div style="margin-bottom:4px;">' +
 			'<b>Options:</b>' +
@@ -1963,13 +1826,20 @@
 			getCheckboxHtml('usemiles', 'Use miles and mph') +
 
 			'<div>' +
-			getCheckboxHtml('getalternatives', 'Alternative routes: show up to', '', { display: 'inline-block' }) +
+			getCheckboxHtml('getalternatives', 'Alternative routes: show', '', { display: 'inline-block' }) +
 			'<select id=routespeeds-maxroutes style="margin-left:-4px; display:inline-block;" >' +
 			'<option id=routespeeds-maxroutes value="1">1</option>' +
 			'<option id=routespeeds-maxroutes value="2">2</option>' +
 			'<option id=routespeeds-maxroutes value="3">3</option>' +
 			'<option id=routespeeds-maxroutes value="4">4</option>' +
 			'<option id=routespeeds-maxroutes value="5">5</option>' +
+			'<option id=routespeeds-maxroutes value="6">6</option>' +
+			'<option id=routespeeds-maxroutes value="8">8</option>' +
+			'<option id=routespeeds-maxroutes value="10">10</option>' +
+			'<option id=routespeeds-maxroutes value="12">12</option>' +
+			'<option id=routespeeds-maxroutes value="15">15</option>' +
+			'<option id=routespeeds-maxroutes value="100">all</option>' +
+
 			'</select>' +
 			'</div>' +
 
@@ -2154,12 +2024,6 @@
 		getId('routespeeds-avoiddifficult').onclick = clickAvoidDifficult;
 		getId('routespeeds-avoidferries').onclick = clickAvoidFerries;
 		getId('routespeeds-vehicletype').onchange = clickVehicleType;
-
-		getId('routespeeds-summary1').onclick = clickRoute1;
-		getId('routespeeds-summary2').onclick = clickRoute2;
-		getId('routespeeds-summary3').onclick = clickRoute3;
-		getId('routespeeds-summary4').onclick = clickRoute4;
-		getId('routespeeds-summary5').onclick = clickRoute5;
 
 		getId('sidepanel-routespeeds-a').onkeydown = enterAB;
 		getId('sidepanel-routespeeds-b').onkeydown = enterAB;
