@@ -770,7 +770,9 @@
 
 					routeLayer.removeAllFeatures();
 
-					getId('routespeeds-summary1').style.visibility = 'hidden';
+                    getId('routespeeds-summaries').style.visibility = 'hidden';
+
+                    getId('routespeeds-summary1').style.visibility = 'hidden';
 					getId('routespeeds-summary2').style.visibility = 'hidden';
 					getId('routespeeds-summary3').style.visibility = 'hidden';
 					getId('routespeeds-summary4').style.visibility = 'hidden';
@@ -1289,7 +1291,51 @@
         }
         if (routeSelectedLast != -1) routeSelected = routeSelectedLast;
         if (routeSelected >= routesShown.length) routeSelected = routesShown.length - 1;
+        createSummaries();
         rezoom();
+    }
+	//--------------------------------------------------------------------------------------------------------
+    function createSummaries() {
+        var summaryDiv = getId('routespeeds-summaries');
+        summaryDiv.innerHTML = '';
+        let lengthUnit = options.useMiles ? "miles" : "km";
+        let speedUnit = options.useMiles ? "mph" : "km/h";
+        for (let i = 0; i < routesShown.length; i++) {
+            summaryDiv.innerHTML += '<div id=routespeeds-summary-' + i + ' class=routespeeds_summary_classA></div>';
+        }
+        for (let i = 0; i < routesShown.length; i++) {
+            let routeDiv = getId('routespeeds-summary-' + i);
+            routeDiv.onclick = function(){ toggleRoute(i) };
+            console.log(routeDiv);
+            console.log(routeDiv.onclick);
+            if (routeSelected == i) routeDiv.className = 'routespeeds_summary_classB';
+
+            let html = '<div class=routespeeds_header style="background: ' + getRouteColor(i) + '; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route ' + (i+1) + '</span> ';
+
+            let lengthM = 0;
+            for (let s = 0; s < routesShown[i].response.results.length; s++) {
+                lengthM += routesShown[i].response.results[s].length;
+            }
+            let length = lengthM / 1000;
+            if (options.useMiles) length /= KM_PER_MILE;
+            let lengthText = length.toFixed(2);
+
+            let timeS = options.liveTraffic ? routesShown[i].response.totalRouteTime : routesShown[i].response.totalRouteTimeWithoutRealtime;
+            let seconds = timeS % 60;
+            let minutes = Math.floor((timeS % 3600) / 60);
+            let hours = Math.floor(timeS / 3600)
+            let timeText = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+
+            html += '<div style="min-width:50px; display:inline-block; text-align:right;" ><b>' + lengthText + '</b></div>' + '<span style="font-size:11px;"> ' + lengthUnit + '</span> &nbsp;<b>' + timeText + '</b>';
+
+            let avgSpeed = getSpeed(lengthM, timeS)
+            html += '<div style="display:inline-block; min-width:40px; text-align:right; color:#404040" >' + avgSpeed.toFixed(1) + '</div> <span style="font-size:11px;">' + speedUnit + '</span>';
+
+            routeDiv.innerHTML = html;
+            routeDiv.style.visibility = 'visible';
+        }
+
+        summaryDiv.style.visibility = 'visible';
     }
 	//--------------------------------------------------------------------------------------------------------
 	function handleRouteRequestError(message) {
@@ -1298,7 +1344,9 @@
 		getId('routespeeds-button-livemap').style.backgroundColor = '';
 		getId('routespeeds-button-reverse').style.backgroundColor = '';
 
-		getId('routespeeds-summary1').innerHTML = '';
+        getId('routespeeds-summaries').style.visibility = 'hidden';
+
+        getId('routespeeds-summary1').innerHTML = '';
 		getId('routespeeds-summary2').innerHTML = '';
 		getId('routespeeds-summary3').innerHTML = '';
 		getId('routespeeds-summary4').innerHTML = '';
@@ -1525,6 +1573,8 @@
 		if (!options.enableScript) {
 			getId('sidepanel-routespeeds').style.color = "#A0A0A0";
 
+            getId('routespeeds-summaries').style.visibility = 'hidden';
+
 			getId('routespeeds-summary1').innerHTML = '';
 			getId('routespeeds-summary2').innerHTML = '';
 			getId('routespeeds-summary3').innerHTML = '';
@@ -1667,15 +1717,15 @@
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickRoute1() { toggleRoute(1); }
-	function clickRoute2() { toggleRoute(2); }
-	function clickRoute3() { toggleRoute(3); }
-	function clickRoute4() { toggleRoute(4); }
-	function clickRoute5() { toggleRoute(5); }
+	function clickRoute1() { toggleRoute(0); }
+	function clickRoute2() { toggleRoute(1); }
+	function clickRoute3() { toggleRoute(2); }
+	function clickRoute4() { toggleRoute(3); }
+	function clickRoute5() { toggleRoute(4); }
 	//--------------------------------------------------------------------------------------------------------
 	function toggleRoute(routeNo) {
-		if (routeSelected === routeNo-1) routeNo = 0;
-		routeSelectedLast = routeSelected = routeNo-1;
+		if (routeSelected === routeNo) routeNo = -1;
+		routeSelectedLast = routeSelected = routeNo;
 		switchRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
@@ -1692,6 +1742,11 @@
 		else getId('routespeeds-summary4').className = 'routespeeds_summary_classA';
 		if (routeSelected == 4) getId('routespeeds-summary5').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
+
+        for (let i = 0; i < routesShown.length; i++) {
+            let summary = getId('routespeeds-summary-' + i);
+            summary.className = (routeSelected == i) ? 'routespeeds_summary_classB' : 'routespeeds_summary_classA';
+        }
 
 		let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
 		let routeLayer = rlayers[0];
@@ -1729,7 +1784,9 @@
 		var routeLayer = rlayers[0];
 		if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
-		getId('routespeeds-summary1').innerHTML = '';
+        getId('routespeeds-summaries').style.visibility = 'hidden';
+
+        getId('routespeeds-summary1').innerHTML = '';
 		getId('routespeeds-summary2').innerHTML = '';
 		getId('routespeeds-summary3').innerHTML = '';
 		getId('routespeeds-summary4').innerHTML = '';
@@ -1887,6 +1944,8 @@
 			'</div>' +
 			'<b><div id=routespeeds-error style="color:#FF0000"></div></b>' +
             '<div id=routespeeds-routecount></div>' +
+
+            '<div id=routespeeds-summaries></div>' +
 			'<div id=routespeeds-summary1 class=routespeeds_summary_classA></div>' +
 			'<div id=routespeeds-summary2 class=routespeeds_summary_classA></div>' +
 			'<div id=routespeeds-summary3 class=routespeeds_summary_classA></div>' +
