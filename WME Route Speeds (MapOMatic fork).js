@@ -101,7 +101,22 @@
         '#d34f8a', // route 2
         '#188984', // route 3
         '#cafa27', // route 4
-        '#ffca3f'  // route 5
+        '#ffca3f', // route 5
+        '#39e440', // route 6
+        '#b560e5', // route 7
+        '#fff772', // route 8
+        '#11abef', // route 9
+        '#ff3d1e', // route 10
+        '#aa98ff', // route 11
+        '#ffa2da', // route 12
+        '#7bdcd6', // route 13
+        '#86c211', // route 14
+        '#ff8500', // route 15
+        '#00a842', // route 16
+        '#f6cfff', // route 17
+        '#5b00c8', // route 18
+        '#d9eaff', // route 19
+        '#ffcdcc'  // route 20
     ];
 
 	var jqueryinfo = 0;
@@ -307,6 +322,11 @@
 		if (k > 15) k = 15;
 		return speedColors[k];
 	}
+	//-----------------------------------------------------------------------------------------------
+    function getRouteColor(route) {
+        let i = route % routeColors.length;
+        return routeColors[i];
+    }
 	//-----------------------------------------------------------------------------------------------
 	function updatePassesLabel() {
 		let count = countryPassList.filter(pass => options.passes.indexOf(pass.key) > -1).length;
@@ -976,7 +996,7 @@
 			let line = new OpenLayers.Geometry.LineString(points);
 			lines.push(line);
 
-			let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: ((routeSelected == id || routeSelected == -1) ? kolor : routeColors[id]), labelText: '', strokeWidth: ((routeSelected == id || routeSelected == -1) ? 10 : 5) });
+			let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: ((routeSelected == id || routeSelected == -1) ? kolor : getRouteColor(id)), labelText: '', strokeWidth: ((routeSelected == id || routeSelected == -1) ? 10 : 5) });
 
 			lineFeatures.push(lineFeature);
 
@@ -1040,7 +1060,7 @@
 		if (id == 3) summaryobj = getId('routespeeds-summary4');
 		if (id == 4) summaryobj = getId('routespeeds-summary5');
 
-		let html = '<div class=routespeeds_header style="background: ' + routeColors[id] + '; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route ' + (id+1) + '</span> ';
+		let html = '<div class=routespeeds_header style="background: ' + getRouteColor(id) + '; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route ' + (id+1) + '</span> ';
 
 		let lenstr = precFloat(len, 2);
 		let u1 = 'km';
@@ -1681,25 +1701,6 @@
 		let s1 = style1.strokeColor;
 		let t1 = style1.label;
 
-		//style1.strokeColor = routeColors[0];
-		//style2.strokeColor = routeColors[1];
-		//style3.strokeColor = routeColors[2];
-		//style4.strokeColor = routeColors[3];
-		//style5.strokeColor = routeColors[4];
-		//style1.strokeColor = '#76768f'; // Two old sets of colors for routes 1-5? Consider for routes 6-15?
-		//style2.strokeColor = '#917682';
-		//style3.strokeColor = '#6b8a88';
-		//style4.strokeColor = '#998f73';
-		//style5.strokeColor = '#769178';
-		//style1.strokeColor = '#7070a0';
-		//style2.strokeColor = '#a07070';
-		//style3.strokeColor = '#70a070';
-		//style4.strokeColor = '#a0a070';
-		//style5.strokeColor = '#a070a0';
-
-        //style1.strokeWidth = 5;
-		//style1.label = '';
-
 		//wlodek76: finding closure layer and changing its zindex to hide it under Route Speeds layer
 		//          we cannot easily set route speed layer over markers because it will block access to elements on these layers
 		let clayers = WM.getLayersBy("uniqueName", "closures");
@@ -1713,8 +1714,7 @@
 			closurelayer.redraw();
 		}
 
-		if (t1 !== style1.label || s1 !== style1.strokeColor) routeLayer1.redraw();
-        rezoom(); // can we replace these two lines with a simple call to routeLayer1.redraw() ?
+        rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function showClosures(mode) {
