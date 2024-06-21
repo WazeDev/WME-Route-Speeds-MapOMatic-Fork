@@ -588,7 +588,7 @@
 	}
 	//------------------------------------------------------------------------------------------------
 	function showRouteLayer(disp) {
-		var routeLayer = W.map.getLayersBy("uniqueName", "__DrawRouteSpeeds1")[0];
+		var routeLayer = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines")[0];
 		if (routeLayer === undefined) return;
 		routeLayer.setVisibility(disp);
 	}
@@ -660,10 +660,10 @@
 
 		var WM = W.map;
 
-		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
+		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
 		if (rlayers.length === 0) {
 
-			var drc_style1 = new OpenLayers.Style({
+			var drc_style = new OpenLayers.Style({
 				strokeDashstyle: 'solid',
 				strokeColor: "${strokeColor}",
 				strokeOpacity: 1.0,
@@ -681,15 +681,15 @@
 				display: 'block'
 			});
 
-			var drc_mapLayer1 = new OpenLayers.Layer.Vector("Route Speeds", {
+			var drc_mapLayer = new OpenLayers.Layer.Vector("Route Speeds Lines", {
 				displayInLayerSwitcher: true,
-				uniqueName: "__DrawRouteSpeeds1",
-				styleMap: new OpenLayers.StyleMap(drc_style1)
+				uniqueName: "__DrawRouteSpeedsLines",
+				styleMap: new OpenLayers.StyleMap(drc_style)
 			});
 
-			I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeeds1"] = "Route Speeds";
-			drc_mapLayer1.setVisibility(true);
-			WM.addLayer(drc_mapLayer1);
+			I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeedsLines"] = "Route Speeds Lines";
+			drc_mapLayer.setVisibility(true);
+			WM.addLayer(drc_mapLayer);
 
 			return;
 		}
@@ -729,9 +729,9 @@
 		}
 
 
-		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		var routeLayer1 = rlayers1[0];
-		if (routeLayer1 === undefined) return;
+		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+		var routeLayer = rlayers[0];
+		if (routeLayer === undefined) return;
 
 		var numSelected = WazeWrap.getSelectedDataModelObjects().length;
 		var seg1 = WazeWrap.getSelectedDataModelObjects()[0];
@@ -768,7 +768,7 @@
 				if (selected) {
 					selected = 0;
 
-					routeLayer1.removeAllFeatures();
+					routeLayer.removeAllFeatures();
 
 					getId('routespeeds-summary1').style.visibility = 'hidden';
 					getId('routespeeds-summary2').style.visibility = 'hidden';
@@ -790,7 +790,7 @@
 
 		var WM = W.map;
 
-		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
+		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
 		var routeLayer = rlayers[0];
 		if (routeLayer === undefined) return;
 
@@ -1311,9 +1311,9 @@
 		getId('routespeeds-summary5').style.visibility = 'hidden';
 
 		let WM = W.map;
-		let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		let routeLayer1 = rlayers1[0];
-		if (routeLayer1 !== undefined) routeLayer1.removeAllFeatures();
+		let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+		let routeLayer = rlayers[0];
+		if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
 		getId('routespeeds-error').innerHTML = "<br>" + message;
         getId('routespeeds-routecount').innerHTML = '';
@@ -1537,9 +1537,9 @@
 			getId('routespeeds-summary4').style.visibility = 'hidden';
 			getId('routespeeds-summary5').style.visibility = 'hidden';
 
-			let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-			let routeLayer1 = rlayers1[0];
-			if (routeLayer1 !== undefined) routeLayer1.removeAllFeatures();
+			let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+			let routeLayer = rlayers[0];
+			if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
 			showMarkers(false);
 			showClosures(0);
@@ -1693,22 +1693,19 @@
 		if (routeSelected == 4) getId('routespeeds-summary5').className = 'routespeeds_summary_classB';
 		else getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
 
-		let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		let routeLayer1 = rlayers1[0];
-		if (routeLayer1 === undefined) return;
-
-		let style1 = routeLayer1.styleMap.styles.default.defaultStyle;
-		let s1 = style1.strokeColor;
-		let t1 = style1.label;
+		let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+		let routeLayer = rlayers[0];
+		if (routeLayer === undefined) return;
 
 		//wlodek76: finding closure layer and changing its zindex to hide it under Route Speeds layer
 		//          we cannot easily set route speed layer over markers because it will block access to elements on these layers
+        let z = parseInt(routeLayer.getZIndex());
 		let clayers = WM.getLayersBy("uniqueName", "closures");
 		if (clayers[0] !== undefined && closurelayer === null) {
 
 			closurelayer = clayers[0];
 			closurelayerZINDEX[0] = clayers[0].getZIndex();
-			closurelayerZINDEX[1] = z1 - 5;
+			closurelayerZINDEX[1] = z - 5;
 
 			closurelayer.setZIndex(closurelayerZINDEX[1]);
 			closurelayer.redraw();
@@ -1728,9 +1725,9 @@
 
 		var WM = W.map;
 
-		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		var routeLayer1 = rlayers1[0];
-		if (routeLayer1 !== undefined) routeLayer1.removeAllFeatures();
+		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+		var routeLayer = rlayers[0];
+		if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
 		getId('routespeeds-summary1').innerHTML = '';
 		getId('routespeeds-summary2').innerHTML = '';
