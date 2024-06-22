@@ -214,7 +214,6 @@
     function loadRouteSpeedsOptions() {
 
         if (localStorage.getItem(SAVED_OPTIONS_KEY)) {
-            log("Found new options key, using it)")
             try {
                 Object.assign(options, JSON.parse(localStorage.getItem(SAVED_OPTIONS_KEY)));
             } catch {
