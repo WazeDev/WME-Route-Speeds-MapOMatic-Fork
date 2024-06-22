@@ -1009,6 +1009,7 @@
 
 		routeLayer.addFeatures(lineFeatures);
 		routeLayer.addFeatures(labelFeatures);
+        //showRouteLayer(true);
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function precFloat(f, prec) {
@@ -1271,7 +1272,7 @@
         getId('routespeeds-summaries').innerHTML = '';
 
         routesReceived = [];
-        showRouteLayer(false);
+        sortRoutes();
 
 		getId('routespeeds-error').innerHTML = "<br>" + message;
         getId('routespeeds-routecount').innerHTML = '';
