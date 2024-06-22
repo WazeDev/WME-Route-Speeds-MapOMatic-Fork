@@ -103,12 +103,12 @@
         '#cafa27', // route 4
         '#ffca3f', // route 5
         '#39e440', // route 6
-        '#a848e2', // '#b560e5', // route 7
-        '#cbbf00', // '#fff772', // route 8
-        '#2994f3', // '#11abef', // route 9
+        '#a848e2', // route 7
+        '#cbbf00', // route 8
+        '#2994f3', // route 9
         '#ff3d1e', // route 10
-        '#b0b7f8', // '#aa98ff', // route 11
-        '#ffb0ba', // '#ffa2da', // route 12
+        '#b0b7f8', // route 11
+        '#ffb0ba', // route 12
         '#71ded2', // route 13
         '#86c211', // route 14
         '#ff8500', // route 15
@@ -1086,7 +1086,7 @@
 		var atTime = getnowtoday();
 
 		var numRoutes = 1;
-		if (options.getAlternatives) numRoutes = Math.min(options.maxRoutes, 5);
+		if (options.getAlternatives) numRoutes = options.maxRoutes;
 
 		var routeType = (options.routeType === 3) ? "TIME" : "HISTORIC_TIME";
 
@@ -1144,7 +1144,6 @@
 		};
 
 		routewait = 1;
-
 		getId('routespeeds-error').innerHTML = "";
 
 		console.time('WME Route Speeds: routing time');
@@ -1170,9 +1169,7 @@
 					handleRouteRequestError(str);
 				} else {
 
-                    routesReceived = [];
-
-					if (json.coords !== undefined) {
+                    if (json.coords !== undefined) {
 						log("1 route received (" + numRoutes + " requested)");
 
 						if (routeSelected > 0) routeSelected = 0;
@@ -1273,10 +1270,8 @@
         getId('routespeeds-summaries').style.visibility = 'hidden';
         getId('routespeeds-summaries').innerHTML = '';
 
-		let WM = W.map;
-		let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
-		let routeLayer = rlayers[0];
-		if (routeLayer !== undefined) routeLayer.removeAllFeatures();
+        routesReceived = [];
+        showRouteLayer(false);
 
 		getId('routespeeds-error').innerHTML = "<br>" + message;
         getId('routespeeds-routecount').innerHTML = '';
@@ -1838,7 +1833,7 @@
 			'<option id=routespeeds-maxroutes value="10">10</option>' +
 			'<option id=routespeeds-maxroutes value="12">12</option>' +
 			'<option id=routespeeds-maxroutes value="15">15</option>' +
-			'<option id=routespeeds-maxroutes value="100">all</option>' +
+			'<option id=routespeeds-maxroutes value="40">all</option>' +
 
 			'</select>' +
 			'</div>' +
