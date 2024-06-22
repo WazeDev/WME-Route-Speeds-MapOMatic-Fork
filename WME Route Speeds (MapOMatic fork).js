@@ -213,92 +213,10 @@
     //---------------------------------------------------------------------------------------
     function loadRouteSpeedsOptions() {
 
-        if (localStorage.getItem(SAVED_OPTIONS_KEY)) {
-            try {
-                Object.assign(options, JSON.parse(localStorage.getItem(SAVED_OPTIONS_KEY)));
-            } catch {
-                log("Error loading saved options. Using defaults.");
-            }
-        } else {
-            log("Error loading saved options. Attempting to load from old keys.");
-            if (localStorage.RouteSpeedsOption1) {
-                options.enableScript = (localStorage.RouteSpeedsOption1 == "false");
-                localStorage.removeItem("RouteSpeedsOption1");
-            }
-            if (localStorage.RouteSpeedsOption2) {
-                options.showLabels = (localStorage.RouteSpeedsOption2 == "false");
-                localStorage.removeItem("RouteSpeedsOption2");
-            }
-            if (localStorage.RouteSpeedsOption3) {
-                options.showSpeeds = (localStorage.RouteSpeedsOption3 == "false");
-                localStorage.removeItem("RouteSpeedsOption3");
-            }
-            if (localStorage.RouteSpeedsOption4) {
-                options.useMiles = (localStorage.RouteSpeedsOption4 == "true");
-                localStorage.removeItem("RouteSpeedsOption4");
-            }
-            if (localStorage.RouteSpeedsOption5) {
-                options.getAlternatives = (localStorage.RouteSpeedsOption5 == "true");
-                localStorage.removeItem("RouteSpeedsOption5");
-            }
-            if (localStorage.RouteSpeedsOption6) {
-                options.maxRoutes = (localStorage.RouteSpeedsOption6);
-                localStorage.removeItem("RouteSpeedsOption6");
-            }
-            if (localStorage.RouteSpeedsOption7) {
-                options.liveTraffic = (localStorage.RouteSpeedsOption7 == "true");
-                localStorage.removeItem("RouteSpeedsOption7");
-            }
-            if (localStorage.RouteSpeedsOption8) {
-                options.avoidTolls = (localStorage.RouteSpeedsOption8 == "true");
-                localStorage.removeItem("RouteSpeedsOption8");
-            }
-            if (localStorage.RouteSpeedsOption9) {
-                options.avoidFreeways = (localStorage.RouteSpeedsOption9 == "true");
-                localStorage.removeItem("RouteSpeedsOption9");
-            }
-            if (localStorage.RouteSpeedsOption10) {
-                options.avoidUnpaved = (localStorage.RouteSpeedsOption10 == "true");
-                localStorage.removeItem("RouteSpeedsOption10");
-            }
-            if (localStorage.RouteSpeedsOption11) {
-                options.avoidLongUnpaved = (localStorage.RouteSpeedsOption11 == "true");
-                localStorage.removeItem("RouteSpeedsOption11");
-            }
-            if (localStorage.RouteSpeedsOption12) {
-                localStorage.removeItem("RouteSpeedsOption12");
-            }
-            if (localStorage.RouteSpeedsOption13) {
-                options.routeType = (localStorage.RouteSpeedsOption13);
-                localStorage.removeItem("RouteSpeedsOption13");
-            }
-            if (localStorage.RouteSpeedsOption14) {
-                options.allowUTurns = (localStorage.RouteSpeedsOption14 == "true");
-                localStorage.removeItem("RouteSpeedsOption14");
-            }
-            if (localStorage.RouteSpeedsOption15) {
-                options.routingOrder = (localStorage.RouteSpeedsOption15 == "true");
-                localStorage.removeItem("RouteSpeedsOption15");
-            }
-            if (localStorage.RouteSpeedsOption16) {
-                options.avoidDifficult = (localStorage.RouteSpeedsOption16 == "true");
-                localStorage.removeItem("RouteSpeedsOption16");
-            }
-            if (localStorage.RouteSpeedsOption17) {
-                options.avoidFerries = (localStorage.RouteSpeedsOption17 == "true");
-                localStorage.removeItem("RouteSpeedsOption17");
-            }
-            if (localStorage.RouteSpeedsOption18) {
-                options.vehicleType = (localStorage.RouteSpeedsOption18);
-                localStorage.removeItem("RouteSpeedsOption18");
-            }
-            try {
-                Object.assign(options, JSON.parse(localStorage.getItem('wme_routespeeds')));
-                localStorage.removeItem('wme_routespeeds');
-            } catch {
-                log("Error loading passes from old key. Using default (empty list)");
-            }
-            saveRouteSpeedsOptions();
+        try {
+            Object.assign(options, JSON.parse(localStorage.getItem(SAVED_OPTIONS_KEY)));
+        } catch {
+            log("Error loading saved options. Using defaults.");
         }
 
         getId('routespeeds-enablescript').checked = options.enableScript;
