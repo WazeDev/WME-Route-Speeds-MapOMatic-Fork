@@ -78,22 +78,23 @@
 	var accelerationbackstop = 3;
 
 	var speedColors = [
-		"#808080",  // invalid speed
-		"#271308",  // <= 10.5 km/h
-		"#813b27",  // <= 20.5 km/h
-		"#e22700",  // <= 30.5 km/h
-		"#ef7200",  // <= 40.5 km/h
-		"#ffd307",  // <= 50.5 km/h
-		"#6cf104",  // <= 60.5 km/h
-		"#2fa035",  // <= 70.5 km/h
-		"#0bbbe9",  // <= 80.5 km/h
-		"#0f77e0",  // <= 90.5 km/h
-		"#0346fc",  // <= 100.5 km/h
-		"#3918d7",  // <= 110.5 km/h
-		"#8c07f7",  // <= 120.5 km/h
-		"#ea0ae7",  // <= 130.5 km/h
-		"#b00094",  // <= 140.5 km/h
-		"#670055"   // > 140.5 km/h
+		"#808080", // invalid speed
+		"#271308", // < 5.5 km/h
+        "#542816", // < 12.5 km/h
+		"#813b27", // < 20.5 km/h
+		"#e22700", // < 30.5 km/h
+		"#ef7200", // < 40.5 km/h
+		"#ffd307", // < 50.5 km/h
+		"#6cf104", // < 60.5 km/h
+		"#2fa035", // < 70.5 km/h
+		"#0bbbe9", // < 80.5 km/h
+		"#0f77e0", // < 90.5 km/h
+		"#0346fc", // < 100.5 km/h
+		"#3918d7", // < 110.5 km/h
+		"#8c07f7", // < 120.5 km/h
+		"#ea0ae7", // < 130.5 km/h
+		"#b00094", // < 140.5 km/h
+		"#670055"  // >= 140.5 km/h
 	];
 
     var routeColors = [
@@ -318,8 +319,11 @@
 	//-----------------------------------------------------------------------------------------------
 	function getSpeedColor(speed) {
 		if (speed === 0) return speedColors[0]; // invalid speed
-		var k = Math.ceil((speed - 0.5) / 10);
-		if (k > 15) k = 15;
+		var s = Math.round(speed);
+        if (s <= 5) return speedColors[1];
+        if (s <= 12) return speedColors[2];
+		var k = Math.ceil(s / 10) + 1;
+        if (k > 16) k = 16;
 		return speedColors[k];
 	}
 	//-----------------------------------------------------------------------------------------------
