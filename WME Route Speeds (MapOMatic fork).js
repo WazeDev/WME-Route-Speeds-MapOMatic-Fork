@@ -60,8 +60,8 @@
     var routesShown = [];
 
 	var routewait = 0;
-	var routeSelected = 1;
-	var routeSelectedLast = 0;
+	var routeSelected = 0;
+	var routeSelectedLast = -1;
 
 	var markerA;
 	var markerB;
@@ -78,22 +78,23 @@
 	var accelerationbackstop = 3;
 
 	var speedColors = [
-		"#808080",  // invalid speed
-		"#271308",  // <= 10.5 km/h
-		"#813b27",  // <= 20.5 km/h
-		"#e22700",  // <= 30.5 km/h
-		"#ef7200",  // <= 40.5 km/h
-		"#ffd307",  // <= 50.5 km/h
-		"#6cf104",  // <= 60.5 km/h
-		"#2fa035",  // <= 70.5 km/h
-		"#0bbbe9",  // <= 80.5 km/h
-		"#0f77e0",  // <= 90.5 km/h
-		"#0346fc",  // <= 100.5 km/h
-		"#3918d7",  // <= 110.5 km/h
-		"#8c07f7",  // <= 120.5 km/h
-		"#ea0ae7",  // <= 130.5 km/h
-		"#b00094",  // <= 140.5 km/h
-		"#670055"   // > 140.5 km/h
+		"#808080", // invalid speed
+		"#271308", // < 5.5 km/h
+        "#542816", // < 12.5 km/h
+		"#813b27", // < 20.5 km/h
+		"#e22700", // < 30.5 km/h
+		"#ef7200", // < 40.5 km/h
+		"#ffd307", // < 50.5 km/h
+		"#6cf104", // < 60.5 km/h
+		"#2fa035", // < 70.5 km/h
+		"#0bbbe9", // < 80.5 km/h
+		"#0f77e0", // < 90.5 km/h
+		"#0346fc", // < 100.5 km/h
+		"#3918d7", // < 110.5 km/h
+		"#8c07f7", // < 120.5 km/h
+		"#ea0ae7", // < 130.5 km/h
+		"#b00094", // < 140.5 km/h
+		"#670055"  // >= 140.5 km/h
 	];
 
     var routeColors = [
@@ -101,7 +102,22 @@
         '#d34f8a', // route 2
         '#188984', // route 3
         '#cafa27', // route 4
-        '#ffca3f'  // route 5
+        '#ffca3f', // route 5
+        '#39e440', // route 6
+        '#a848e2', // route 7
+        '#cbbf00', // route 8
+        '#2994f3', // route 9
+        '#ff3d1e', // route 10
+        '#b0b7f8', // route 11
+        '#ffb0ba', // route 12
+        '#71ded2', // route 13
+        '#86c211', // route 14
+        '#ff8500', // route 15
+        '#00a842', // route 16
+        '#ecd4ff', // route 17
+        '#7c00ff', // route 18
+        '#caeeff', // route 19
+        '#ffdab8'  // route 20
     ];
 
 	var jqueryinfo = 0;
@@ -303,17 +319,41 @@
 	//-----------------------------------------------------------------------------------------------
 	function getSpeedColor(speed) {
 		if (speed === 0) return speedColors[0]; // invalid speed
-		var k = Math.ceil((speed - 0.5) / 10);
-		if (k > 15) k = 15;
+		var s = Math.round(speed);
+        if (s <= 5) return speedColors[1];
+        if (s <= 12) return speedColors[2];
+		var k = Math.ceil(s / 10) + 1;
+        if (k > 16) k = 16;
 		return speedColors[k];
 	}
+	//-----------------------------------------------------------------------------------------------
+    function getRouteColor(route) {
+        let i = route % routeColors.length;
+        return routeColors[i];
+    }
 	//-----------------------------------------------------------------------------------------------
 	function updatePassesLabel() {
 		let count = countryPassList.filter(pass => options.passes.indexOf(pass.key) > -1).length;
 		$('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${countryPassList.length})`);
 	}
 	//------------------------------------------------------------------------------------------------
-	function addLabel(lines, time, length) {
+    function getLabelText(length, time) {
+        var speed = getSpeed(length, time);
+        if (options.showSpeeds) {
+            if (options.useMiles) speed /= KM_PER_MILE;
+            if (speed == 0) {
+                return "?";
+            } else if (speed < 1) {
+                return "<1";
+            } else {
+                return Math.round(speed);
+            }
+        } else {
+            return time + "s";
+        }
+    }
+	//------------------------------------------------------------------------------------------------
+	function addLabel(lines, time, length, segmentID) {
 
 		var speed = getSpeed(length, time);
 
@@ -370,7 +410,7 @@
 			sy = p1.y + (p2.y - p1.y) * proc;
 
 			pt = new OpenLayers.Geometry.Point(sx, sy);
-			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0 });
+			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0, segmentID: segmentID });
 			return textFeature;
 		}
 		else if (numlines == 1) {
@@ -381,7 +421,7 @@
 			sy = (p1.y + p2.y) * 0.5;
 
 			pt = new OpenLayers.Geometry.Point(sx, sy);
-			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0 });
+			textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: kolor1, pointRadius: 0, segmentID: segmentID });
 			return textFeature;
 		}
 		else return null;
@@ -551,31 +591,10 @@
 		markerB.created = disp;
 	}
 	//------------------------------------------------------------------------------------------------
-	function showLayers(disp) {
-		var WM = W.map;
-
-		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		var rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-		var rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-		var rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-		var rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
-		var routeLayer1 = rlayers1[0];
-		var routeLayer2 = rlayers2[0];
-		var routeLayer3 = rlayers3[0];
-		var routeLayer4 = rlayers4[0];
-		var routeLayer5 = rlayers5[0];
-
-		if (routeLayer1 === undefined) return;
-		if (routeLayer2 === undefined) return;
-		if (routeLayer3 === undefined) return;
-		if (routeLayer4 === undefined) return;
-		if (routeLayer5 === undefined) return;
-
-		routeLayer1.setVisibility(disp);
-		routeLayer2.setVisibility(disp);
-		routeLayer3.setVisibility(disp);
-		routeLayer4.setVisibility(disp);
-		routeLayer5.setVisibility(disp);
+	function showRouteLayer(disp) {
+		var routeLayer = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines")[0];
+		if (routeLayer === undefined) return;
+		routeLayer.setVisibility(disp);
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function showMarkers(disp) {
@@ -620,7 +639,7 @@
 		if (!tabOpen) {
 			if (tabswitched !== 1) {
 				tabswitched = 1;
-				showLayers(false);
+				showRouteLayer(false);
 				showMarkers(false);
 				showClosures(0);
 			}
@@ -629,7 +648,7 @@
 		else {
 			if (tabswitched !== 2) {
 				tabswitched = 2;
-				showLayers(true);
+				showRouteLayer(true);
 				showMarkers(true);
 				showClosures(1);
 			}
@@ -645,10 +664,10 @@
 
 		var WM = W.map;
 
-		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
+		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
 		if (rlayers.length === 0) {
 
-			var drc_style1 = new OpenLayers.Style({
+			var drc_style = new OpenLayers.Style({
 				strokeDashstyle: 'solid',
 				strokeColor: "${strokeColor}",
 				strokeOpacity: 1.0,
@@ -666,125 +685,15 @@
 				display: 'block'
 			});
 
-			var drc_style2 = new OpenLayers.Style({
-				strokeDashstyle: 'solid',
-				strokeColor: "${strokeColor}",
-				strokeOpacity: 1.0,
-				strokeWidth: "${strokeWidth}",
-				fillColor: '#0040FF',
-				fillOpacity: 1.0,
-				pointRadius: "${pointRadius}",
-				label: "${labelText}",
-				fontFamily: "Tahoma, Courier New",
-				labelOutlineColor: '#FFFFFF',
-				labelOutlineWidth: 0,
-				fontColor: "${fontColor}",
-				fontOpacity: 1.0,
-				fontSize: "10px",
-				display: 'block'
-			});
-
-			var drc_style3 = new OpenLayers.Style({
-				strokeDashstyle: 'solid',
-				strokeColor: "${strokeColor}",
-				strokeOpacity: 1.0,
-				strokeWidth: "${strokeWidth}",
-				fillColor: '#0040FF',
-				fillOpacity: 1.0,
-				pointRadius: "${pointRadius}",
-				label: "${labelText}",
-				fontFamily: "Tahoma, Courier New",
-				labelOutlineColor: '#FFFFFF',
-				labelOutlineWidth: 0,
-				fontColor: "${fontColor}",
-				fontOpacity: 1.0,
-				fontSize: "10px",
-				display: 'block'
-			});
-
-			var drc_style4 = new OpenLayers.Style({
-				strokeDashstyle: 'solid',
-				strokeColor: "${strokeColor}",
-				strokeOpacity: 1.0,
-				strokeWidth: "${strokeWidth}",
-				fillColor: '#0040FF',
-				fillOpacity: 1.0,
-				pointRadius: "${pointRadius}",
-				label: "${labelText}",
-				fontFamily: "Tahoma, Courier New",
-				labelOutlineColor: '#FFFFFF',
-				labelOutlineWidth: 0,
-				fontColor: "${fontColor}",
-				fontOpacity: 1.0,
-				fontSize: "10px",
-				display: 'block'
-			});
-
-			var drc_style5 = new OpenLayers.Style({
-				strokeDashstyle: 'solid',
-				strokeColor: "${strokeColor}",
-				strokeOpacity: 1.0,
-				strokeWidth: "${strokeWidth}",
-				fillColor: '#0040FF',
-				fillOpacity: 1.0,
-				pointRadius: "${pointRadius}",
-				label: "${labelText}",
-				fontFamily: "Tahoma, Courier New",
-				labelOutlineColor: '#FFFFFF',
-				labelOutlineWidth: 0,
-				fontColor: "${fontColor}",
-				fontOpacity: 1.0,
-				fontSize: "10px",
-				display: 'block'
-			});
-
-			var drc_mapLayer1 = new OpenLayers.Layer.Vector("Route Speeds", {
+			var drc_mapLayer = new OpenLayers.Layer.Vector("Route Speeds Lines", {
 				displayInLayerSwitcher: true,
-				uniqueName: "__DrawRouteSpeeds1",
-				styleMap: new OpenLayers.StyleMap(drc_style1)
+				uniqueName: "__DrawRouteSpeedsLines",
+				styleMap: new OpenLayers.StyleMap(drc_style)
 			});
 
-			var drc_mapLayer2 = new OpenLayers.Layer.Vector("Route Speeds 2", {
-				displayInLayerSwitcher: false,
-				uniqueName: "__DrawRouteSpeeds2",
-				styleMap: new OpenLayers.StyleMap(drc_style2)
-			});
-
-			var drc_mapLayer3 = new OpenLayers.Layer.Vector("Route Speeds 3", {
-				displayInLayerSwitcher: false,
-				uniqueName: "__DrawRouteSpeeds3",
-				styleMap: new OpenLayers.StyleMap(drc_style3)
-			});
-
-			var drc_mapLayer4 = new OpenLayers.Layer.Vector("Route Speeds 4", {
-				displayInLayerSwitcher: false,
-				uniqueName: "__DrawRouteSpeeds4",
-				styleMap: new OpenLayers.StyleMap(drc_style4)
-			});
-
-			var drc_mapLayer5 = new OpenLayers.Layer.Vector("Route Speeds 5", {
-				displayInLayerSwitcher: false,
-				uniqueName: "__DrawRouteSpeeds5",
-				styleMap: new OpenLayers.StyleMap(drc_style5)
-			});
-
-			I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeeds1"] = "Route Speeds";
-			I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeeds2"] = "Route Speeds 2";
-			I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeeds3"] = "Route Speeds 3";
-			I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeeds4"] = "Route Speeds 4";
-			I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeeds5"] = "Route Speeds 5";
-
-			drc_mapLayer1.setVisibility(true);
-			drc_mapLayer2.setVisibility(true);
-			drc_mapLayer3.setVisibility(true);
-			drc_mapLayer4.setVisibility(true);
-			drc_mapLayer5.setVisibility(true);
-
-			WM.addLayer(drc_mapLayer1);
-			WM.addLayer(drc_mapLayer2);
-			WM.addLayer(drc_mapLayer3);
-			WM.addLayer(drc_mapLayer4);
-			WM.addLayer(drc_mapLayer5);
+			I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeedsLines"] = "Route Speeds Lines";
+			drc_mapLayer.setVisibility(true);
+			WM.addLayer(drc_mapLayer);
 
 			return;
 		}
@@ -824,38 +733,9 @@
 		}
 
 
-		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		var rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-		var rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-		var rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-		var rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
-		var routeLayer1 = rlayers1[0];
-		var routeLayer2 = rlayers2[0];
-		var routeLayer3 = rlayers3[0];
-		var routeLayer4 = rlayers4[0];
-		var routeLayer5 = rlayers5[0];
-		if (routeLayer1 === undefined) return;
-		if (routeLayer2 === undefined) return;
-		if (routeLayer3 === undefined) return;
-		if (routeLayer4 === undefined) return;
-		if (routeLayer5 === undefined) return;
-
-		if (routeLayer1.getVisibility() === false) {
-			if (routeLayer2.getVisibility() === true) {
-				routeLayer2.setVisibility(false);
-				routeLayer3.setVisibility(false);
-				routeLayer4.setVisibility(false);
-				routeLayer5.setVisibility(false);
-			}
-		}
-		else {
-			if (routeLayer2.getVisibility() === false) {
-				routeLayer2.setVisibility(true);
-				routeLayer3.setVisibility(true);
-				routeLayer4.setVisibility(true);
-				routeLayer5.setVisibility(true);
-			}
-		}
+		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+		var routeLayer = rlayers[0];
+		if (routeLayer === undefined) return;
 
 		var numSelected = WazeWrap.getSelectedDataModelObjects().length;
 		var seg1 = WazeWrap.getSelectedDataModelObjects()[0];
@@ -892,23 +772,9 @@
 				if (selected) {
 					selected = 0;
 
-					routeLayer1.removeAllFeatures();
-					routeLayer2.removeAllFeatures();
-					routeLayer3.removeAllFeatures();
-					routeLayer4.removeAllFeatures();
-					routeLayer5.removeAllFeatures();
+					routeLayer.removeAllFeatures();
 
-					getId('routespeeds-summary1').style.visibility = 'hidden';
-					getId('routespeeds-summary2').style.visibility = 'hidden';
-					getId('routespeeds-summary3').style.visibility = 'hidden';
-					getId('routespeeds-summary4').style.visibility = 'hidden';
-					getId('routespeeds-summary5').style.visibility = 'hidden';
-
-					getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
-					getId('routespeeds-summary2').className = 'routespeeds_summary_classA';
-					getId('routespeeds-summary3').className = 'routespeeds_summary_classA';
-					getId('routespeeds-summary4').className = 'routespeeds_summary_classA';
-					getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
+                    getId('routespeeds-summaries').style.visibility = 'hidden';
 				}
 			}
 		}
@@ -918,12 +784,7 @@
 
 		var WM = W.map;
 
-		var rlayers;
-		if (id == 1) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		if (id == 2) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-		if (id == 3) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-		if (id == 4) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-		if (id == 5) rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
+		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
 		var routeLayer = rlayers[0];
 		if (routeLayer === undefined) return;
 
@@ -932,7 +793,10 @@
 		var lines = [];
 		var outlinepoints = [];
 
+        var segmentID = 0;
 		var odc = 0;
+
+        segmentID = routeodc[odc].path.segmentId;
 		var odclen = routeodc[odc].length;
 		var odctime = 0;
 		if (options.liveTraffic) odctime = routeodc[odc].crossTime;
@@ -1022,14 +886,18 @@
 
 			if (dx < 0.000001 && dy < 0.000001) {
 
-				if (options.showLabels) {
-					label = addLabel(lines, odctime, odclen);
-					if (label !== null) labelFeatures.push(label);
+				if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
+					label = addLabel(lines, odctime, odclen, segmentID);
+					if (label !== null) {
+                        if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
+                        labelFeatures.push(label);
+                    }
 				}
 				while (lines.length > 0) lines.pop();
 
 				if (odc + 1 < routeodc.length) {
 					odc++;
+                    segmentID = routeodc[odc].path.segmentId;
 					odclen = routeodc[odc].length;
 					if (options.liveTraffic) odctime = routeodc[odc].crossTime;
 					else odctime = routeodc[odc].crossTimeWithoutRealTime;
@@ -1122,7 +990,7 @@
 			let line = new OpenLayers.Geometry.LineString(points);
 			lines.push(line);
 
-			let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: kolor, labelText: '', strokeWidth: 10 });
+			let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: ((routeSelected == id || routeSelected == -1) ? kolor : getRouteColor(id)), labelText: '', strokeWidth: ((routeSelected == id || routeSelected == -1) ? 10 : 5) });
 
 			lineFeatures.push(lineFeature);
 
@@ -1130,79 +998,22 @@
 			p2 = p4;
 		}
 
-		if (options.showLabels) {
-			label = addLabel(lines, odctime, odclen);
-			if (label !== null) labelFeatures.push(label);
+		if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
+			label = addLabel(lines, odctime, odclen, segmentID);
+			if (label !== null) {
+                if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
+                labelFeatures.push(label);
+            }
 		}
 		while (lines.length > 0) lines.pop();
 
 		let outlinestring = new OpenLayers.Geometry.LineString(outlinepoints);
 		let outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { strokeColor: '#404040', labelText: '', strokeWidth: 12 });
-		routeLayer.addFeatures(outlineFeature);
+		if (routeSelected == id || routeSelected == -1) routeLayer.addFeatures(outlineFeature);
 
 		routeLayer.addFeatures(lineFeatures);
 		routeLayer.addFeatures(labelFeatures);
-
-
-
-		let summarylen = 0;
-		let summarysec = 0;
-		if (options.liveTraffic) {
-			for (let i = 0; i < routeodc.length; i++) {
-				summarylen += routeodc[i].length;
-				summarysec += routeodc[i].crossTime;
-			}
-		}
-		else {
-			for (let i = 0; i < routeodc.length; i++) {
-				summarylen += routeodc[i].length;
-				summarysec += routeodc[i].crossTimeWithoutRealTime;
-			}
-		}
-		len = summarylen / 1000.0;
-		let sec = summarysec % 60;
-		let min = (summarysec - sec) % 3600;
-		let hou = (summarysec - sec - min) % 216000;
-		min = (min / 60) % 60;
-		hou = (hou / 3600);
-
-		let t = '';
-		if (hou < 10) t += '0' + hou + ":"; else t += hou + ":";
-		if (min < 10) t += '0' + min + ":"; else t += min + ":";
-		if (sec < 10) t += '0' + sec;
-		else t += sec;
-
-		let lenmph = len / KM_PER_MILE;
-
-		let avgspeed = (summarylen / 1000.0) / (summarysec / 3600.0);
-		if (options.useMiles) avgspeed = avgspeed / KM_PER_MILE;
-
-		let summaryobj;
-		if (id == 1) summaryobj = getId('routespeeds-summary1');
-		if (id == 2) summaryobj = getId('routespeeds-summary2');
-		if (id == 3) summaryobj = getId('routespeeds-summary3');
-		if (id == 4) summaryobj = getId('routespeeds-summary4');
-		if (id == 5) summaryobj = getId('routespeeds-summary5');
-
-		let html = '<div class=routespeeds_header style="background: ' + routeColors[id-1] + '; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route ' + id + '</span> ';
-
-		let lenstr = precFloat(len, 2);
-		let u1 = 'km';
-		let u2 = 'km&#47;h';
-		if (options.useMiles) {
-			lenstr = precFloat(lenmph, 2);
-			u1 = 'miles';
-			u2 = 'mph';
-		}
-
-		html += '<div style="min-width:50px; display:inline-block; text-align:right;" ><b>' + lenstr + '</b></div>';
-		html += '<span style="font-size:11px;"> ' + u1 + '</span> &nbsp;<b>' + t + '</b>';
-		html += '<div style="display:inline-block; min-width:40px; text-align:right; color:#404040" >' + precFloat(avgspeed, 1) + '</div> <span style="font-size:11px;">' + u2 + '</span>';
-
-		summaryobj.innerHTML = html;
-
-		if (id === routeSelected) summaryobj.className = 'routespeeds_summary_classB';
-		summaryobj.style.visibility = 'visible';
+        //showRouteLayer(true);
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function precFloat(f, prec) {
@@ -1280,7 +1091,7 @@
 		var atTime = getnowtoday();
 
 		var numRoutes = 1;
-		if (options.getAlternatives) numRoutes = Math.min(options.maxRoutes, 5);
+		if (options.getAlternatives) numRoutes = options.maxRoutes;
 
 		var routeType = (options.routeType === 3) ? "TIME" : "HISTORIC_TIME";
 
@@ -1338,7 +1149,6 @@
 		};
 
 		routewait = 1;
-
 		getId('routespeeds-error').innerHTML = "";
 
 		console.time('WME Route Speeds: routing time');
@@ -1364,12 +1174,10 @@
 					handleRouteRequestError(str);
 				} else {
 
-                    routesReceived = [];
-
-					if (json.coords !== undefined) {
+                    if (json.coords !== undefined) {
 						log("1 route received (" + numRoutes + " requested)");
 
-						if (routeSelected > 1) routeSelected = 1;
+						if (routeSelected > 0) routeSelected = 0;
 
                         routesReceived = [json];
 					}
@@ -1411,9 +1219,51 @@
         if (routesShown.length > options.maxRoutes) {
             routesShown = routesShown.slice(0, options.maxRoutes);
         }
-        if (routeSelectedLast) routeSelected = routeSelectedLast;
-        if (routeSelected > routesShown.length) routeSelected = routesShown.length;
+        if (routeSelectedLast != -1) routeSelected = routeSelectedLast;
+        if (routeSelected >= routesShown.length) routeSelected = routesShown.length - 1;
+        createSummaries();
         rezoom();
+    }
+	//--------------------------------------------------------------------------------------------------------
+    function createSummaries() {
+        var summaryDiv = getId('routespeeds-summaries');
+        summaryDiv.innerHTML = '';
+        let lengthUnit = options.useMiles ? "miles" : "km";
+        let speedUnit = options.useMiles ? "mph" : "km/h";
+        for (let i = 0; i < routesShown.length; i++) {
+            summaryDiv.innerHTML += '<div id=routespeeds-summary-' + i + ' class=routespeeds_summary_classA></div>';
+        }
+        for (let i = 0; i < routesShown.length; i++) {
+            let routeDiv = getId('routespeeds-summary-' + i);
+            routeDiv.onclick = function(){ toggleRoute(i) };
+            if (routeSelected == i) routeDiv.className = 'routespeeds_summary_classB';
+
+            let html = '<div class=routespeeds_header style="background: ' + getRouteColor(i) + '; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route ' + (i+1) + '</span> ';
+
+            let lengthM = 0;
+            for (let s = 0; s < routesShown[i].response.results.length; s++) {
+                lengthM += routesShown[i].response.results[s].length;
+            }
+            let length = lengthM / 1000;
+            if (options.useMiles) length /= KM_PER_MILE;
+            let lengthText = length.toFixed(2);
+
+            let timeS = options.liveTraffic ? routesShown[i].response.totalRouteTime : routesShown[i].response.totalRouteTimeWithoutRealtime;
+            let seconds = timeS % 60;
+            let minutes = Math.floor((timeS % 3600) / 60);
+            let hours = Math.floor(timeS / 3600)
+            let timeText = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+
+            html += '<div style="min-width:50px; display:inline-block; text-align:right;" ><b>' + lengthText + '</b></div>' + '<span style="font-size:11px;"> ' + lengthUnit + '</span> &nbsp;<b>' + timeText + '</b>';
+
+            let avgSpeed = getSpeed(lengthM, timeS)
+            html += '<div style="display:inline-block; min-width:40px; text-align:right; color:#404040" >' + avgSpeed.toFixed(1) + '</div> <span style="font-size:11px;">' + speedUnit + '</span>';
+
+            routeDiv.innerHTML = html;
+            routeDiv.style.visibility = 'visible';
+        }
+
+        summaryDiv.style.visibility = 'visible';
     }
 	//--------------------------------------------------------------------------------------------------------
 	function handleRouteRequestError(message) {
@@ -1422,42 +1272,19 @@
 		getId('routespeeds-button-livemap').style.backgroundColor = '';
 		getId('routespeeds-button-reverse').style.backgroundColor = '';
 
-		getId('routespeeds-summary1').innerHTML = '';
-		getId('routespeeds-summary2').innerHTML = '';
-		getId('routespeeds-summary3').innerHTML = '';
-		getId('routespeeds-summary4').innerHTML = '';
-		getId('routespeeds-summary5').innerHTML = '';
+        getId('routespeeds-summaries').style.visibility = 'hidden';
+        getId('routespeeds-summaries').innerHTML = '';
 
-		getId('routespeeds-summary1').style.visibility = 'hidden';
-		getId('routespeeds-summary2').style.visibility = 'hidden';
-		getId('routespeeds-summary3').style.visibility = 'hidden';
-		getId('routespeeds-summary4').style.visibility = 'hidden';
-		getId('routespeeds-summary5').style.visibility = 'hidden';
-
-		let WM = W.map;
-		let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		let rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-		let rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-		let rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-		let rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
-		let routeLayer1 = rlayers1[0];
-		let routeLayer2 = rlayers2[0];
-		let routeLayer3 = rlayers3[0];
-		let routeLayer4 = rlayers4[0];
-		let routeLayer5 = rlayers5[0];
-		if (routeLayer1 !== undefined) routeLayer1.removeAllFeatures();
-		if (routeLayer2 !== undefined) routeLayer2.removeAllFeatures();
-		if (routeLayer3 !== undefined) routeLayer3.removeAllFeatures();
-		if (routeLayer4 !== undefined) routeLayer4.removeAllFeatures();
-		if (routeLayer5 !== undefined) routeLayer5.removeAllFeatures();
+        routesReceived = [];
+        sortRoutes();
 
 		getId('routespeeds-error').innerHTML = "<br>" + message;
         getId('routespeeds-routecount').innerHTML = '';
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function livemapRouteClick() {
-		routeSelected = 1;
-		routeSelectedLast = 0;
+		routeSelected = 0;
+		routeSelectedLast = -1;
 
 		livemapRoute();
 	}
@@ -1661,34 +1488,11 @@
 		if (!options.enableScript) {
 			getId('sidepanel-routespeeds').style.color = "#A0A0A0";
 
-			getId('routespeeds-summary1').innerHTML = '';
-			getId('routespeeds-summary2').innerHTML = '';
-			getId('routespeeds-summary3').innerHTML = '';
-			getId('routespeeds-summary4').innerHTML = '';
-			getId('routespeeds-summary5').innerHTML = '';
+            getId('routespeeds-summaries').style.visibility = 'hidden';
 
-			getId('routespeeds-summary1').style.visibility = 'hidden';
-			getId('routespeeds-summary2').style.visibility = 'hidden';
-			getId('routespeeds-summary3').style.visibility = 'hidden';
-			getId('routespeeds-summary4').style.visibility = 'hidden';
-			getId('routespeeds-summary5').style.visibility = 'hidden';
-
-			let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-			let rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-			let rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-			let rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-			let rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
-			let routeLayer1 = rlayers1[0];
-			let routeLayer2 = rlayers2[0];
-			let routeLayer3 = rlayers3[0];
-			let routeLayer4 = rlayers4[0];
-			let routeLayer5 = rlayers5[0];
-
-			if (routeLayer1 !== undefined) routeLayer1.removeAllFeatures();
-			if (routeLayer2 !== undefined) routeLayer2.removeAllFeatures();
-			if (routeLayer3 !== undefined) routeLayer3.removeAllFeatures();
-			if (routeLayer4 !== undefined) routeLayer4.removeAllFeatures();
-			if (routeLayer5 !== undefined) routeLayer5.removeAllFeatures();
+			let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+			let routeLayer = rlayers[0];
+			if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
 			showMarkers(false);
 			showClosures(0);
@@ -1717,8 +1521,8 @@
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function clickGetAlternatives() {
-		routeSelected = 1;
-		routeSelectedLast = 0;
+		routeSelected = 0;
+		routeSelectedLast = -1;
 
 		options.getAlternatives = (getId('routespeeds-getalternatives').checked === true);
 		if (options.getAlternatives && routesReceived.length < options.maxRoutes) {
@@ -1816,14 +1620,8 @@
 		livemapRoute();
 	}
 	//--------------------------------------------------------------------------------------------------------
-	function clickRoute1() { toggleRoute(1); }
-	function clickRoute2() { toggleRoute(2); }
-	function clickRoute3() { toggleRoute(3); }
-	function clickRoute4() { toggleRoute(4); }
-	function clickRoute5() { toggleRoute(5); }
-	//--------------------------------------------------------------------------------------------------------
 	function toggleRoute(routeNo) {
-		if (routeSelected === routeNo) routeNo = 0;
+		if (routeSelected === routeNo) routeNo = -1;
 		routeSelectedLast = routeSelected = routeNo;
 		switchRoute();
 	}
@@ -1831,125 +1629,30 @@
 	function switchRoute() {
 		var WM = W.map;
 
-		if (routeSelected == 1) getId('routespeeds-summary1').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
-		if (routeSelected == 2) getId('routespeeds-summary2').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary2').className = 'routespeeds_summary_classA';
-		if (routeSelected == 3) getId('routespeeds-summary3').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary3').className = 'routespeeds_summary_classA';
-		if (routeSelected == 4) getId('routespeeds-summary4').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary4').className = 'routespeeds_summary_classA';
-		if (routeSelected == 5) getId('routespeeds-summary5').className = 'routespeeds_summary_classB';
-		else getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
+        for (let i = 0; i < routesShown.length; i++) {
+            let summary = getId('routespeeds-summary-' + i);
+            summary.className = (routeSelected == i) ? 'routespeeds_summary_classB' : 'routespeeds_summary_classA';
+        }
 
-		let rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		let rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-		let rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-		let rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-		let rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
-		let routeLayer1 = rlayers1[0];
-		let routeLayer2 = rlayers2[0];
-		let routeLayer3 = rlayers3[0];
-		let routeLayer4 = rlayers4[0];
-		let routeLayer5 = rlayers5[0];
-		if (routeLayer1 === undefined) return;
-		if (routeLayer2 === undefined) return;
-		if (routeLayer3 === undefined) return;
-		if (routeLayer4 === undefined) return;
-		if (routeLayer5 === undefined) return;
-
-		let style1 = routeLayer1.styleMap.styles.default.defaultStyle;
-		let style2 = routeLayer2.styleMap.styles.default.defaultStyle;
-		let style3 = routeLayer3.styleMap.styles.default.defaultStyle;
-		let style4 = routeLayer4.styleMap.styles.default.defaultStyle;
-		let style5 = routeLayer5.styleMap.styles.default.defaultStyle;
-
-		let s1 = style1.strokeColor;
-		let s2 = style2.strokeColor;
-		let s3 = style3.strokeColor;
-		let s4 = style4.strokeColor;
-		let s5 = style5.strokeColor;
-
-		let t1 = style1.label;
-		let t2 = style2.label;
-		let t3 = style3.label;
-		let t4 = style4.label;
-		let t5 = style5.label;
-
-		style1.strokeColor = routeColors[0];
-		style2.strokeColor = routeColors[1];
-		style3.strokeColor = routeColors[2];
-		style4.strokeColor = routeColors[3];
-		style5.strokeColor = routeColors[4];
-		//style1.strokeColor = '#76768f';
-		//style2.strokeColor = '#917682';
-		//style3.strokeColor = '#6b8a88';
-		//style4.strokeColor = '#998f73';
-		//style5.strokeColor = '#769178';
-		//style1.strokeColor = '#7070a0';
-		//style2.strokeColor = '#a07070';
-		//style3.strokeColor = '#70a070';
-		//style4.strokeColor = '#a0a070';
-		//style5.strokeColor = '#a070a0';
-		style1.strokeWidth = 5;
-		style2.strokeWidth = 5;
-		style3.strokeWidth = 5;
-		style4.strokeWidth = 5;
-		style5.strokeWidth = 5;
-		style1.label = '';
-		style2.label = '';
-		style3.label = '';
-		style4.label = '';
-		style5.label = '';
-
-		if (routeSelected === 0 || routeSelected === 1) { style1.strokeColor = '${strokeColor}'; style1.strokeWidth = '${strokeWidth}'; style1.label = '${labelText}'; }
-		if (routeSelected === 0 || routeSelected === 2) { style2.strokeColor = '${strokeColor}'; style2.strokeWidth = '${strokeWidth}'; style2.label = '${labelText}'; }
-		if (routeSelected === 0 || routeSelected === 3) { style3.strokeColor = '${strokeColor}'; style3.strokeWidth = '${strokeWidth}'; style3.label = '${labelText}'; }
-		if (routeSelected === 0 || routeSelected === 4) { style4.strokeColor = '${strokeColor}'; style4.strokeWidth = '${strokeWidth}'; style4.label = '${labelText}'; }
-		if (routeSelected === 0 || routeSelected === 5) { style5.strokeColor = '${strokeColor}'; style5.strokeWidth = '${strokeWidth}'; style5.label = '${labelText}'; }
-
-		let z1 = parseInt(routeLayer1.getZIndex());
-		let z2 = parseInt(routeLayer2.getZIndex());
-		let z3 = parseInt(routeLayer3.getZIndex());
-		let z4 = parseInt(routeLayer4.getZIndex());
-		let z5 = parseInt(routeLayer5.getZIndex());
-		let z;
-
-		if (z1 > z2) { z = z1; z1 = z2; z2 = z; }
-		if (z1 > z3) { z = z1; z1 = z3; z3 = z; }
-		if (z1 > z4) { z = z1; z1 = z4; z4 = z; }
-		if (z1 > z5) { z = z1; z1 = z5; z5 = z; }
-		if (z2 > z3) { z = z2; z2 = z3; z3 = z; }
-		if (z2 > z4) { z = z2; z2 = z4; z4 = z; }
-		if (z2 > z5) { z = z2; z2 = z5; z5 = z; }
-		if (z3 > z4) { z = z3; z3 = z4; z4 = z; }
-		if (z3 > z5) { z = z3; z3 = z5; z5 = z; }
-		if (z4 > z5) { z = z4; z4 = z5; z5 = z; }
+		let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+		let routeLayer = rlayers[0];
+		if (routeLayer === undefined) return;
 
 		//wlodek76: finding closure layer and changing its zindex to hide it under Route Speeds layer
 		//          we cannot easily set route speed layer over markers because it will block access to elements on these layers
+        let z = parseInt(routeLayer.getZIndex());
 		let clayers = WM.getLayersBy("uniqueName", "closures");
 		if (clayers[0] !== undefined && closurelayer === null) {
 
 			closurelayer = clayers[0];
 			closurelayerZINDEX[0] = clayers[0].getZIndex();
-			closurelayerZINDEX[1] = z1 - 5;
+			closurelayerZINDEX[1] = z - 5;
 
 			closurelayer.setZIndex(closurelayerZINDEX[1]);
 			closurelayer.redraw();
 		}
 
-		if (routeSelected <= 1) { routeLayer1.setZIndex(z5); routeLayer2.setZIndex(z4); routeLayer3.setZIndex(z3); routeLayer4.setZIndex(z2); routeLayer5.setZIndex(z1); }
-		if (routeSelected === 2) { routeLayer1.setZIndex(z4); routeLayer2.setZIndex(z5); routeLayer3.setZIndex(z3); routeLayer4.setZIndex(z2); routeLayer5.setZIndex(z1); }
-		if (routeSelected === 3) { routeLayer1.setZIndex(z4); routeLayer2.setZIndex(z3); routeLayer3.setZIndex(z5); routeLayer4.setZIndex(z2); routeLayer5.setZIndex(z1); }
-		if (routeSelected === 4) { routeLayer1.setZIndex(z4); routeLayer2.setZIndex(z3); routeLayer3.setZIndex(z2); routeLayer4.setZIndex(z5); routeLayer5.setZIndex(z1); }
-		if (routeSelected === 5) { routeLayer1.setZIndex(z4); routeLayer2.setZIndex(z3); routeLayer3.setZIndex(z2); routeLayer4.setZIndex(z1); routeLayer5.setZIndex(z5); }
-
-		if (t1 !== style1.label || s1 !== style1.strokeColor) routeLayer1.redraw();
-		if (t2 !== style2.label || s2 !== style2.strokeColor) routeLayer2.redraw();
-		if (t3 !== style3.label || s3 !== style3.strokeColor) routeLayer3.redraw();
-		if (t4 !== style4.label || s4 !== style4.strokeColor) routeLayer4.redraw();
-		if (t5 !== style5.label || s5 !== style5.strokeColor) routeLayer5.redraw();
+        rezoom();
 	}
 	//--------------------------------------------------------------------------------------------------------
 	function showClosures(mode) {
@@ -1963,46 +1666,20 @@
 
 		var WM = W.map;
 
-		var rlayers1 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds1");
-		var rlayers2 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds2");
-		var rlayers3 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds3");
-		var rlayers4 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds4");
-		var rlayers5 = WM.getLayersBy("uniqueName", "__DrawRouteSpeeds5");
+		var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+		var routeLayer = rlayers[0];
+		if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
-		var routeLayer1 = rlayers1[0];
-		var routeLayer2 = rlayers2[0];
-		var routeLayer3 = rlayers3[0];
-		var routeLayer4 = rlayers4[0];
-		var routeLayer5 = rlayers5[0];
+        getId('routespeeds-summaries').style.visibility = 'hidden';
 
-		if (routeLayer1 !== undefined) routeLayer1.removeAllFeatures();
-		if (routeLayer2 !== undefined) routeLayer2.removeAllFeatures();
-		if (routeLayer3 !== undefined) routeLayer3.removeAllFeatures();
-		if (routeLayer4 !== undefined) routeLayer4.removeAllFeatures();
-		if (routeLayer5 !== undefined) routeLayer5.removeAllFeatures();
+		//switchRoute();
 
-		getId('routespeeds-summary1').innerHTML = '';
-		getId('routespeeds-summary2').innerHTML = '';
-		getId('routespeeds-summary3').innerHTML = '';
-		getId('routespeeds-summary4').innerHTML = '';
-		getId('routespeeds-summary5').innerHTML = '';
-
-		getId('routespeeds-summary1').className = 'routespeeds_summary_classA';
-		getId('routespeeds-summary2').className = 'routespeeds_summary_classA';
-		getId('routespeeds-summary3').className = 'routespeeds_summary_classA';
-		getId('routespeeds-summary4').className = 'routespeeds_summary_classA';
-		getId('routespeeds-summary5').className = 'routespeeds_summary_classA';
-
-		getId('routespeeds-summary1').style.visibility = 'hidden';
-		getId('routespeeds-summary2').style.visibility = 'hidden';
-		getId('routespeeds-summary3').style.visibility = 'hidden';
-		getId('routespeeds-summary4').style.visibility = 'hidden';
-		getId('routespeeds-summary5').style.visibility = 'hidden';
-
-		switchRoute();
-
-        for (let i = 0; i < routesShown.length; i++) {
-            createRouteFeatures(i+1, routesShown[i].coords, routesShown[i].response.results)
+        for (let i = routesShown.length - 1; i >= 0; i--) {
+            if (i == routeSelected) continue;
+            createRouteFeatures(i, routesShown[i].coords, routesShown[i].response.results)
+        }
+        if (routeSelected != -1 && routesShown.length) {
+            createRouteFeatures(routeSelected, routesShown[routeSelected].coords, routesShown[routeSelected].response.results)
         }
 	}
 	//--------------------------------------------------------------------------------------------------------
@@ -2135,11 +1812,8 @@
 			'</div>' +
 			'<b><div id=routespeeds-error style="color:#FF0000"></div></b>' +
             '<div id=routespeeds-routecount></div>' +
-			'<div id=routespeeds-summary1 class=routespeeds_summary_classA></div>' +
-			'<div id=routespeeds-summary2 class=routespeeds_summary_classA></div>' +
-			'<div id=routespeeds-summary3 class=routespeeds_summary_classA></div>' +
-			'<div id=routespeeds-summary4 class=routespeeds_summary_classA></div>' +
-			'<div id=routespeeds-summary5 class=routespeeds_summary_classA></div>' +
+
+            '<div id=routespeeds-summaries></div>' +
 
 			'<div style="margin-bottom:4px;">' +
 			'<b>Options:</b>' +
@@ -2152,13 +1826,20 @@
 			getCheckboxHtml('usemiles', 'Use miles and mph') +
 
 			'<div>' +
-			getCheckboxHtml('getalternatives', 'Alternative routes: show up to', '', { display: 'inline-block' }) +
+			getCheckboxHtml('getalternatives', 'Alternative routes: show', '', { display: 'inline-block' }) +
 			'<select id=routespeeds-maxroutes style="margin-left:-4px; display:inline-block;" >' +
 			'<option id=routespeeds-maxroutes value="1">1</option>' +
 			'<option id=routespeeds-maxroutes value="2">2</option>' +
 			'<option id=routespeeds-maxroutes value="3">3</option>' +
 			'<option id=routespeeds-maxroutes value="4">4</option>' +
 			'<option id=routespeeds-maxroutes value="5">5</option>' +
+			'<option id=routespeeds-maxroutes value="6">6</option>' +
+			'<option id=routespeeds-maxroutes value="8">8</option>' +
+			'<option id=routespeeds-maxroutes value="10">10</option>' +
+			'<option id=routespeeds-maxroutes value="12">12</option>' +
+			'<option id=routespeeds-maxroutes value="15">15</option>' +
+			'<option id=routespeeds-maxroutes value="40">all</option>' +
+
 			'</select>' +
 			'</div>' +
 
@@ -2343,12 +2024,6 @@
 		getId('routespeeds-avoiddifficult').onclick = clickAvoidDifficult;
 		getId('routespeeds-avoidferries').onclick = clickAvoidFerries;
 		getId('routespeeds-vehicletype').onchange = clickVehicleType;
-
-		getId('routespeeds-summary1').onclick = clickRoute1;
-		getId('routespeeds-summary2').onclick = clickRoute2;
-		getId('routespeeds-summary3').onclick = clickRoute3;
-		getId('routespeeds-summary4').onclick = clickRoute4;
-		getId('routespeeds-summary5').onclick = clickRoute5;
 
 		getId('sidepanel-routespeeds-a').onkeydown = enterAB;
 		getId('sidepanel-routespeeds-b').onkeydown = enterAB;
