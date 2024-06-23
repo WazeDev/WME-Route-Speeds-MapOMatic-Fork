@@ -214,6 +214,7 @@
     function loadRouteSpeedsOptions() {
 
         if (localStorage.getItem(SAVED_OPTIONS_KEY)) {
+            log("Found new options key, using it)")
             try {
                 Object.assign(options, JSON.parse(localStorage.getItem(SAVED_OPTIONS_KEY)));
             } catch {
@@ -1339,6 +1340,7 @@
             html += '<div style="min-width:50px; display:inline-block; text-align:right;" ><b>' + lengthText + '</b></div>' + '<span style="font-size:11px;"> ' + lengthUnit + '</span> &nbsp;<b>' + timeText + '</b>';
 
             let avgSpeed = getSpeed(lengthM, timeS)
+            if (options.useMiles) avgSpeed /= KM_PER_MILE;
             html += '<div style="display:inline-block; min-width:40px; text-align:right; color:#404040" >' + avgSpeed.toFixed(1) + '</div> <span style="font-size:11px;">' + speedUnit + '</span>';
 
             routeDiv.innerHTML = html;
@@ -1599,6 +1601,7 @@
     //--------------------------------------------------------------------------------------------------------
     function clickUseMiles() {
         options.useMiles = (getId('routespeeds-usemiles').checked === true);
+        createSummaries();
         rezoom();
     }
     //--------------------------------------------------------------------------------------------------------
