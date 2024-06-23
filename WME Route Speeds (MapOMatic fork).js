@@ -35,6 +35,7 @@
         maxRoutes: 3,
         liveTraffic: true,
         routingOrder: true,
+        useRBS: false,
         routeType: 1,
         vehicleType: 'PRIVATE',
         avoidTolls: false,
@@ -316,6 +317,7 @@
         getId('routespeeds-routetype').value = options.routeType;
         getId('routespeeds-allowuturns').checked = options.allowUTurns;
         getId('routespeeds-routingorder').checked = options.routingOrder;
+        getId('routespeeds-userbs').checked = options.useRBS;
         getId('routespeeds-avoiddifficult').checked = options.avoidDifficult;
         getId('routespeeds-avoidferries').checked = options.avoidFerries;
         getId('routespeeds-vehicletype').value = options.vehicleType;
@@ -1230,6 +1232,7 @@
             vehicleType: vehType,
             subscription: expressPass
         };
+        if (options.useRBS) data.id = "beta";
 
         routewait = 1;
         getId('routespeeds-error').innerHTML = "";
@@ -1680,6 +1683,11 @@
         sortRoutes();
     }
     //--------------------------------------------------------------------------------------------------------
+    function clickUseRBS() {
+        options.useRBS = (getId('routespeeds-userbs').checked === true);
+        livemapRoute();
+    }
+    //--------------------------------------------------------------------------------------------------------
     function clickAvoidDifficult() {
         options.avoidDifficult = (getId('routespeeds-avoiddifficult').checked === true);
         livemapRoute();
@@ -1932,6 +1940,8 @@
             getCheckboxHtml('livetraffic', 'Real-Time Traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
             getCheckboxHtml('routingorder', 'Use Routing Order', 'Sorts routes in the same order they would appear in the app or livemap') +
 
+            getCheckboxHtml('userbs', 'Use Routing Beta Server (RBS)', '', { display: window.location.hostname.includes('beta') ? 'inline' : 'none' }) +
+
             '<div>' +
             '<label class="" style="display:inline-block;">' +
             'Route type:<select id=routespeeds-routetype style="margin-left:10px;" >' +
@@ -2092,6 +2102,7 @@
         getId('routespeeds-maxroutes').value = options.maxRoutes;
         getId('routespeeds-routetype').value = options.routeType;
         getId('routespeeds-vehicletype').value = options.vehicleType;
+        getId('routespeeds-userbs').onclick = clickUseRBS;
 
         getId('routespeeds-enablescript').onclick = clickEnableScript;
         getId('routespeeds-showLabels').onclick = clickShowLabels;
