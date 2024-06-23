@@ -1321,7 +1321,7 @@
             routeDiv.onclick = function(){ toggleRoute(i) };
             if (routeSelected == i) routeDiv.className = 'routespeeds_summary_classB';
 
-            let html = '<div class=routespeeds_header style="background: ' + getRouteColor(i) + '; color: #e0e0e0; "></div>' + '<span style="color: #404040;">Route ' + (i+1) + '</span> ';
+            let html = '<div class=routespeeds_header style="background: ' + getRouteColor(i) + '; color: #e0e0e0; "></div>' + '<div style="color: #404040; min-width:24px; display:inline-block; text-align:right;"><b>' + (i+1) + '.</b></div>';
 
             let lengthM = 0;
             for (let s = 0; s < routesShown[i].response.results.length; s++) {
@@ -1334,14 +1334,15 @@
             let timeS = options.liveTraffic ? routesShown[i].response.totalRouteTime : routesShown[i].response.totalRouteTimeWithoutRealtime;
             let seconds = timeS % 60;
             let minutes = Math.floor((timeS % 3600) / 60);
-            let hours = Math.floor(timeS / 3600)
+            let hours = Math.floor(timeS / 3600);
             let timeText = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
 
-            html += '<div style="min-width:50px; display:inline-block; text-align:right;" ><b>' + lengthText + '</b></div>' + '<span style="font-size:11px;"> ' + lengthUnit + '</span> &nbsp;<b>' + timeText + '</b>';
+            html += '<div style="min-width:57px; display:inline-block; text-align:right;">' + lengthText + '</div>' + '<span style="font-size:11px;"> ' + lengthUnit + '</span>';
+            html += '<div style="min-width:75px; display:inline-block; text-align:right;"><b>' + timeText + '</b></div>';
 
-            let avgSpeed = getSpeed(lengthM, timeS)
+            let avgSpeed = getSpeed(lengthM, timeS);
             if (options.useMiles) avgSpeed /= KM_PER_MILE;
-            html += '<div style="display:inline-block; min-width:40px; text-align:right; color:#404040" >' + avgSpeed.toFixed(1) + '</div> <span style="font-size:11px;">' + speedUnit + '</span>';
+            html += '<div style="min-width:48px; display:inline-block; text-align:right; color:#404040" >' + avgSpeed.toFixed(1) + '</div><span style="font-size:11px;"> ' + speedUnit + '</span>';
 
             routeDiv.innerHTML = html;
             routeDiv.style.visibility = 'visible';
@@ -1898,7 +1899,7 @@
             '<b><div id=routespeeds-error style="color:#FF0000"></div></b>' +
             '<div id=routespeeds-routecount></div>' +
 
-            '<div id=routespeeds-summaries></div>' +
+            '<div id=routespeeds-summaries style="font-variant-numeric:tabular-nums;"></div>' +
 
             '<div style="margin-bottom:4px;">' +
             '<b>Options:</b>' +
