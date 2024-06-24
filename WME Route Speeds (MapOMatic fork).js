@@ -1152,8 +1152,7 @@
     function requestRouteFromLiveMap(x1, y1, x2, y2) {
         var atTime = getnowtoday();
 
-        var numRoutes = 1;
-        if (options.getAlternatives) numRoutes = options.maxRoutes;
+        var numRoutes = options.getAlternatives ? 3 : 1;
 
         var routeType = (options.routeType === 3) ? "TIME" : "HISTORIC_TIME";
 
