@@ -420,6 +420,9 @@
 
         var speed = getSpeed(length, time);
 
+        var labelColor = '#F0F0F0';
+        if (speed >= 40.5 && speed < 60.5) labelColor = '#404040';
+
         var labelText;
         if (options.showSpeeds) {
             if (options.useMiles) speed /= KM_PER_MILE;
@@ -433,9 +436,6 @@
         } else {
             labelText = time + "s";
         }
-
-        var labelColor = '#F0F0F0';
-        if (speed >= 40.5 && speed < 60.5) labelColor = '#404040';
 
         var p1, p2, pt, textFeature, k, sx, sy;
         var numlines = lines.length;
@@ -1078,25 +1078,6 @@
         //showRouteLayer(true);
     }
     //--------------------------------------------------------------------------------------------------------
-    function precFloat(f, prec) {
-        if (!isFinite(f)) return "&mdash;";
-
-        if (f < 0)
-            f -= Math.pow(0.1, prec) * 0.5;
-        else
-            f += Math.pow(0.1, prec) * 0.5;
-
-        let ipart = parseInt(f);
-        let fpart = Math.abs(f - ipart);
-        f = ipart;
-
-        if (fpart === '0') fpart = '0.0';
-        fpart += '0000000000000000';
-        if (prec) f += fpart.substr(1, prec + 1);
-
-        return f;
-    }
-    //--------------------------------------------------------------------------------------------------------
     function getElementsByClassName(classname, node) {
         if (!node) node = document.getElementsByTagName("body")[0];
         var a = [];
@@ -1284,7 +1265,7 @@
         if (routeSelectedLast != -1) routeSelected = routeSelectedLast;
         if (routeSelected >= routesShown.length) routeSelected = routesShown.length - 1;
         createSummaries();
-        rezoom();
+        drawRoutes();
     }
     //--------------------------------------------------------------------------------------------------------
     function createSummaries() {
@@ -1572,25 +1553,25 @@
         else {
             getId('sidepanel-routespeeds').style.color = "";
 
-            if (showMarkers(true)) rezoom();
+            if (showMarkers(true)) drawRoutes();
             showClosures(1);
         }
     }
     //--------------------------------------------------------------------------------------------------------
     function clickShowLabels() {
         options.showLabels = (getId('routespeeds-showLabels').checked === true);
-        rezoom();
+        drawRoutes();
     }
     //--------------------------------------------------------------------------------------------------------
     function clickShowSpeeds() {
         options.showSpeeds = (getId('routespeeds-showSpeeds').checked === true);
-        rezoom();
+        drawRoutes();
     }
     //--------------------------------------------------------------------------------------------------------
     function clickUseMiles() {
         options.useMiles = (getId('routespeeds-usemiles').checked === true);
         createSummaries();
-        rezoom();
+        drawRoutes();
     }
     //--------------------------------------------------------------------------------------------------------
     function clickShowRouteText() {
@@ -1732,7 +1713,7 @@
             closurelayer.redraw();
         }
 
-        rezoom();
+        drawRoutes();
     }
     //--------------------------------------------------------------------------------------------------------
     function showClosures(mode) {
@@ -1742,17 +1723,10 @@
         }
     }
     //--------------------------------------------------------------------------------------------------------
-    function rezoom() {
+    function drawRoutes() {
 
-        var WM = W.map;
-
-        var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
-        var routeLayer = rlayers[0];
+        var routeLayer = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines")[0];
         if (routeLayer !== undefined) routeLayer.removeAllFeatures();
-
-        getId('routespeeds-summaries').style.visibility = 'hidden';
-
-        //switchRoute();
 
         for (let i = routesShown.length - 1; i >= 0; i--) {
             if (i == routeSelected) continue;
@@ -2129,8 +2103,7 @@
             buildPassesDiv();
         }
 
-        // W.map.events.register("zoomend", null, rezoom);
-        WazeWrap.Events.register('zoomend', null, rezoom);
+        //WazeWrap.Events.register('zoomend', null, drawRoutes);
         W.model.events.register('mergeend', null, onModelMergeEnd);
 
         window.setInterval(loopWMERouteSpeeds, 500);
