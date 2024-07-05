@@ -1309,7 +1309,9 @@
                 let laneTypes = [];
                 if (routesShown[i].response.routeAttr.includes('Toll')) laneTypes.push('Toll');
                 laneTypes.push(...routesShown[i].response.laneTypes);
-                let separator = laneTypes.length ? ': ' : '';
+                let separator = '';
+                if (routesShown[i].response.minPassengers) separator += " (" + routesShown[i].response.minPassengers + "+)";
+                if (laneTypes.length) separator += ': ';
                 html += '<div style="max-width:' + maxWidth + 'px; white-space:normal; line-height:normal; font-size:11px;">' + laneTypes.join(', ') + separator + routesShown[i].response.routeName + '</div>';
             }
 
@@ -1878,7 +1880,7 @@
             getCheckboxHtml('showLabels', 'Show segment labels') +
             getCheckboxHtml('showSpeeds', 'Show speed on labels') +
             getCheckboxHtml('usemiles', 'Use miles and mph') +
-            getCheckboxHtml('routetext', 'Show route names and types') +
+            getCheckboxHtml('routetext', 'Show route descriptions') +
 
             '<div>' +
             getCheckboxHtml('getalternatives', 'Alternative routes: show', '', { display: 'inline-block' }) +
