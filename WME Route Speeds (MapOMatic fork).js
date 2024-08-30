@@ -391,6 +391,13 @@
         return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
     }
     //------------------------------------------------------------------------------------------------
+    function getLabelTime(routeSegmentInfo) {
+        let time = 0;
+        if (options.liveTraffic) time += routeSegmentInfo.crossTime;
+        else time += routeSegmentInfo.crossTimeWithoutRealTime;
+        return time;
+    }
+    //------------------------------------------------------------------------------------------------
     function getSpeed(length_m, time_s) {
         if (time_s == 0) return 0;
         else return 3.6 * length_m / time_s;
@@ -398,10 +405,10 @@
     //-----------------------------------------------------------------------------------------------
     function getSpeedColor(speed) {
         if (speed === 0) return speedColors[0]; // invalid speed
-        var s = Math.round(speed);
+        let s = Math.round(speed);
         if (s <= 5) return speedColors[1];
         if (s <= 12) return speedColors[2];
-        var k = Math.ceil(s / 10) + 1;
+        let k = Math.ceil(s / 10) + 1;
         if (k > 16) k = 16;
         return speedColors[k];
     }
@@ -416,7 +423,7 @@
         $('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${countryPassList.length})`);
     }
     //------------------------------------------------------------------------------------------------
-    function addLabel(lines, time, length, segmentID) {
+    function addLabel(lines, length, time, segmentID) {
 
         var speed = getSpeed(length, time);
 
@@ -860,9 +867,7 @@
 
         segmentID = routeodc[odc].path.segmentId;
         var odclen = routeodc[odc].length;
-        var odctime = 0;
-        if (options.liveTraffic) odctime = routeodc[odc].crossTime;
-        else odctime = routeodc[odc].crossTimeWithoutRealTime;
+        var odctime = getLabelTime(routeodc[odc]);
         var odcx = 0;
         var odcy = 0;
         if (odc + 1 < routeodc.length) {
@@ -870,10 +875,7 @@
             odcy = routeodc[odc + 1].path.y;
         }
 
-        var speed = 0;
-        if (odctime > 0) speed = 3.6 * odclen / odctime;
-        var speedtekst = parseInt(speed);
-        var kolor = getSpeedColor(speed);
+        var speedColor = getSpeedColor(getSpeed(odclen, odctime));
 
         var ptA = new OpenLayers.Geometry.Point(0, 0);
         var ptB = new OpenLayers.Geometry.Point(0, 0);
@@ -949,7 +951,7 @@
             if (dx < 0.000001 && dy < 0.000001) {
 
                 if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
-                    label = addLabel(lines, odctime, odclen, segmentID);
+                    label = addLabel(lines, odclen, odctime, segmentID);
                     if (label !== null) {
                         if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
                         labelFeatures.push(label);
@@ -961,17 +963,13 @@
                     odc++;
                     segmentID = routeodc[odc].path.segmentId;
                     odclen = routeodc[odc].length;
-                    if (options.liveTraffic) odctime = routeodc[odc].crossTime;
-                    else odctime = routeodc[odc].crossTimeWithoutRealTime;
+                    odctime = getLabelTime(routeodc[odc]);
                     if (odc + 1 < routeodc.length) {
                         odcx = routeodc[odc + 1].path.x;
                         odcy = routeodc[odc + 1].path.y;
                     }
 
-                    speed = 0;
-                    if (odctime > 0) speed = 3.6 * odclen / odctime;
-                    speedtekst = parseInt(speed);
-                    kolor = getSpeedColor(speed);
+                    speedColor = getSpeedColor(getSpeed(odclen, odctime));
 
                 }
             }
@@ -1052,7 +1050,7 @@
             let line = new OpenLayers.Geometry.LineString(points);
             lines.push(line);
 
-            let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: ((routeSelected == id || routeSelected == -1) ? kolor : getRouteColor(id)), labelText: '', strokeWidth: ((routeSelected == id || routeSelected == -1) ? 10 : 5) });
+            let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: ((routeSelected == id || routeSelected == -1) ? speedColor : getRouteColor(id)), labelText: '', strokeWidth: ((routeSelected == id || routeSelected == -1) ? 10 : 5) });
 
             lineFeatures.push(lineFeature);
 
@@ -1061,7 +1059,7 @@
         }
 
         if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
-            label = addLabel(lines, odctime, odclen, segmentID);
+            label = addLabel(lines, odclen, odctime, segmentID);
             if (label !== null) {
                 if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
                 labelFeatures.push(label);
