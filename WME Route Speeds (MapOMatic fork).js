@@ -418,6 +418,13 @@
         return routeColors[i];
     }
     //-----------------------------------------------------------------------------------------------
+    function getTimeText(time) {
+        let seconds = time % 60;
+        let minutes = Math.floor((time % 3600) / 60);
+        let hours = Math.floor(time / 3600);
+        return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+    }
+    //-----------------------------------------------------------------------------------------------
     function updatePassesLabel() {
         let count = countryPassList.filter(pass => options.passes.indexOf(pass.key) > -1).length;
         $('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${countryPassList.length})`);
@@ -1279,7 +1286,7 @@
             routeDiv.onclick = function(){ toggleRoute(i) };
             if (routeSelected == i) routeDiv.className = 'routespeeds_summary_classB';
 
-            let html = '<div class=routespeeds_header style="background: ' + getRouteColor(i) + '; color: #e0e0e0; "></div>' + '<div style="color: #404040; min-width:24px; display:inline-block; text-align:right;"><b>' + (i+1) + '.</b></div>';
+            let html = '<div class=routespeeds_header style="background: ' + getRouteColor(i) + '; color:#e0e0e0; "></div>' + '<div style="min-width:24px; display:inline-block; font-size:14px; color:#404040; text-align:right;"><b>' + (i+1) + '.</b></div>';
 
             let lengthM = 0;
             for (let s = 0; s < routesShown[i].response.results.length; s++) {
@@ -1289,18 +1296,15 @@
             if (options.useMiles) length /= KM_PER_MILE;
             let lengthText = length.toFixed(2);
 
-            let timeS = options.liveTraffic ? routesShown[i].response.totalRouteTime : routesShown[i].response.totalRouteTimeWithoutRealtime;
-            let seconds = timeS % 60;
-            let minutes = Math.floor((timeS % 3600) / 60);
-            let hours = Math.floor(timeS / 3600);
-            let timeText = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+            let time = options.liveTraffic ? routesShown[i].response.totalRouteTime : routesShown[i].response.totalRouteTimeWithoutRealtime;
+            let timeText = getTimeText(time);
 
-            html += '<div style="min-width:57px; display:inline-block; text-align:right;">' + lengthText + '</div>' + '<span style="font-size:11px;"> ' + lengthUnit + '</span>';
-            html += '<div style="min-width:75px; display:inline-block; text-align:right;"><b>' + timeText + '</b></div>';
+            html += '<div style="min-width:57px; display:inline-block; font-size:14px; text-align:right;">' + lengthText + '</div>' + '<span style="color:#404040;"> ' + lengthUnit + '</span>';
+            html += '<div style="min-width:75px; display:inline-block; font-size:14px; text-align:right;"><b>' + timeText + '</b></div>';
 
-            let avgSpeed = getSpeed(lengthM, timeS);
+            let avgSpeed = getSpeed(lengthM, time);
             if (options.useMiles) avgSpeed /= KM_PER_MILE;
-            html += '<div style="min-width:48px; display:inline-block; text-align:right; color:#404040" >' + avgSpeed.toFixed(1) + '</div><span style="font-size:11px;"> ' + speedUnit + '</span>';
+            html += '<div style="min-width:48px; display:inline-block; font-size:14px; text-align:right;" >' + avgSpeed.toFixed(1) + '</div><span style="color:#404040;"> ' + speedUnit + '</span>';
 
             if (options.showRouteText) {
                 let maxWidth = options.useMiles ? 277 : 270;
@@ -1310,7 +1314,7 @@
                 let separator = '';
                 if (routesShown[i].response.minPassengers) separator += " (" + routesShown[i].response.minPassengers + "+)";
                 if (laneTypes.length) separator += ': ';
-                html += '<div style="max-width:' + maxWidth + 'px; white-space:normal; line-height:normal; font-size:11px;">' + laneTypes.join(', ') + separator + routesShown[i].response.routeName + '</div>';
+                html += '<div style="max-width:' + maxWidth + 'px; white-space:normal; line-height:normal; font-variant-numeric:normal;">' + laneTypes.join(', ') + separator + routesShown[i].response.routeName + '</div>';
             }
 
             routeDiv.innerHTML = html;
@@ -1867,7 +1871,7 @@
             '<b><div id=routespeeds-error style="color:#FF0000"></div></b>' +
             '<div id=routespeeds-routecount></div>' +
 
-            '<div id=routespeeds-summaries style="font-variant-numeric:tabular-nums;"></div>' +
+            '<div id=routespeeds-summaries style="font-size:11px; font-variant-numeric:tabular-nums;"></div>' +
 
             '<div style="margin-bottom:4px;">' +
             '<b>Options:</b>' +
@@ -1876,6 +1880,7 @@
 
             getCheckboxHtml('enablescript', 'Enable script') +
             getCheckboxHtml('showLabels', 'Show segment labels') +
+            getCheckboxHtml('livetraffic', 'Use real-time traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
             getCheckboxHtml('showSpeeds', 'Show speed on labels') +
             getCheckboxHtml('usemiles', 'Use miles and mph') +
             getCheckboxHtml('routetext', 'Show route descriptions') +
@@ -1898,7 +1903,6 @@
             '</select>' +
             '</div>' +
 
-            getCheckboxHtml('livetraffic', 'Real-Time Traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
             getCheckboxHtml('routingorder', 'Use Routing Order', 'Sorts routes in the same order they would appear in the app or livemap') +
 
             getCheckboxHtml('userbs', 'Use Routing Beta Server (RBS)', '', { display: window.location.hostname.includes('beta') ? 'inline' : 'none' }) +
