@@ -1239,6 +1239,7 @@
 
                 getId('routespeeds-button-livemap').style.backgroundColor = '';
                 getId('routespeeds-button-reverse').style.backgroundColor = '';
+                switchRoute()
             },
             complete: function () {
                 console.timeEnd('WME Route Speeds: routing time');
@@ -1706,7 +1707,7 @@
         //wlodek76: finding closure layer and changing its zindex to hide it under Route Speeds layer
         //          we cannot easily set route speed layer over markers because it will block access to elements on these layers
         let z = parseInt(routeLayer.getZIndex());
-        let clayers = WM.getLayersBy("uniqueName", "closures");
+        let clayers = WM.getLayersBy("name", "closures");
         if (clayers[0] !== undefined && closurelayer === null) {
 
             closurelayer = clayers[0];
