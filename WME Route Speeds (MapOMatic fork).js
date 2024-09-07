@@ -124,8 +124,12 @@
 
     var jqueryinfo = 0;
     var tabswitched = 0;
+
     var closurelayer = null;
     var closurelayerZINDEX = [];
+    var pathlayer = null;
+    var pathlayerZINDEX = [];
+
     var leftHand = false;
 
     function log(msg) {
@@ -1718,6 +1722,16 @@
             closurelayer.redraw();
         }
 
+        let pathlayers = WM.getLayersBy("name", "marker_drawing_context_1");
+        if (pathlayers[0] !== undefined) {
+            pathlayer = pathlayers[0]
+            pathlayerZINDEX[0] = pathlayer.getZIndex();
+            pathlayerZINDEX[1] = z - 6;
+
+            pathlayer.setZIndex(pathlayerZINDEX[1]);
+            pathlayer.redraw();
+        }
+
         drawRoutes();
     }
     //--------------------------------------------------------------------------------------------------------
@@ -1725,6 +1739,10 @@
         if (closurelayer !== null && closurelayerZINDEX.length == 2) {
             closurelayer.setZIndex(closurelayerZINDEX[mode]);
             closurelayer.redraw();
+        }
+        if (pathlayer !== null && pathlayerZINDEX.length == 2) {
+            pathlayer.setZIndex(pathlayerZINDEX[mode]);
+            pathlayer.redraw();
         }
     }
     //--------------------------------------------------------------------------------------------------------
