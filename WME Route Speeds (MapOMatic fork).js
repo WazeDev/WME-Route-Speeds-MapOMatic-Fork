@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2024.09.07.001
+// @version             2024.09.08.000
 // @grant               GM_xmlhttpRequest
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -2025,9 +2025,9 @@
                 let collapse = $chevron.hasClass('fa-chevron-right');
                 let checkboxDivs = $('input.routespeeds-pass-checkbox:not(:checked)').parent();
                 if (collapse) {
-                    checkboxDivs.addClass('hidden');
+                    checkboxDivs.css('display', 'none');
                 } else {
-                    checkboxDivs.removeClass('hidden');
+                    checkboxDivs.css('display', 'block');
                 }
                 // $($this.children()[0])
                 // 	.toggleClass('fa fa-fw fa-chevron-down')
