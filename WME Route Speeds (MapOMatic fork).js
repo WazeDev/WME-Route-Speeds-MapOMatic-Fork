@@ -1626,7 +1626,7 @@
         //          we cannot easily set route speed layer over markers because it will block access to elements on these layers
         let z = parseInt(routeLayer.getZIndex());
         let clayers = WM.getLayersBy("name", "closures");
-        if (clayers[0] !== undefined && closurelayer === null) {
+        if (clayers[0] !== undefined) {
 
             closurelayer = clayers[0];
             closurelayerZINDEX[0] = clayers[0].getZIndex();
