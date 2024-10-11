@@ -853,7 +853,7 @@
 
         var doubletrafficoffset = 0;
         if (doubletraffic) {
-            doubletrafficoffset = 11 * Math.pow(2.0, 5 - W.map.getZoom());
+            doubletrafficoffset = 11 * Math.pow(2.0, 17 - W.map.getZoom());
         }
 
 
