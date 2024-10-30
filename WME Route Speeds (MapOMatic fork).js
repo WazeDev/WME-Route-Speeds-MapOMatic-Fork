@@ -314,11 +314,28 @@
         return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
     }
     //------------------------------------------------------------------------------------------------
-    function getLabelTime(routeSegmentInfo) {
+    function getLabelTime(segmentInfo) {
         let time = 0;
-        if (options.liveTraffic) time += routeSegmentInfo.crossTime;
-        else time += routeSegmentInfo.crossTimeWithoutRealTime;
+        if (options.liveTraffic) time += segmentInfo.crossTime;
+        else time += segmentInfo.crossTimeWithoutRealTime;
         return time;
+    }
+    //------------------------------------------------------------------------------------------------
+    function getLabelColor(segmentInfo) {
+        if (options.liveTraffic) {
+            if (segmentInfo.crossTime != segmentInfo.crossTimeWithoutRealTime) {
+                let ratio = segmentInfo.crossTime / segmentInfo.crossTimeWithoutRealTime;
+                if (ratio < 0.5) return '#00bf3f';
+                if (ratio < 0.8) return '#9fef00';
+                if (ratio <= 1.25) return '#ffff00';
+                if (ratio <= 2) return '#ff9f00';
+                else return '#ff0000';
+            } else {
+                return '#ffffff';
+            }
+        } else {
+            return '#f0f0f0';
+        }
     }
     //------------------------------------------------------------------------------------------------
     function getSpeed(length_m, time_s) {
@@ -353,9 +370,9 @@
         $('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${countryPassList.length})`);
     }
     //------------------------------------------------------------------------------------------------
-    function addLabel(lines, length, time, segmentID) {
+    function addLabel(lines, segmentInfo) {
 
-        var speed = getSpeed(length, time);
+        var speed = getSpeed(segmentInfo.length, getLabelTime(segmentInfo));
 
         var labelColor = '#F0F0F0';
         if (speed >= 40.5 && speed < 60.5) labelColor = '#404040';
@@ -371,7 +388,7 @@
                 labelText = Math.round(speed);
             }
         } else {
-            labelText = time + "s";
+            labelText = getLabelTime(segmentInfo) + "s";
         }
 
         var p1, p2, pt, textFeature, k, sx, sy;
@@ -409,7 +426,7 @@
             sy = p1.y + (p2.y - p1.y) * proc;
 
             pt = new OpenLayers.Geometry.Point(sx, sy);
-            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: labelColor, pointRadius: 0, segmentID: segmentID });
+            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: getLabelColor(segmentInfo), pointRadius: 0, segmentID: segmentInfo.path.segmentId });
             return textFeature;
         }
         else if (numlines == 1) {
@@ -420,7 +437,7 @@
             sy = (p1.y + p2.y) * 0.5;
 
             pt = new OpenLayers.Geometry.Point(sx, sy);
-            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: labelColor, pointRadius: 0, segmentID: segmentID });
+            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: getLabelColor(segmentInfo), pointRadius: 0, segmentID: segmentInfo.path.segmentId });
             return textFeature;
         }
         else return null;
@@ -676,8 +693,8 @@
                 pointRadius: "${pointRadius}",
                 label: "${labelText}",
                 fontFamily: "Tahoma, Courier New",
-                labelOutlineColor: '#FFFFFF',
-                labelOutlineWidth: 0,
+                labelOutlineColor: '#404040',
+                labelOutlineWidth: 3,
                 fontColor: "${fontColor}",
                 fontOpacity: 1.0,
                 fontSize: "10px",
@@ -888,7 +905,7 @@
             if (dx < 0.000001 && dy < 0.000001) {
 
                 if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
-                    label = addLabel(lines, odclen, odctime, segmentID);
+                    label = addLabel(lines, routeodc[odc]);
                     if (label !== null) {
                         if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
                         labelFeatures.push(label);
@@ -987,7 +1004,12 @@
             let line = new OpenLayers.Geometry.LineString(points);
             lines.push(line);
 
-            let lineFeature = new OpenLayers.Feature.Vector(line, { strokeColor: ((routeSelected == id || routeSelected == -1) ? speedColor : getRouteColor(id)), labelText: '', strokeWidth: ((routeSelected == id || routeSelected == -1) ? 10 : 5) });
+            let lineFeature;
+            if (routeSelected == id || routeSelected == -1) {
+                lineFeature = new OpenLayers.Feature.Vector(line, {labelText: '', strokeWidth: 10, strokeColor: speedColor });
+            } else {
+                lineFeature = new OpenLayers.Feature.Vector(line, {labelText: '', strokeWidth: 5, strokeColor: getRouteColor(id) });
+            }
 
             lineFeatures.push(lineFeature);
 
@@ -996,7 +1018,7 @@
         }
 
         if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
-            label = addLabel(lines, odclen, odctime, segmentID);
+            label = addLabel(lines, routeodc[odc]);
             if (label !== null) {
                 if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
                 labelFeatures.push(label);
@@ -1005,7 +1027,7 @@
         while (lines.length > 0) lines.pop();
 
         let outlinestring = new OpenLayers.Geometry.LineString(outlinepoints);
-        let outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { strokeColor: '#404040', labelText: '', strokeWidth: 12 });
+        let outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { labelText: '', strokeWidth: 12, strokeColor: '#404040' });
         if (routeSelected == id || routeSelected == -1) routeLayer.addFeatures(outlineFeature);
 
         routeLayer.addFeatures(lineFeatures);
