@@ -79,27 +79,50 @@
     var accelerationmargin = 30;
     var accelerationbackstop = 3;
 
-    var speedColors = [
-        "#808080", // invalid speed
-        "#271308", // < 5.5 km/h
-        "#542816", // < 12.5 km/h
-        "#813b27", // < 20.5 km/h
-        "#e22700", // < 30.5 km/h
-        "#ef7200", // < 40.5 km/h
-        "#ffd307", // < 50.5 km/h
-        "#6cf104", // < 60.5 km/h
-        "#2fa035", // < 70.5 km/h
-        "#0bbbe9", // < 80.5 km/h
-        "#0f77e0", // < 90.5 km/h
-        "#0346fc", // < 100.5 km/h
-        "#3918d7", // < 110.5 km/h
-        "#8c07f7", // < 120.5 km/h
-        "#ea0ae7", // < 130.5 km/h
-        "#b00094", // < 140.5 km/h
-        "#670055"  // >= 140.5 km/h
+    const INVALID_SPEED_COLOR = '#808080';
+    const METRIC_SPEED_COLORS = [
+        '#2e131c', // < 5.5 km/h
+        '#711422', // < 10.5 km/h
+        '#af0b26', // < 15.5 km/h
+        '#e9052a', // < 20.5 km/h
+        '#ff632a', // < 30.5 km/h
+        '#ffab20', // < 40.5 km/h
+        '#ffd60f', // < 50.5 km/h
+        '#9ce30b', // < 60.5 km/h
+        '#23bf4c', // < 70.5 km/h
+        '#32c6c2', // < 80.5 km/h
+        '#09d7ff', // < 90.5 km/h
+        '#09a9ff', // < 100.5 km/h
+        '#1555fe', // < 110.5 km/h
+        '#5e00e0', // < 120.5 km/h
+        '#a504cd', // < 130.5 km/h
+        '#851680', // < 140.5 km/h
+        '#531947'  // >= 140.5 km/h
+    ];
+    const IMPERIAL_SPEED_COLORS = [
+        '#2e131c', // < 3.5 mph
+        '#711422', // < 6.5 mph
+        '#af0b26', // < 9.5 mph
+        '#e9052a', // < 12.5 mph
+        '#ff492a', // < 15.5 mph
+        '#ff7b28', // < 20.5 mph
+        '#ffab20', // < 25.5 mph
+        '#ffd60f', // < 30.5 mph
+        '#9ce30b', // < 35.5 mph
+        '#04d02e', // < 40.5 mph
+        '#2cae60', // < 45.5 mph
+        '#32c6c2', // < 50.5 mph
+        '#09d7ff', // < 55.5 mph
+        '#09a9ff', // < 60.5 mph
+        '#0d75ff', // < 65.5 mph
+        '#1b2fff', // < 70.5 mph
+        '#5e00e0', // < 75.5 mph
+        '#a504cd', // < 80.5 mph
+        '#851680', // < 85.5 mph
+        '#531947'  // >= 85.5 mph
     ];
 
-    var routeColors = [
+    const ROUTE_COLORS = [
         '#4d4dcd', // route 1
         '#d34f8a', // route 2
         '#188984', // route 3
@@ -340,28 +363,31 @@
     //------------------------------------------------------------------------------------------------
     function getSpeed(length_m, time_s) {
         if (time_s == 0) return 0;
+        if (options.useMiles) return 3.6 * length_m / (time_s * KM_PER_MILE);
         else return 3.6 * length_m / time_s;
     }
     //-----------------------------------------------------------------------------------------------
     function getSpeedColor(speed) {
-        if (speed === 0) return speedColors[0]; // invalid speed
+        if (speed === 0) return INVALID_SPEED_COLOR;
         let s = Math.round(speed);
-        if (s <= 5) return speedColors[1];
-        if (s <= 12) return speedColors[2];
-        let k = Math.ceil(s / 10) + 1;
-        if (k > 16) k = 16;
-        return speedColors[k];
+        if (options.useMiles) {
+            if (s <= 15) return IMPERIAL_SPEED_COLORS[Math.min(Math.ceil(s / 3) - 1, IMPERIAL_SPEED_COLORS.length - 1)];
+            else return IMPERIAL_SPEED_COLORS[Math.min(Math.ceil(s / 5) + 1, IMPERIAL_SPEED_COLORS.length - 1)];
+        } else {
+            if (s <= 20) return METRIC_SPEED_COLORS[Math.min(Math.ceil(s / 5) - 1, METRIC_SPEED_COLORS.length - 1)];
+            else return METRIC_SPEED_COLORS[Math.min(Math.ceil(s / 10) + 1, METRIC_SPEED_COLORS.length - 1)];
+        }
     }
     //-----------------------------------------------------------------------------------------------
-    function getRouteColor(route) {
-        let i = route % routeColors.length;
-        return routeColors[i];
+    function getRouteColor(routeNo) {
+        let i = routeNo % ROUTE_COLORS.length;
+        return ROUTE_COLORS[i];
     }
     //-----------------------------------------------------------------------------------------------
-    function getTimeText(time) {
-        let seconds = time % 60;
-        let minutes = Math.floor((time % 3600) / 60);
-        let hours = Math.floor(time / 3600);
+    function getTimeText(time_s) {
+        let seconds = time_s % 60;
+        let minutes = Math.floor((time_s % 3600) / 60);
+        let hours = Math.floor(time_s / 3600);
         return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
     }
     //-----------------------------------------------------------------------------------------------
@@ -372,23 +398,14 @@
     //------------------------------------------------------------------------------------------------
     function addLabel(lines, segmentInfo) {
 
-        var speed = getSpeed(segmentInfo.length, getLabelTime(segmentInfo));
-
-        var labelColor = '#F0F0F0';
-        if (speed >= 40.5 && speed < 60.5) labelColor = '#404040';
-
-        var labelText;
+        let labelText;
         if (options.showSpeeds) {
-            if (options.useMiles) speed /= KM_PER_MILE;
-            if (speed == 0) {
-                labelText = "?";
-            } else if (speed < 1) {
-                labelText = "<1";
-            } else {
-                labelText = Math.round(speed);
-            }
+            let speed = getSpeed(segmentInfo.length, getLabelTime(segmentInfo));
+            if (speed >= 1) labelText = Math.round(speed);
+            else if (speed == 0) labelText = '?';
+            else labelText = '<1';
         } else {
-            labelText = getLabelTime(segmentInfo) + "s";
+            labelText = getLabelTime(segmentInfo) + 's';
         }
 
         var p1, p2, pt, textFeature, k, sx, sy;
@@ -1256,7 +1273,6 @@
             html += '<div style="min-width:75px; display:inline-block; font-size:14px; text-align:right;"><b>' + timeText + '</b></div>';
 
             let avgSpeed = getSpeed(lengthM, time);
-            if (options.useMiles) avgSpeed /= KM_PER_MILE;
             html += '<div style="min-width:48px; display:inline-block; font-size:14px; text-align:right;" >' + avgSpeed.toFixed(1) + '</div><span style="color:#404040;"> ' + speedUnit + '</span>';
 
             if (options.showRouteText) {
