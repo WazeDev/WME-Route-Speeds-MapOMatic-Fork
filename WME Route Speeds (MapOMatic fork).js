@@ -344,15 +344,20 @@
         return time;
     }
     //------------------------------------------------------------------------------------------------
+    function getLabelWeight(segmentInfo) {
+        if (options.liveTraffic && segmentInfo.crossTime != segmentInfo.crossTimeWithoutRealTime) return 'bold';
+        else return 'normal';
+    }
+    //------------------------------------------------------------------------------------------------
     function getLabelColor(segmentInfo) {
         if (options.liveTraffic) {
             if (segmentInfo.crossTime != segmentInfo.crossTimeWithoutRealTime) {
                 let ratio = segmentInfo.crossTime / segmentInfo.crossTimeWithoutRealTime;
-                if (ratio < 0.5) return '#00bf3f';
-                if (ratio < 0.8) return '#9fef00';
-                if (ratio <= 1.25) return '#ffff00';
-                if (ratio <= 2) return '#ff9f00';
-                else return '#ff0000';
+                if (ratio > 2) return '#ff0000';
+                if (ratio > 1.25) return '#ff9900';
+                if (ratio >= 0.8) return '#ffff00';
+                if (ratio >= 0.5) return '#99ee00';
+                else return '#00bb33';
             } else {
                 return '#ffffff';
             }
@@ -443,7 +448,7 @@
             sy = p1.y + (p2.y - p1.y) * proc;
 
             pt = new OpenLayers.Geometry.Point(sx, sy);
-            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: getLabelColor(segmentInfo), pointRadius: 0, segmentID: segmentInfo.path.segmentId });
+            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontWeight: getLabelWeight(segmentInfo), fontColor: getLabelColor(segmentInfo), pointRadius: 0, segmentID: segmentInfo.path.segmentId });
             return textFeature;
         }
         else if (numlines == 1) {
@@ -454,7 +459,7 @@
             sy = (p1.y + p2.y) * 0.5;
 
             pt = new OpenLayers.Geometry.Point(sx, sy);
-            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontColor: getLabelColor(segmentInfo), pointRadius: 0, segmentID: segmentInfo.path.segmentId });
+            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontWeight: getLabelWeight(segmentInfo), fontColor: getLabelColor(segmentInfo), pointRadius: 0, segmentID: segmentInfo.path.segmentId });
             return textFeature;
         }
         else return null;
@@ -710,8 +715,9 @@
                 pointRadius: "${pointRadius}",
                 label: "${labelText}",
                 fontFamily: "Tahoma, Courier New",
+                fontWeight: "${fontWeight}",
                 labelOutlineColor: '#404040',
-                labelOutlineWidth: 3,
+                labelOutlineWidth: 2,
                 fontColor: "${fontColor}",
                 fontOpacity: 1.0,
                 fontSize: "10px",
