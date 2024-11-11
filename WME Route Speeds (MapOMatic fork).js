@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2024.09.18.000
+// @version             2024.11.11.000
 // @grant               GM_xmlhttpRequest
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -359,10 +359,10 @@
                 if (ratio >= 0.5) return '#99ee00';
                 else return '#00bb33';
             } else {
-                return '#ffffff';
+                return '#f8f8f8';
             }
         } else {
-            return '#f0f0f0';
+            return '#f8f8f8';
         }
     }
     //------------------------------------------------------------------------------------------------
