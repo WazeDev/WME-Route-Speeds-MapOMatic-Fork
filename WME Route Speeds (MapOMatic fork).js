@@ -673,7 +673,7 @@
 
         if (!options.enableScript) return;
 
-        var tabOpen = $('#routespeeds-tab-label').parent().parent().attr('aria-expanded') == "true";
+        var tabOpen = $('#user-tabs #routespeeds-tab-label').parent().parent().attr('aria-expanded') == "true";
         if (!tabOpen) {
             if (tabswitched !== 1) {
                 tabswitched = 1;
