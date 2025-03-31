@@ -1962,6 +1962,7 @@
     let _lastTopCountryId;
     function buildPassesDiv() {
         $('#routespeeds-passes-container').empty();
+        // SDK: FR submitted to get passes: https://issuetracker.google.com/issues/406842110
         let passesObj = W.model.getTopCountry().attributes.restrictionSubscriptions;
         if (passesObj) {
             countryPassList = Object.keys(passesObj).map(key => { return { key: key, name: passesObj[key] } }).sort((a, b) => {
