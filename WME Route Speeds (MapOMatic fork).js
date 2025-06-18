@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2025.01.13.000
+// @version             2025.06.18.000
 // @grant               GM_xmlhttpRequest
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -10,6 +10,7 @@
 // @copyright           2014, 2015 wlodek76
 // @contributor         2014, 2015 FZ69617
 // @connect             greasyfork.org
+// @connect             waze.com
 // ==/UserScript==
 
 /* global W */
@@ -272,11 +273,11 @@
     //---------------------------------------------------------------------------------------
     function getRoutingManager() {
         if (W.model.countries.getObjectById(235) || W.model.countries.getObjectById(40) || W.model.countries.getObjectById(182)) { // US, Canada, & PR
-            return '/RoutingManager/routingRequest';
+            return 'https://routing-livemap-am.waze.com/RoutingManager/routingRequest';
         } else if (W.model.countries.getObjectById(106)) { // Israel
-            return '/il-RoutingManager/routingRequest';
+            return 'https://routing-livemap-il.waze.com/RoutingManager/routingRequest';
         } else {
-            return '/row-RoutingManager/routingRequest'; // ROW
+            return 'https://routing-livemap-row.waze.com/RoutingManager/routingRequest'; // ROW
         }
     }
     //------------------------------------------------------------------------------------------------
@@ -1112,11 +1113,8 @@
     //--------------------------------------------------------------------------------------------------------
     function requestRouteFromLiveMap(x1, y1, x2, y2) {
         var atTime = getnowtoday();
-
         var numRoutes = options.getAlternatives ? 3 : 1;
-
         var routeType = (options.routeType === 3) ? "TIME" : "HISTORIC_TIME";
-
         var avoidTollRoads = options.avoidTolls;
         var avoidPrimaries = options.avoidFreeways;
         var avoidTrails = options.avoidUnpaved;
@@ -1151,7 +1149,6 @@
         else if (avoidTrails) { opt.put("AVOID_TRAILS", true); }
         else { opt.put("AVOID_LONG_TRAILS", false); }
 
-
         var url = getRoutingManager();
         let expressPass = options.passes.map(key => key);
         var data = {
@@ -1173,40 +1170,38 @@
 
         routewait = 1;
         getId('routespeeds-error').innerHTML = "";
-
         console.time('WME Route Speeds: routing time');
 
-        $.ajax({
-            dataType: "json",
-            cache: false,
-            url: url,
-            data: data,
-            traditional: true,
-            dataFilter: function (data, dataType) {
-                return data.replace(/NaN/g, '0');
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: url + "?" + jQuery.param(data),
+            headers: {
+                "Content-Type": "application/json"
             },
-            error: function (req, textStatus, errorThrown) {
-                let str = "Route request failed" + (textStatus !== null ? " with " + textStatus : "") + "!";
-                str += "<br>" + errorThrown;
+            nocache: true,
+            responseType: "json",
+            onerror: function(response) {
+                let str = "Route request failed" + (response.status !== null ? " with error " + response.status : "") + "!<br>";
                 handleRouteRequestError(str);
+                console.timeEnd('WME Route Speeds: routing time');
+                routewait = 0;
             },
-            success: function (json) {
-                if (json.error !== undefined) {
-                    let str = json.error;
+            onload: function(response) {
+                if (response.response.error !== undefined) {
+                    let str = response.response.error;
                     str = str.replace("|", "<br>");
                     handleRouteRequestError(str);
                 } else {
-
-                    if (json.coords !== undefined) {
+                    if (response.response.coords !== undefined) {
                         log("1 route received (" + numRoutes + " requested)");
 
                         if (routeSelected > 0) routeSelected = 0;
 
-                        routesReceived = [json];
+                        routesReceived = [response.response];
                     }
-                    if (json.alternatives !== undefined) {
-                        log(json.alternatives.length + " routes received (" + numRoutes + " requested)");
-                        routesReceived = json.alternatives;
+                    if (response.response.alternatives !== undefined) {
+                        log(response.response.alternatives.length + " routes received (" + numRoutes + " requested)");
+                        routesReceived = response.response.alternatives;
                     }
                     getId('routespeeds-routecount').innerHTML = 'Received <b>' + routesReceived.length + '</b> route' + (routesReceived.length == 1 ? '' : "s") + ' from the server';
                     sortRoutes();
@@ -1215,11 +1210,9 @@
                 getId('routespeeds-button-livemap').style.backgroundColor = '';
                 getId('routespeeds-button-reverse').style.backgroundColor = '';
                 switchRoute()
-            },
-            complete: function () {
                 console.timeEnd('WME Route Speeds: routing time');
                 routewait = 0;
-            }
+            },
         });
     }
     //--------------------------------------------------------------------------------------------------------
