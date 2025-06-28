@@ -2,7 +2,7 @@
 // @name                WME Route Speeds (MapOMatic fork)
 // @description         Shows segment speeds in a route.
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2025.06.18.000
+// @version             2025.06.28.000
 // @grant               GM_xmlhttpRequest
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -150,7 +150,7 @@
     var tabswitched = 0;
     var leftHand = false;
 
-    const SCRIPT_LAYERS_TO_COVER = ["_LTHighlightLayer", "LTLaneGraphics", "LTNamesLayer"];
+    const SCRIPT_LAYERS_TO_COVER = ["LT Highlights Layer", "LT Names Layer", "LT Lane Graphics"];
     const WME_LAYERS_TO_MOVE = ["closures", "turn_closure", "closure_nodes"];
     let layersMoved = [];
     let originalZIndexes = [];
@@ -1669,8 +1669,8 @@
         let routeLayer = rlayers[0];
         if (routeLayer === undefined) return;
 
-        for (let uniqueName of SCRIPT_LAYERS_TO_COVER) {
-            let layer = W.map.getLayersBy("uniqueName", uniqueName)[0];
+        for (let name of SCRIPT_LAYERS_TO_COVER) {
+            let layer = W.map.getLayerByName(name);
             if (layer === undefined) continue;
             baseZIndex = Math.max(baseZIndex, layer.getZIndex());
         }
