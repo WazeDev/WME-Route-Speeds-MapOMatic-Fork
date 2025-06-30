@@ -4,6 +4,7 @@
 // @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
 // @version             2025.06.28.000
 // @grant               GM_xmlhttpRequest
+// @grant               unsafeWindow
 // @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
 // @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @author              wlodek76 (forked by MapOMatic)
@@ -23,6 +24,8 @@
     const DOWNLOAD_URL = 'https://update.greasyfork.org/scripts/369630/WME%20Route%20Speeds%20%28MapOMatic%20fork%29.user.js';
     const SCRIPT_VERSION = GM_info.script.version.toString();
     const SCRIPT_NAME = GM_info.script.name;
+
+    let sdk;
 
     const KM_PER_MILE = 1.609344;
 
@@ -191,6 +194,8 @@
     }
 
     function bootstrap() {
+        sdk = getWmeSdk({scriptId: "wme-route-speeds",
+                         scriptName: "WME Route Speeds"});
         log('Waiting for WME...');
         if (typeof W === 'object' && W.userscripts?.state.isReady) {
             onWmeReady();
@@ -2090,5 +2095,5 @@
         window.setInterval(panningWMERouteSpeeds, 100);
     }
     //--------------------------------------------------------------------------------------------------------------
-    bootstrap();
+    unsafeWindow.SDK_INITIALIZED.then(bootstrap);
 })();
