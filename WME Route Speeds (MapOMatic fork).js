@@ -161,7 +161,7 @@
     let z17_reached = 0;
 
     function log(msg) {
-        console.log('WME Route Speeds:', msg);
+        console.log('Route Speeds:', msg);
     }
 
     async function onWmeReady(tries = 0) {
@@ -196,11 +196,11 @@
     function bootstrap() {
         sdk = getWmeSdk({scriptId: "wme-route-speeds",
                          scriptName: "WME Route Speeds"});
-        log('Waiting for WME...');
-        if (typeof W === 'object' && W.userscripts?.state.isReady) {
+        if (sdk.State.isReady()) {
             onWmeReady();
         } else {
-            document.addEventListener('wme-ready', onWmeReady, { once: true });
+            log('Waiting for WME...');
+            sdk.Events.once({ eventName: "wme-ready" }).then(onWmeReady);
         }
     }
 
@@ -1740,16 +1740,10 @@
         line_div_break += '</div>';
         line_div_break += '<div style="margin-left:55px">';
 
-        if (W.loginManager !== null && W.loginManager.user) {
-            var user = W.loginManager.user;
-            //console.log(user);
-
-            //wlodek76: I prefer more condensed lines for avoid options, so I've added a personal switch here
-            if (user !== null) {
-                if (user.userName === "wlodek76" && user.id === 203457007) {
-                    line_div_break = '';
-                }
-            }
+        //wlodek76: I prefer more condensed lines for avoid options, so I've added a personal switch here
+        let user = sdk.State.getUserInfo();
+        if (user.userName === "wlodek76") {
+            line_div_break = '';
         }
 
         epsg900913 = new OpenLayers.Projection("EPSG:900913");
