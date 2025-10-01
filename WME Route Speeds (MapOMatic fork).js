@@ -490,12 +490,12 @@
         }
         else panningX = 0;
 
-        if (y < accelerationmargin) {
-            if (my < 0) panningY = y - (accelerationmargin);
+        if (y < accelerationmargin + 30) {
+            if (my < 0) panningY = y - (accelerationmargin + 30);
             if (my > accelerationbackstop) panningY = 0;
         }
-        else if (y > maxY - accelerationmargin - 25) {
-            if (my > 0) panningY = y - (maxY - accelerationmargin - 25);
+        else if (y > maxY - accelerationmargin - 20) {
+            if (my > 0) panningY = y - (maxY - accelerationmargin - 20);
             if (my < -accelerationbackstop) panningY = 0;
         }
         else panningY = 0;
