@@ -55,7 +55,7 @@
 
     let countryPassList = [];
 
-    var wmech_version = GM_info.script.version;
+    let scriptVersion = GM_info.script.version;
 
     var epsg900913;
     var epsg4326;
@@ -169,7 +169,7 @@
             startScriptUpdateMonitor();
             log('Initializing...');
             await initialiseWMERouteSpeeds();
-            log(wmech_version + " loaded.");
+            log(scriptVersion + " loaded.");
         } else {
             if (tries === 0) {
                 log('Waiting for WazeWrap...');
@@ -1736,16 +1736,6 @@
     }
     //--------------------------------------------------------------------------------------------------------
     async function initialiseWMERouteSpeeds() {
-        var line_div_break = '<br>';
-        line_div_break += '</div>';
-        line_div_break += '<div style="margin-left:55px">';
-
-        //wlodek76: I prefer more condensed lines for avoid options, so I've added a personal switch here
-        let user = sdk.State.getUserInfo();
-        if (user.userName === "wlodek76") {
-            line_div_break = '';
-        }
-
         epsg900913 = new OpenLayers.Projection("EPSG:900913");
         epsg4326 = new OpenLayers.Projection("EPSG:4326");
 
@@ -1754,7 +1744,7 @@
         addon.innerHTML = '' +
             '<div id="sidepanel-routespeeds" style="margin: 0px 8px; width: auto;">' +
             '<div style="margin-bottom:4px; padding:0px;"><a href="https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork" target="_blank">' +
-            '<span style="font-weight:bold; text-decoration:underline">WME Route Speeds</span></a><span style="margin-left:6px; color:#888; font-size:11px;">v' + wmech_version + '</span>' +
+            '<span style="font-weight:bold; text-decoration:underline">WME Route Speeds</span></a><span style="margin-left:6px; color:#888; font-size:11px;">v' + scriptVersion + '</span>' +
             '</div>' +
             '<style>\n' +
             '#sidepanel-routespeeds select { margin-left:20px; font-size:12px; height:22px; border:1px solid; border-color:rgb(169, 169, 169); border-radius:4px; border: 1px solid; border-color: rgb(169, 169, 169); -webkit-border-radius:4px; -moz-border-radius:4px; }\n' +
