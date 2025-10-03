@@ -167,7 +167,13 @@
 
     function log(msg) {
         console.log("Route Speeds:", msg);
-    }
+    };
+    function warn(msg) {
+        console.warn("Route Speeds:", msg);
+    };
+    function error(msg) {
+        console.error("Route Speeds:", msg);
+    };
 
     async function onWmeReady(tries = 0) {
         if (WazeWrap && WazeWrap.Ready) {
@@ -179,7 +185,7 @@
             if (tries === 0) {
                 log('Waiting for WazeWrap...');
             } else if (tries === 300) {
-                console.error('WME Route Speeds:', 'WazeWrap loading failed. Giving up.');
+                error("WazeWrap loading failed after 300 tries. Giving up.");
                 return;
             }
             setTimeout(onWmeReady, 100, ++tries);
@@ -194,7 +200,7 @@
             updateMonitor.start();
         } catch (ex) {
             // Report, but don't stop if ScriptUpdateMonitor fails.
-            console.error("Route Speeds:", ex);
+            warn(ex);
         }
     }
 
@@ -767,11 +773,11 @@
 
         if (jqueryinfo === 1) {
             jqueryinfo = 2;
-            console.log('WME Route Speeds: jQuery reloaded ver. ' + jQuery.fn.jquery);
+            log('jQuery reloaded ver. ' + jQuery.fn.jquery);
         }
         if (jqueryinfo === 0) {
             if (typeof jQuery === 'undefined') {
-                console.log('WME Route Speeds: jQuery current ver. ' + jQuery.fn.jquery);
+                log('jQuery current ver. ' + jQuery.fn.jquery);
 
                 var script = document.createElement('script');
                 script.type = "text/javascript";
@@ -1180,7 +1186,7 @@
 
         routewait = 1;
         getId('routespeeds-error').innerHTML = "";
-        console.time('WME Route Speeds: routing time');
+        console.time('Route Speeds: routing time');
 
         GM_xmlhttpRequest({
             method: "GET",
@@ -1193,7 +1199,7 @@
             onerror: function(response) {
                 let str = "Route request failed" + (response.status !== null ? " with error " + response.status : "") + "!<br>";
                 handleRouteRequestError(str);
-                console.timeEnd('WME Route Speeds: routing time');
+                console.timeEnd('Route Speeds: routing time');
                 routewait = 0;
             },
             onload: function(response) {
@@ -1220,7 +1226,7 @@
                 getId('routespeeds-button-livemap').style.backgroundColor = '';
                 getId('routespeeds-button-reverse').style.backgroundColor = '';
                 switchRoute()
-                console.timeEnd('WME Route Speeds: routing time');
+                console.timeEnd('Route Speeds: routing time');
                 routewait = 0;
             },
         });
@@ -1303,7 +1309,7 @@
     }
     //--------------------------------------------------------------------------------------------------------
     function handleRouteRequestError(message) {
-        console.log("WME Route Speeds: route request error: " + message.replace("<br>", "\n"));
+        warn("route request error: " + message.replace("<br>", "\n"));
 
         getId('routespeeds-button-livemap').style.backgroundColor = '';
         getId('routespeeds-button-reverse').style.backgroundColor = '';
@@ -2023,7 +2029,7 @@
                 buildPassesDiv();
             }
         } catch (ex) {
-            console.error('WME Route Speeds error: ', ex);
+            error(ex);
         }
     }
 
