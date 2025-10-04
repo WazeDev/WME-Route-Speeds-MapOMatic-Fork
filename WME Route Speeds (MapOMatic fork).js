@@ -74,6 +74,9 @@
     var routeSelected = 0;
     var routeSelectedLast = -1;
 
+    let pointA = [];
+    let pointB = [];
+
     var markerA;
     var markerB;
     var markerA_offset_click = [0, 0];
@@ -653,6 +656,11 @@
     }
     //------------------------------------------------------------------------------------------------
     function placeMarker(id, lon, lat) {
+        if (id == "A") {
+            pointA = [lon, lat];
+        } else {
+            pointB = [lon, lat];
+        }
         sdk.Map.addFeatureToLayer({
             layerName: MARKER_LAYER_NAME,
             feature: {
@@ -680,8 +688,8 @@
             eventHandler: ({lon, lat}) => onMouseMoveWithMarker(id, lon, lat)
         });
         sdk.Events.on({
-            eventName: "wme-map-mouse-down",
-            eventHandler: ({x, y, lon, lat}) => onFurtherMouseDown(id, x, y, lon, lat)
+            eventName: "wme-layer-feature-clicked",
+            eventHandler: onSecondClick
         });
     }
     //------------------------------------------------------------------------------------------------
@@ -689,18 +697,7 @@
         moveMarker(id, lon, lat);
     }
     //------------------------------------------------------------------------------------------------
-    function onFurtherMouseDown(id, x0, y0, lon0, lat0) {
-        sdk.Events.on({
-            eventName: "wme-map-mouse-up",
-            eventHandler: ({x, y, lon, lat}) => {
-                if (x == x0 && y == y0 && lon == lon0 && lat == lat0) {
-                    onSecondClick(id, lon, lat);
-                }
-            }
-        });
-    }
-    //------------------------------------------------------------------------------------------------
-    function onSecondClick(id, lon, lat) {
+    function onSecondClick() {
         sdk.Events.clear();
         sdk.Events.on({
             eventName: "wme-layer-feature-clicked",
@@ -729,24 +726,6 @@
         if (markerB.created) markerB.display(disp);
 
         return (markerA.created && markerB.created);
-    }
-    //------------------------------------------------------------------------------------------------
-    function reverseMarkers() {
-        var WM = W.map;
-
-        var mlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsMarkers");
-        var markerLayer = mlayers[0];
-
-        if (markerLayer === undefined) return;
-        if (markerA === undefined || !markerA.created) return;
-        if (markerB === undefined || !markerB.created) return;
-
-        var copy = markerA.lonlat;
-        markerA.lonlat = markerB.lonlat;
-        markerB.lonlat = copy;
-
-        markerLayer.drawMarker(markerA);
-        markerLayer.drawMarker(markerB);
     }
     //------------------------------------------------------------------------------------------------
     function loopWMERouteSpeeds() {
