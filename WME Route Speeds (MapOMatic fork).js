@@ -288,12 +288,13 @@
     }
     //---------------------------------------------------------------------------------------
     function getRoutingManager() {
-        if (W.model.countries.getObjectById(235) || W.model.countries.getObjectById(40) || W.model.countries.getObjectById(182)) { // US, Canada, & PR
+        let region = sdk.DataModel.Countries.getTopCountry().regionCode;
+        if (region == "usa") {
             return 'https://routing-livemap-am.waze.com/RoutingManager/routingRequest';
-        } else if (W.model.countries.getObjectById(106)) { // Israel
+        } else if (region == "il") {
             return 'https://routing-livemap-il.waze.com/RoutingManager/routingRequest';
         } else {
-            return 'https://routing-livemap-row.waze.com/RoutingManager/routingRequest'; // ROW
+            return 'https://routing-livemap-row.waze.com/RoutingManager/routingRequest';
         }
     }
     //------------------------------------------------------------------------------------------------
@@ -644,6 +645,68 @@
 
         markerA.created = disp;
         markerB.created = disp;
+
+        sdk.Map.removeAllFeaturesFromLayer({layerName: MARKER_LAYER_NAME});
+        placeMarker("A", lon1, lat1);
+        placeMarker("B", lon2, lat2);
+        sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: disp});
+    }
+    //------------------------------------------------------------------------------------------------
+    function placeMarker(id, lon, lat) {
+        sdk.Map.addFeatureToLayer({
+            layerName: MARKER_LAYER_NAME,
+            feature: {
+                id: id,
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [lon, lat],
+                },
+                properties: {
+                    A: id == "A",
+                },
+            }
+        });
+    }//------------------------------------------------------------------------------------------------
+    function moveMarker(id, lon, lat) {
+        sdk.Map.removeFeatureFromLayer({layerName: MARKER_LAYER_NAME, featureId: id});
+        placeMarker(id, lon, lat);
+    }
+    //------------------------------------------------------------------------------------------------
+    function onMarkerClicked(id) {
+        sdk.Events.clear();
+        sdk.Events.on({
+            eventName: "wme-map-mouse-move",
+            eventHandler: ({lon, lat}) => onMouseMoveWithMarker(id, lon, lat)
+        });
+        sdk.Events.on({
+            eventName: "wme-map-mouse-down",
+            eventHandler: ({x, y, lon, lat}) => onFurtherMouseDown(id, x, y, lon, lat)
+        });
+    }
+    //------------------------------------------------------------------------------------------------
+    function onMouseMoveWithMarker(id, lon, lat) {
+        moveMarker(id, lon, lat);
+    }
+    //------------------------------------------------------------------------------------------------
+    function onFurtherMouseDown(id, x0, y0, lon0, lat0) {
+        sdk.Events.on({
+            eventName: "wme-map-mouse-up",
+            eventHandler: ({x, y, lon, lat}) => {
+                if (x == x0 && y == y0 && lon == lon0 && lat == lat0) {
+                    onSecondClick(id, lon, lat);
+                }
+            }
+        });
+    }
+    //------------------------------------------------------------------------------------------------
+    function onSecondClick(id, lon, lat) {
+        sdk.Events.clear();
+        sdk.Events.on({
+            eventName: "wme-layer-feature-clicked",
+            eventHandler: ({featureId}) => onMarkerClicked(featureId)
+        });
+        //calculate route
     }
     //------------------------------------------------------------------------------------------------
     function showRouteLayer(disp) {
@@ -2090,22 +2153,34 @@
             layerName: MARKER_LAYER_NAME,
             styleRules: [
                 {
-                    predicate: (featureProperties) => featureProperties.markerA,
+                    predicate: (featureProperties) => featureProperties.A,
                     style: {
                         externalGraphic: MARKER_A_IMAGE,
-                        fillOpacity: 1,
+                        graphicWidth: 27,
+                        graphicHeight: 36,
+                        graphicXOffset: -13.5,
+                        graphicYOffset: -33.5,
+                        graphicOpacity: 1,
                     },
                 },
                 {
-                    predicate: (featureProperties) => featureProperties.markerB,
+                    predicate: (featureProperties) => !featureProperties.A,
                     style: {
                         externalGraphic: MARKER_B_IMAGE,
-                        fillOpacity: 1,
+                        graphicWidth: 27,
+                        graphicHeight: 36,
+                        graphicXOffset: -13.5,
+                        graphicYOffset: -33.5,
+                        graphicOpacity: 1,
                     },
                 },
-            ]
+            ],
         });
         sdk.Events.trackLayerEvents({layerName: MARKER_LAYER_NAME});
+        sdk.Events.on({
+            eventName: "wme-layer-feature-clicked",
+            eventHandler: ({featureId}) => onMarkerClicked(featureId)
+        });
 
         // sdk.Map.addLayer(ROUTE_LAYER_NAME, ...);
 
