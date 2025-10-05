@@ -171,7 +171,7 @@
 
     var jqueryinfo = 0;
     var tabswitched = 0;
-    var leftHand = false;
+    var leftHandTraffic = false;
 
     function log(msg) {
         console.log(SCRIPT_SHORT_NAME + ":", msg);
@@ -698,9 +698,8 @@
 
                 createMarkers(lon1, lat1, lon2, lat2, true);
 
-                leftHand = false;
-                if (W.model.isLeftHand) leftHand = true;
-                if (W.model.isLeftHand) leftHand = true;
+                leftHandTraffic = false;
+                if (W.model.isLeftHand) leftHandTraffic = true;
 
                 requestRouteFromLiveMap();
             }
@@ -1220,7 +1219,7 @@
                 var angle = Math.acos(dx / r);
                 if (dy < 0) angle = -angle;
                 angle = angle - 0.5 * Math.PI;
-                if (leftHand) angle += Math.PI;
+                if (leftHandTraffic) angle += Math.PI;
 
                 p3.x += doubletrafficoffset * Math.cos(angle) * 0.6;
                 p3.y += doubletrafficoffset * Math.sin(angle) * 0.6;
