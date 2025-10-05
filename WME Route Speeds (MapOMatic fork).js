@@ -348,6 +348,7 @@
             '<option id=routespeeds-maxroutes value="4">4</option>' +
             '<option id=routespeeds-maxroutes value="5">5</option>' +
             '<option id=routespeeds-maxroutes value="6">6</option>' +
+            '<option id=routespeeds-maxroutes value="7">7</option>' +
             '<option id=routespeeds-maxroutes value="8">8</option>' +
             '<option id=routespeeds-maxroutes value="10">10</option>' +
             '<option id=routespeeds-maxroutes value="12">12</option>' +
@@ -357,7 +358,7 @@
             '</select>' +
             '</div>' +
 
-            getCheckboxHtml('routingorder', 'Use Routing Order', 'Sorts routes in the same order they would appear in the app or livemap') +
+            getCheckboxHtml('routingorder', 'Use Routing Order', 'Sorts routes in the same order they would appear in the app or livemap (only works if the server returned more routes than requested)') +
 
             getCheckboxHtml('userbs', 'Use Routing Beta Server (RBS)', '', { display: window.location.hostname.includes('beta') ? 'inline' : 'none' }) +
 
