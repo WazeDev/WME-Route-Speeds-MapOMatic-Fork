@@ -149,8 +149,8 @@
     let mouseUpHandler;
     let mouseMoveHandler;
 
-    let pointA = [];
-    let pointB = [];
+    let pointA = {};
+    let pointB = {};
 
     let z17_reached = false;
     let baseZIndex = 0;
@@ -734,7 +734,7 @@
                 if (W.model.isLeftHand) leftHand = true;
                 if (W.model.isLeftHand) leftHand = true;
 
-                requestRouteFromLiveMap(lon1, lat1, lon2, lat2);
+                requestRouteFromLiveMap();
             }
         }
         else {
@@ -1080,7 +1080,7 @@
                 var objprog1 = getId('routespeeds-button-livemap');
                 if (objprog1.style.backgroundColor === '') objprog1.style.backgroundColor = '#FF8000';
 
-                requestRouteFromLiveMap(lon1, lat1, lon2, lat2);
+                requestRouteFromLiveMap();
             };
             markerB.dragging.done = function (e) {
 
@@ -1105,7 +1105,7 @@
                 var objprog1 = getId('routespeeds-button-livemap');
                 if (objprog1.style.backgroundColor === '') objprog1.style.backgroundColor = '#FF8000';
 
-                requestRouteFromLiveMap(lon1, lat1, lon2, lat2);
+                requestRouteFromLiveMap();
             };
 
             markerA.dragging.activate(iconA.$div);
@@ -1144,9 +1144,11 @@
 
     function placeMarker(id, lon, lat) {
         if (id == "A") {
-            pointA = [lon, lat];
+            pointA.lon = lon;
+            pointA.lat = lat;
         } else {
-            pointB = [lon, lat];
+            pointB.lon = lon;
+            pointB.lat = lat;
         }
         sdk.Map.addFeatureToLayer({
             layerName: MARKER_LAYER_NAME,
@@ -1226,8 +1228,8 @@
         });
         let markerLocationPixel = sdk.Map.getMapPixelFromLonLat({
             lonLat: {
-                lon: id == "A" ? pointA[0] : pointB[0],
-                lat: id == "A" ? pointA[1] : pointB[1]
+                lon: id == "A" ? pointA.lon : pointB.lon,
+                lat: id == "A" ? pointA.lat : pointB.lat
             }
         });
         let offsetX = markerLocationPixel.x - event.x;
@@ -1288,7 +1290,19 @@
             eventHandler: cancelSecondClick
         });
         sdk.Events.trackLayerEvents({layerName: MARKER_LAYER_NAME});
-        //calculate route
+
+        let lon1 = parseInt(pointA.lon * 1000000.0 + 0.5) / 1000000.0;
+        let lat1 = parseInt(pointA.lat * 1000000.0 + 0.5) / 1000000.0;
+        let lon2 = parseInt(pointB.lon * 1000000.0 + 0.5) / 1000000.0;
+        let lat2 = parseInt(pointB.lat * 1000000.0 + 0.5) / 1000000.0;
+        if (getId('sidepanel-routespeeds-a') !== undefined) {
+            getId('sidepanel-routespeeds-a').value = lon1 + ", " + lat1;
+            getId('sidepanel-routespeeds-b').value = lon2 + ", " + lat2;
+        }
+        var objprog1 = getId('routespeeds-button-livemap');
+        if (objprog1.style.backgroundColor === '') objprog1.style.backgroundColor = '#FF8000';
+
+        requestRouteFromLiveMap();
     }
 
     function showRouteLayer(disp) {
@@ -1597,7 +1611,7 @@
         return tsel - tnow;
     }
 
-    function requestRouteFromLiveMap(x1, y1, x2, y2) {
+    function requestRouteFromLiveMap() {
         var atTime = getnowtoday();
         var numRoutes = options.getAlternatives ? 3 : 1;
         var routeType = (options.routeType === 3) ? "TIME" : "HISTORIC_TIME";
@@ -1638,8 +1652,8 @@
         var url = getRoutingManager();
         let expressPass = options.passes.map(key => key);
         var data = {
-            from: "x:" + x1 + " y:" + y1,
-            to: "x:" + x2 + " y:" + y2,
+            from: "x:" + pointA.lon + " y:" + pointA.lat,
+            to: "x:" + pointB.lon + " y:" + pointB.lat,
             returnJSON: true,
             returnGeometries: true,
             returnInstructions: true,
@@ -1886,7 +1900,7 @@
             clickA();
         }
 
-        requestRouteFromLiveMap(x1, y1, x2, y2);
+        requestRouteFromLiveMap();
     }
 
     function reverseRoute() {
@@ -1933,7 +1947,7 @@
 
         createMarkers(x1, y1, x2, y2, true);
 
-        requestRouteFromLiveMap(x1, y1, x2, y2);
+        requestRouteFromLiveMap();
     }
 
     //--------------------------------------------------------------------------
