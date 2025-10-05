@@ -142,7 +142,12 @@
 
     let sdk;
 
+    let _lastTopCountryId;
     let countryPassList = [];
+
+    let mouseDownHandler;
+    let mouseUpHandler;
+    let mouseMoveHandler;
 
     let pointA = [];
     let pointB = [];
@@ -578,8 +583,12 @@
         });
         sdk.Events.trackLayerEvents({layerName: MARKER_LAYER_NAME});
         sdk.Events.on({
-            eventName: "wme-layer-feature-clicked",
-            eventHandler: ({featureId}) => onMarkerClicked(featureId)
+            eventName: "wme-layer-feature-mouse-enter",
+            eventHandler: mouseEnterHandler
+        });
+        sdk.Events.on({
+            eventName: "wme-layer-feature-mouse-leave",
+            eventHandler: mouseLeaveHandler
         });
 
         // sdk.Map.addLayer(ROUTE_LAYER_NAME, ...);
@@ -1160,28 +1169,125 @@
         placeMarker(id, lon, lat);
     }
 
-    function onMarkerClicked(id) {
-        sdk.Events.clear();
+    function mouseEnterHandler(event) {
+        if (mouseDownHandler) {
+            sdk.Events.off({
+                eventName: "wme-map-mouse-down",
+                eventHandler: mouseDownHandler
+            });
+        }
+        mouseDownHandler = () => startFirstClick(event.featureId);
+        sdk.Events.on({
+            eventName: "wme-map-mouse-down",
+            eventHandler: mouseDownHandler
+        });
+    }
+
+    function mouseLeaveHandler(event) {
+        if (mouseDownHandler) {
+            sdk.Events.off({
+                eventName: "wme-map-mouse-down",
+                eventHandler: mouseDownHandler
+            });
+            mouseDownHandler = false;
+        }
+    }
+
+    function startFirstClick(id) {
+        mouseUpHandler = (event) => onFirstClick(id, event);
+        sdk.Events.on({
+            eventName: "wme-map-mouse-up",
+            eventHandler: mouseUpHandler
+        });
         sdk.Events.on({
             eventName: "wme-map-mouse-move",
-            eventHandler: ({lon, lat}) => onMouseMoveWithMarker(id, lon, lat)
+            eventHandler: cancelFirstClick
+        });
+    }
+
+    function cancelFirstClick(event) {
+        sdk.Events.off({
+            eventName: "wme-map-mouse-up",
+            eventHandler: mouseUpHandler
+        });
+        sdk.Events.off({
+            eventName: "wme-map-mouse-move",
+            eventHandler: cancelFirstClick
+        });
+    }
+
+    function onFirstClick(id, event) {
+        sdk.Events.stopLayerEventsTracking({layerName: MARKER_LAYER_NAME});
+        mouseLeaveHandler(event);
+        cancelFirstClick(event);
+        sdk.Events.on({
+            eventName: "wme-map-mouse-down",
+            eventHandler: startSecondClick
+        });
+        let markerLocationPixel = sdk.Map.getMapPixelFromLonLat({
+            lonLat: {
+                lon: id == "A" ? pointA[0] : pointB[0],
+                lat: id == "A" ? pointA[1] : pointB[1]
+            }
+        });
+        let offsetX = markerLocationPixel.x - event.x;
+        let offsetY = markerLocationPixel.y - event.y;
+        mouseMoveHandler = ({x, y}) => onMouseMoveWithMarker(id, x + offsetX, y + offsetY);
+        sdk.Events.on({
+            eventName: "wme-map-mouse-move",
+            eventHandler: mouseMoveHandler
+        });
+    }
+
+    function onMouseMoveWithMarker(id, x, y) {
+        let newLocation = sdk.Map.getLonLatFromMapPixel({x: x, y: y});
+        moveMarker(id, newLocation.lon, newLocation.lat);
+    }
+
+    function startSecondClick(event) {
+        sdk.Events.off({
+            eventName: "wme-map-mouse-move",
+            eventHandler: mouseMoveHandler
         });
         sdk.Events.on({
-            eventName: "wme-layer-feature-clicked",
+            eventName: "wme-map-mouse-up",
             eventHandler: onSecondClick
         });
-    }
-
-    function onMouseMoveWithMarker(id, lon, lat) {
-        moveMarker(id, lon, lat);
-    }
-
-    function onSecondClick() {
-        sdk.Events.clear();
         sdk.Events.on({
-            eventName: "wme-layer-feature-clicked",
-            eventHandler: ({featureId}) => onMarkerClicked(featureId)
+            eventName: "wme-map-mouse-move",
+            eventHandler: cancelSecondClick
         });
+    }
+
+    function cancelSecondClick(event) {
+        sdk.Events.off({
+            eventName: "wme-map-mouse-up",
+            eventHandler: onSecondClick
+        });
+        sdk.Events.off({
+            eventName: "wme-map-mouse-move",
+            eventHandler: cancelSecondClick
+        });
+        sdk.Events.on({
+            eventName: "wme-map-mouse-move",
+            eventHandler: mouseMoveHandler
+        });
+    }
+
+    function onSecondClick(event) {
+        sdk.Events.off({
+            eventName: "wme-map-mouse-down",
+            eventHandler: startSecondClick
+        });
+        sdk.Events.off({
+            eventName: "wme-map-mouse-up",
+            eventHandler: onSecondClick
+        });
+        sdk.Events.off({
+            eventName: "wme-map-mouse-move",
+            eventHandler: cancelSecondClick
+        });
+        sdk.Events.trackLayerEvents({layerName: MARKER_LAYER_NAME});
         //calculate route
     }
 
@@ -2084,7 +2190,6 @@
         }
     }
 
-    let _lastTopCountryId;
     function buildPassesDiv() {
         $('#routespeeds-passes-container').empty();
         // SDK: FR submitted to get passes: https://issuetracker.google.com/issues/406842110
