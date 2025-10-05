@@ -1365,7 +1365,7 @@
 
     function requestRouteFromLiveMap() {
         var atTime = getnowtoday();
-        var numRoutes = options.getAlternatives ? 3 : 1;
+        var numRoutes = Math.min(10, options.getAlternatives ? options.maxRoutes : 1);
         var routeType = (options.routeType === 3) ? "TIME" : "HISTORIC_TIME";
         var avoidTollRoads = options.avoidTolls;
         var avoidPrimaries = options.avoidFreeways;
