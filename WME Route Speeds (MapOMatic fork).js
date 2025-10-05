@@ -169,20 +169,6 @@
     var routeSelected = 0;
     var routeSelectedLast = -1;
 
-    var markerA;
-    var markerB;
-    var markerA_offset_click = [0, 0];
-    var markerB_offset_click = [0, 0];
-
-    var lastmapcenter = [0, 0];
-    var panningX = 0;
-    var panningY = 0;
-    var acceleration = 1.6;
-    var accelerationmin = 10;
-    var accelerationmax = 200;
-    var accelerationmargin = 30;
-    var accelerationbackstop = 3;
-
     var jqueryinfo = 0;
     var tabswitched = 0;
     var leftHand = false;
@@ -594,7 +580,6 @@
         // sdk.Map.addLayer(ROUTE_LAYER_NAME, ...);
 
         window.setInterval(loopWMERouteSpeeds, 500);
-        window.setInterval(panningWMERouteSpeeds, 100);
     }
 
     //--------------------------------------------------------------------------
@@ -609,7 +594,7 @@
             if (tabswitched !== 1) {
                 tabswitched = 1;
                 showRouteLayer(false);
-                showMarkers(false);
+                sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: false});
                 reorderLayers(0);
             }
             return;
@@ -618,7 +603,7 @@
             if (tabswitched !== 2) {
                 tabswitched = 2;
                 showRouteLayer(true);
-                showMarkers(true);
+                sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
                 reorderLayers(1);
             }
         }
@@ -756,43 +741,6 @@
             }
         }
     }
-
-    function panningWMERouteSpeeds() {
-        var WM = W.map;
-
-        //var operationPending = W.vent._events.listeners.operationPending[0];
-        //if (operationPending == undefined) return;
-        //var pending = operationPending.obj.pending[0];
-
-        //var lastcenterX = lastmapcenter[0];
-        //var lastcenterY = lastmapcenter[1];
-        //var centerX = WM.getCenter().lon;
-        //var centerY = WM.getCenter().lat;
-
-        //if (lastcenterX == 0) lastcenterX = centerX;
-        //if (lastcenterY == 0) lastcenterY = centerY;
-
-        //if ( lastcenterX==centerX && lastcenterY==centerY && pending == undefined ) {
-        if (panningX || panningY) {
-            var accelX = panningX;
-            var accelY = panningY;
-
-            if (accelX < 0) accelX = -Math.pow(Math.abs(accelX), acceleration) - accelerationmin;
-            if (accelX > 0) accelX = Math.pow(Math.abs(accelX), acceleration) + accelerationmin;
-
-            if (accelY < 0) accelY = -Math.pow(Math.abs(accelY), acceleration) - accelerationmin;
-            if (accelY > 0) accelY = Math.pow(Math.abs(accelY), acceleration) + accelerationmin;
-
-            if (accelX < -accelerationmax) accelX = -accelerationmax;
-            if (accelY < -accelerationmax) accelY = -accelerationmax;
-            if (accelX > accelerationmax) accelX = accelerationmax;
-            if (accelY > accelerationmax) accelY = accelerationmax;
-
-            WM.getOLMap().pan(accelX, accelY);
-        }
-        //}
-    }
-
 
     function getRoutingManager() {
         let region = sdk.DataModel.Countries.getTopCountry().regionCode;
@@ -973,169 +921,7 @@
         else return null;
     }
 
-    function panmap(draggingobj, x, y) {
-        let viewPortDiv = draggingobj.map.getViewport();
-        let maxX = viewPortDiv.clientWidth;
-        let maxY = viewPortDiv.clientHeight;
-        let lastx = draggingobj.last.x;
-        let lasty = draggingobj.last.y;
-        let mx = x - lastx;
-        let my = y - lasty;
-
-        if (x < accelerationmargin) {
-            if (mx < 0) panningX = x - accelerationmargin;
-            if (mx > accelerationbackstop) panningX = 0;
-        }
-        else if (x > maxX - accelerationmargin) {
-            if (mx > 0) panningX = x - (maxX - accelerationmargin);
-            if (mx < -accelerationbackstop) panningX = 0;
-        }
-        else panningX = 0;
-
-        if (y < accelerationmargin + 30) {
-            if (my < 0) panningY = y - (accelerationmargin + 30);
-            if (my > accelerationbackstop) panningY = 0;
-        }
-        else if (y > maxY - accelerationmargin - 20) {
-            if (my > 0) panningY = y - (maxY - accelerationmargin - 20);
-            if (my < -accelerationbackstop) panningY = 0;
-        }
-        else panningY = 0;
-    }
-
     function createMarkers(lon1, lat1, lon2, lat2, disp) {
-
-        var WM = W.map;
-
-        var mlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsMarkers");
-        var markerLayer = mlayers[0];
-        var p1, p2, lonlat;
-
-        if (markerA === undefined && markerB === undefined) {
-            var di = WazeWrap.Require.DivIcon;
-            var iconA = new di("routespeedsmarkerA");
-            var iconB = new di("routespeedsmarkerB");
-
-            p1 = new OpenLayers.Geometry.Point(lon1, lat1).transform(epsg4326, epsg900913);
-            p2 = new OpenLayers.Geometry.Point(lon2, lat2).transform(epsg4326, epsg900913);
-
-            var lonlatA = new OpenLayers.LonLat(p1.x, p1.y);
-            var lonlatB = new OpenLayers.LonLat(p2.x, p2.y);
-
-            markerA = new OpenLayers.Marker(lonlatA, iconA);
-            markerB = new OpenLayers.Marker(lonlatB, iconB);
-
-            var wh = WazeWrap.Require.DragElement();//require("Waze/Handler/DragElement");
-            markerA.dragging = new wh(WM);
-            markerB.dragging = new wh(WM);
-
-            markerA.dragging.down = function (e) {
-                lonlat = this.map.getOLMap().getLonLatFromViewPortPx(e.xy ?? e);
-                if (lonlat === null) return;
-                markerA_offset_click[0] = markerA.lonlat.lon - lonlat.lon;
-                markerA_offset_click[1] = markerA.lonlat.lat - lonlat.lat;
-            };
-            markerB.dragging.down = function (e) {
-                lonlat = this.map.getOLMap().getLonLatFromViewPortPx(e.xy ?? e);
-                if (lonlat === null) return;
-                markerB_offset_click[0] = markerB.lonlat.lon - lonlat.lon;
-                markerB_offset_click[1] = markerB.lonlat.lat - lonlat.lat;
-            };
-
-            markerA.dragging.move = function (e) {
-                lonlat = this.map.getOLMap().getLonLatFromViewPortPx(e.xy);
-                markerA.lonlat.lon = lonlat.lon + markerA_offset_click[0];
-                markerA.lonlat.lat = lonlat.lat + markerA_offset_click[1];
-                markerLayer.drawMarker(markerA);
-                panmap(this, e.xy.x, e.xy.y);
-            };
-            markerB.dragging.move = function (e) {
-                lonlat = this.map.getOLMap().getLonLatFromViewPortPx(e.xy);
-                markerB.lonlat.lon = lonlat.lon + markerB_offset_click[0];
-                markerB.lonlat.lat = lonlat.lat + markerB_offset_click[1];
-                markerLayer.drawMarker(markerB);
-                panmap(this, e.xy.x, e.xy.y);
-            };
-
-            markerA.dragging.done = function (e) {
-
-                if (!options.enableScript) return;
-
-                panningX = 0;
-                panningY = 0;
-
-                var lonlatA = new OpenLayers.LonLat(markerA.lonlat.lon, markerA.lonlat.lat).transform(epsg900913, epsg4326);
-                var lonlatB = new OpenLayers.LonLat(markerB.lonlat.lon, markerB.lonlat.lat).transform(epsg900913, epsg4326);
-
-                lon1 = parseInt(lonlatA.lon * 1000000.0 + 0.5) / 1000000.0;
-                lat1 = parseInt(lonlatA.lat * 1000000.0 + 0.5) / 1000000.0;
-                lon2 = parseInt(lonlatB.lon * 1000000.0 + 0.5) / 1000000.0;
-                lat2 = parseInt(lonlatB.lat * 1000000.0 + 0.5) / 1000000.0;
-
-                if (getId('sidepanel-routespeeds-a') !== undefined) {
-                    getId('sidepanel-routespeeds-a').value = lon1 + ", " + lat1;
-                    getId('sidepanel-routespeeds-b').value = lon2 + ", " + lat2;
-                }
-
-                var objprog1 = getId('routespeeds-button-livemap');
-                if (objprog1.style.backgroundColor === '') objprog1.style.backgroundColor = '#FF8000';
-
-                requestRouteFromLiveMap();
-            };
-            markerB.dragging.done = function (e) {
-
-                if (!options.enableScript) return;
-
-                panningX = 0;
-                panningY = 0;
-
-                var lonlatA = new OpenLayers.LonLat(markerA.lonlat.lon, markerA.lonlat.lat).transform(epsg900913, epsg4326);
-                var lonlatB = new OpenLayers.LonLat(markerB.lonlat.lon, markerB.lonlat.lat).transform(epsg900913, epsg4326);
-
-                lon1 = parseInt(lonlatA.lon * 1000000.0 + 0.5) / 1000000.0;
-                lat1 = parseInt(lonlatA.lat * 1000000.0 + 0.5) / 1000000.0;
-                lon2 = parseInt(lonlatB.lon * 1000000.0 + 0.5) / 1000000.0;
-                lat2 = parseInt(lonlatB.lat * 1000000.0 + 0.5) / 1000000.0;
-
-                if (getId('sidepanel-routespeeds-a') !== undefined) {
-                    getId('sidepanel-routespeeds-a').value = lon1 + ", " + lat1;
-                    getId('sidepanel-routespeeds-b').value = lon2 + ", " + lat2;
-                }
-
-                var objprog1 = getId('routespeeds-button-livemap');
-                if (objprog1.style.backgroundColor === '') objprog1.style.backgroundColor = '#FF8000';
-
-                requestRouteFromLiveMap();
-            };
-
-            markerA.dragging.activate(iconA.$div);
-            markerB.dragging.activate(iconB.$div);
-
-            markerA.display(disp);
-            markerB.display(disp);
-
-            markerLayer.addMarker(markerA);
-            markerLayer.addMarker(markerB);
-        }
-        else {
-            p1 = new OpenLayers.Geometry.Point(lon1, lat1).transform(epsg4326, epsg900913);
-            p2 = new OpenLayers.Geometry.Point(lon2, lat2).transform(epsg4326, epsg900913);
-
-            markerA.lonlat.lon = p1.x;
-            markerA.lonlat.lat = p1.y;
-            markerB.lonlat.lon = p2.x;
-            markerB.lonlat.lat = p2.y;
-
-            markerA.display(disp);
-            markerB.display(disp);
-
-            markerLayer.drawMarker(markerA);
-            markerLayer.drawMarker(markerB);
-        }
-
-        markerA.created = disp;
-        markerB.created = disp;
-
         sdk.Map.removeAllFeaturesFromLayer({layerName: MARKER_LAYER_NAME});
         placeMarker("A", lon1, lat1);
         placeMarker("B", lon2, lat2);
@@ -1309,22 +1095,6 @@
         var routeLayer = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines")[0];
         if (routeLayer === undefined) return;
         routeLayer.setVisibility(disp);
-    }
-
-    function showMarkers(disp) {
-        var WM = W.map;
-
-        var mlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsMarkers");
-        var markerLayer = mlayers[0];
-
-        if (markerLayer === undefined) return false;
-        if (markerA === undefined) return false;
-        if (markerB === undefined) return false;
-
-        if (markerA.created) markerA.display(disp);
-        if (markerB.created) markerB.display(disp);
-
-        return (markerA.created && markerB.created);
     }
 
     function createRouteFeatures(id, routewsp, routeodc) {
@@ -1974,8 +1744,22 @@
         livemapRoute();
     }
 
-    function clickA() { gotoMarker(markerA); }
-    function clickB() { gotoMarker(markerB); }
+    function clickA() {
+        sdk.Map.centerMapOnGeometry({
+            geometry: {
+                type: "Point",
+                coordinates: [pointA.lon, pointA.lat]
+            }
+        })
+    }
+    function clickB() {
+        sdk.Map.centerMapOnGeometry({
+            geometry: {
+                type: "Point",
+                coordinates: [pointB.lon, pointB.lat]
+            }
+        })
+    }
 
     function gotoMarker(marker) {
 
@@ -2001,13 +1785,13 @@
             let routeLayer = rlayers[0];
             if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
-            showMarkers(false);
+            sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: false});
             reorderLayers(0);
         }
         else {
             getId('sidepanel-routespeeds').style.color = "";
-
-            if (showMarkers(true)) drawRoutes();
+            sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
+            if (routesShown.length > 0) drawRoutes();
             reorderLayers(1);
         }
     }
