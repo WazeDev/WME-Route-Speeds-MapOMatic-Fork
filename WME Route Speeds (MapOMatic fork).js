@@ -653,23 +653,6 @@
             return;
         }
 
-        var mlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsMarkers");
-        if (mlayers.length === 0) {
-
-            var drc_mapLayer = new OpenLayers.Layer.Markers(SCRIPT_SHORT_NAME + " Markers", {
-                displayInLayerSwitcher: false,
-                uniqueName: "__DrawRouteSpeedsMarkers"
-            });
-
-            I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeedsMarkers"] = SCRIPT_SHORT_NAME + " Markers";
-            WM.addLayer(drc_mapLayer);
-            drc_mapLayer.setVisibility(true);
-
-            createMarkers(16, 52, 17, 53, false);
-
-            return;
-        }
-
         if (jqueryinfo === 1) {
             jqueryinfo = 2;
             log('jQuery reloaded ver. ' + jQuery.fn.jquery);
