@@ -142,8 +142,7 @@
 
     let sdk;
 
-    let _lastTopCountryId;
-    let countryPassList = [];
+    let topCountry;
 
     let mouseDownHandler;
     let mouseUpHandler;
@@ -532,9 +531,9 @@
         getId('routespeeds-button-A').onclick = clickA;
         getId('routespeeds-button-B').onclick = clickB;
 
-        const topCountry = W.model.getTopCountry();
-        if (topCountry) {
-            _lastTopCountryId = topCountry.attributes.id;
+        const newTopCountry = sdk.DataModel.Countries.getTopCountry();
+        if (newTopCountry) {
+            topCountry = newTopCountry;
             buildPassesDiv();
         }
 
@@ -838,8 +837,8 @@
     }
 
     function updatePassesLabel() {
-        let count = countryPassList.filter(pass => options.passes.indexOf(pass.key) > -1).length;
-        $('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${countryPassList.length})`);
+        let count = topCountry.restrictionSubscriptions.filter(pass => options.passes.indexOf(pass.id) > -1).length;
+        $('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${topCountry.restrictionSubscriptions.length})`);
     }
 
     function addLabel(lines, segmentInfo) {
@@ -1575,11 +1574,10 @@
     // Map event handlers
 
     function onMapDataLoaded(event) {
-        // Detect when the "top" country changes and update the list of passes.
         try {
-            const topCountry = W.model.getTopCountry();
-            if (topCountry && topCountry.attributes.id !== _lastTopCountryId) {
-                _lastTopCountryId = topCountry.attributes.id;
+            const newTopCountry = sdk.DataModel.Countries.getTopCountry();
+            if (newTopCountry && (!topCountry || newTopCountry.id != topCountry.id)) {
+                topCountry = newTopCountry;
                 buildPassesDiv();
             }
         } catch (ex) {
@@ -1971,68 +1969,52 @@
 
     function buildPassesDiv() {
         $('#routespeeds-passes-container').empty();
-        // SDK: FR submitted to get passes: https://issuetracker.google.com/issues/406842110
-        let passesObj = W.model.getTopCountry().attributes.restrictionSubscriptions;
-        if (passesObj) {
-            countryPassList = Object.keys(passesObj).map(key => { return { key: key, name: passesObj[key] } }).sort((a, b) => {
-                if (a.name > b.name) {
-                    return 1;
-                } else if (a.name < b.name) {
-                    return -1;
-                }
-                return 0;
-            });
-        } else {
-            countryPassList = [];
-        }
+        if (topCountry.restrictionSubscriptions.length == 0) return;
+        $('#routespeeds-passes-container').append(
+            '<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
+            '  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
+            '    <i class="fa fa-fw fa-chevron-down" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>' +
+            '    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
+            '  </legend>' +
+            '  <div id="routespeeds-passes-internal-container" style="padding-top:0px;">' +
+            topCountry.restrictionSubscriptions.map((pass, i) => {
+                //let id = 'routespeeds-pass-' + pass.key;
+                return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
+                    '      <input id="routespeeds-pass-' + i + '" type="checkbox" class="routespeeds-pass-checkbox" data-pass-key = "' + pass.id + '">' +
+                    '      <label for="routespeeds-pass-' + i + '" style="white-space:pre-line">' + pass.name + '</label>' +
+                    '    </div>';
+            }).join(' ') +
+            '  </div>' +
+            '</fieldset>'
+        );
 
-        if (countryPassList.length) {
-            $('#routespeeds-passes-container').append(
-                '<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
-                '  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
-                '    <i class="fa fa-fw fa-chevron-down" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>' +
-                '    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
-                '  </legend>' +
-                '  <div id="routespeeds-passes-internal-container" style="padding-top:0px;">' +
-                countryPassList.map((pass, i) => {
-                    //let id = 'routespeeds-pass-' + pass.key;
-                    return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
-                        '      <input id="routespeeds-pass-' + i + '" type="checkbox" class="routespeeds-pass-checkbox" data-pass-key = "' + pass.key + '">' +
-                        '      <label for="routespeeds-pass-' + i + '" style="white-space:pre-line">' + pass.name + '</label>' +
-                        '    </div>';
-                }).join(' ') +
-                '  </div>' +
-                '</fieldset>'
-            );
+        $('.routespeeds-pass-checkbox').click(clickPassOption);
 
-            $('.routespeeds-pass-checkbox').click(clickPassOption);
+        $('#routespeeds-passes-legend').click(function () {
+            let $this = $(this);
+            let $chevron = $($this.children()[0]);
+            $chevron
+                .toggleClass('fa fa-fw fa-chevron-down')
+                .toggleClass('fa fa-fw fa-chevron-right');
+            let collapse = $chevron.hasClass('fa-chevron-right');
+            let checkboxDivs = $('input.routespeeds-pass-checkbox:not(:checked)').parent();
+            if (collapse) {
+                checkboxDivs.css('display', 'none');
+            } else {
+                checkboxDivs.css('display', 'block');
+            }
+            // $($this.children()[0])
+            // 	.toggleClass('fa fa-fw fa-chevron-down')
+            // 	.toggleClass('fa fa-fw fa-chevron-right');
+            // $($this.siblings()[0]).toggleClass('collapse');
+        })
 
-            $('#routespeeds-passes-legend').click(function () {
-                let $this = $(this);
-                let $chevron = $($this.children()[0]);
-                $chevron
-                    .toggleClass('fa fa-fw fa-chevron-down')
-                    .toggleClass('fa fa-fw fa-chevron-right');
-                let collapse = $chevron.hasClass('fa-chevron-right');
-                let checkboxDivs = $('input.routespeeds-pass-checkbox:not(:checked)').parent();
-                if (collapse) {
-                    checkboxDivs.css('display', 'none');
-                } else {
-                    checkboxDivs.css('display', 'block');
-                }
-                // $($this.children()[0])
-                // 	.toggleClass('fa fa-fw fa-chevron-down')
-                // 	.toggleClass('fa fa-fw fa-chevron-right');
-                // $($this.siblings()[0]).toggleClass('collapse');
-            })
-
-            $('.routespeeds-pass-checkbox').each((i, elem) => {
-                const $elem = $(elem);
-                const passKey = $elem.data('pass-key');
-                $elem.prop('checked', options.passes.includes(passKey));
-            });
-            updatePassesLabel();
-        }
+        $('.routespeeds-pass-checkbox').each((i, elem) => {
+            const $elem = $(elem);
+            const passKey = $elem.data('pass-key');
+            $elem.prop('checked', options.passes.includes(passKey));
+        });
+        updatePassesLabel();
     }
 
     //--------------------------------------------------------------------------
