@@ -538,8 +538,10 @@
             buildPassesDiv();
         }
 
-        //WazeWrap.Events.register('zoomend', null, drawRoutes);
-        W.model.events.register('mergeend', null, onModelMergeEnd);
+        sdk.Events.on({
+            eventName: "wme-map-data-loaded",
+            eventHandler: onMapDataLoaded
+        });
 
         sdk.Map.addLayer({
             layerName: MARKER_LAYER_NAME,
@@ -938,140 +940,6 @@
     function moveMarker(id, lon, lat) {
         sdk.Map.removeFeatureFromLayer({layerName: MARKER_LAYER_NAME, featureId: id});
         placeMarker(id, lon, lat);
-    }
-
-    function mouseEnterHandler(event) {
-        if (mouseDownHandler) {
-            sdk.Events.off({
-                eventName: "wme-map-mouse-down",
-                eventHandler: mouseDownHandler
-            });
-        }
-        mouseDownHandler = () => startFirstClick(event.featureId);
-        sdk.Events.on({
-            eventName: "wme-map-mouse-down",
-            eventHandler: mouseDownHandler
-        });
-    }
-
-    function mouseLeaveHandler(event) {
-        if (mouseDownHandler) {
-            sdk.Events.off({
-                eventName: "wme-map-mouse-down",
-                eventHandler: mouseDownHandler
-            });
-            mouseDownHandler = false;
-        }
-    }
-
-    function startFirstClick(id) {
-        mouseUpHandler = (event) => onFirstClick(id, event);
-        sdk.Events.on({
-            eventName: "wme-map-mouse-up",
-            eventHandler: mouseUpHandler
-        });
-        sdk.Events.on({
-            eventName: "wme-map-mouse-move",
-            eventHandler: cancelFirstClick
-        });
-    }
-
-    function cancelFirstClick(event) {
-        sdk.Events.off({
-            eventName: "wme-map-mouse-up",
-            eventHandler: mouseUpHandler
-        });
-        sdk.Events.off({
-            eventName: "wme-map-mouse-move",
-            eventHandler: cancelFirstClick
-        });
-    }
-
-    function onFirstClick(id, event) {
-        sdk.Events.stopLayerEventsTracking({layerName: MARKER_LAYER_NAME});
-        mouseLeaveHandler(event);
-        cancelFirstClick(event);
-        sdk.Events.on({
-            eventName: "wme-map-mouse-down",
-            eventHandler: startSecondClick
-        });
-        let markerLocationPixel = sdk.Map.getMapPixelFromLonLat({
-            lonLat: {
-                lon: id == "A" ? pointA.lon : pointB.lon,
-                lat: id == "A" ? pointA.lat : pointB.lat
-            }
-        });
-        let offsetX = markerLocationPixel.x - event.x;
-        let offsetY = markerLocationPixel.y - event.y;
-        mouseMoveHandler = ({x, y}) => onMouseMoveWithMarker(id, x + offsetX, y + offsetY);
-        sdk.Events.on({
-            eventName: "wme-map-mouse-move",
-            eventHandler: mouseMoveHandler
-        });
-    }
-
-    function onMouseMoveWithMarker(id, x, y) {
-        let newLocation = sdk.Map.getLonLatFromMapPixel({x: x, y: y});
-        moveMarker(id, newLocation.lon, newLocation.lat);
-    }
-
-    function startSecondClick(event) {
-        sdk.Events.off({
-            eventName: "wme-map-mouse-move",
-            eventHandler: mouseMoveHandler
-        });
-        sdk.Events.on({
-            eventName: "wme-map-mouse-up",
-            eventHandler: onSecondClick
-        });
-        sdk.Events.on({
-            eventName: "wme-map-mouse-move",
-            eventHandler: cancelSecondClick
-        });
-    }
-
-    function cancelSecondClick(event) {
-        sdk.Events.off({
-            eventName: "wme-map-mouse-up",
-            eventHandler: onSecondClick
-        });
-        sdk.Events.off({
-            eventName: "wme-map-mouse-move",
-            eventHandler: cancelSecondClick
-        });
-        sdk.Events.on({
-            eventName: "wme-map-mouse-move",
-            eventHandler: mouseMoveHandler
-        });
-    }
-
-    function onSecondClick(event) {
-        sdk.Events.off({
-            eventName: "wme-map-mouse-down",
-            eventHandler: startSecondClick
-        });
-        sdk.Events.off({
-            eventName: "wme-map-mouse-up",
-            eventHandler: onSecondClick
-        });
-        sdk.Events.off({
-            eventName: "wme-map-mouse-move",
-            eventHandler: cancelSecondClick
-        });
-        sdk.Events.trackLayerEvents({layerName: MARKER_LAYER_NAME});
-
-        let lon1 = parseInt(pointA.lon * 1000000.0 + 0.5) / 1000000.0;
-        let lat1 = parseInt(pointA.lat * 1000000.0 + 0.5) / 1000000.0;
-        let lon2 = parseInt(pointB.lon * 1000000.0 + 0.5) / 1000000.0;
-        let lat2 = parseInt(pointB.lat * 1000000.0 + 0.5) / 1000000.0;
-        if (getId('sidepanel-routespeeds-a') !== undefined) {
-            getId('sidepanel-routespeeds-a').value = lon1 + ", " + lat1;
-            getId('sidepanel-routespeeds-b').value = lon2 + ", " + lat2;
-        }
-        var objprog1 = getId('routespeeds-button-livemap');
-        if (objprog1.style.backgroundColor === '') objprog1.style.backgroundColor = '#FF8000';
-
-        requestRouteFromLiveMap();
     }
 
     function showRouteLayer(disp) {
@@ -1704,7 +1572,157 @@
     }
 
     //--------------------------------------------------------------------------
-    // Event handlers
+    // Map event handlers
+
+    function onMapDataLoaded(event) {
+        // Detect when the "top" country changes and update the list of passes.
+        try {
+            const topCountry = W.model.getTopCountry();
+            if (topCountry && topCountry.attributes.id !== _lastTopCountryId) {
+                _lastTopCountryId = topCountry.attributes.id;
+                buildPassesDiv();
+            }
+        } catch (ex) {
+            error(ex);
+        }
+    }
+
+    function mouseEnterHandler(event) {
+        if (mouseDownHandler) {
+            sdk.Events.off({
+                eventName: "wme-map-mouse-down",
+                eventHandler: mouseDownHandler
+            });
+        }
+        mouseDownHandler = () => startFirstClick(event.featureId);
+        sdk.Events.on({
+            eventName: "wme-map-mouse-down",
+            eventHandler: mouseDownHandler
+        });
+    }
+
+    function mouseLeaveHandler(event) {
+        if (mouseDownHandler) {
+            sdk.Events.off({
+                eventName: "wme-map-mouse-down",
+                eventHandler: mouseDownHandler
+            });
+            mouseDownHandler = false;
+        }
+    }
+
+    function startFirstClick(id) {
+        mouseUpHandler = (event) => onFirstClick(id, event);
+        sdk.Events.on({
+            eventName: "wme-map-mouse-up",
+            eventHandler: mouseUpHandler
+        });
+        sdk.Events.on({
+            eventName: "wme-map-mouse-move",
+            eventHandler: cancelFirstClick
+        });
+    }
+
+    function cancelFirstClick(event) {
+        sdk.Events.off({
+            eventName: "wme-map-mouse-up",
+            eventHandler: mouseUpHandler
+        });
+        sdk.Events.off({
+            eventName: "wme-map-mouse-move",
+            eventHandler: cancelFirstClick
+        });
+    }
+
+    function onFirstClick(id, event) {
+        sdk.Events.stopLayerEventsTracking({layerName: MARKER_LAYER_NAME});
+        mouseLeaveHandler(event);
+        cancelFirstClick(event);
+        sdk.Events.on({
+            eventName: "wme-map-mouse-down",
+            eventHandler: startSecondClick
+        });
+        let markerLocationPixel = sdk.Map.getMapPixelFromLonLat({
+            lonLat: {
+                lon: id == "A" ? pointA.lon : pointB.lon,
+                lat: id == "A" ? pointA.lat : pointB.lat
+            }
+        });
+        let offsetX = markerLocationPixel.x - event.x;
+        let offsetY = markerLocationPixel.y - event.y;
+        mouseMoveHandler = ({x, y}) => onMouseMoveWithMarker(id, x + offsetX, y + offsetY);
+        sdk.Events.on({
+            eventName: "wme-map-mouse-move",
+            eventHandler: mouseMoveHandler
+        });
+    }
+
+    function onMouseMoveWithMarker(id, x, y) {
+        let newLocation = sdk.Map.getLonLatFromMapPixel({x: x, y: y});
+        moveMarker(id, newLocation.lon, newLocation.lat);
+    }
+
+    function startSecondClick(event) {
+        sdk.Events.off({
+            eventName: "wme-map-mouse-move",
+            eventHandler: mouseMoveHandler
+        });
+        sdk.Events.on({
+            eventName: "wme-map-mouse-up",
+            eventHandler: onSecondClick
+        });
+        sdk.Events.on({
+            eventName: "wme-map-mouse-move",
+            eventHandler: cancelSecondClick
+        });
+    }
+
+    function cancelSecondClick(event) {
+        sdk.Events.off({
+            eventName: "wme-map-mouse-up",
+            eventHandler: onSecondClick
+        });
+        sdk.Events.off({
+            eventName: "wme-map-mouse-move",
+            eventHandler: cancelSecondClick
+        });
+        sdk.Events.on({
+            eventName: "wme-map-mouse-move",
+            eventHandler: mouseMoveHandler
+        });
+    }
+
+    function onSecondClick(event) {
+        sdk.Events.off({
+            eventName: "wme-map-mouse-down",
+            eventHandler: startSecondClick
+        });
+        sdk.Events.off({
+            eventName: "wme-map-mouse-up",
+            eventHandler: onSecondClick
+        });
+        sdk.Events.off({
+            eventName: "wme-map-mouse-move",
+            eventHandler: cancelSecondClick
+        });
+        sdk.Events.trackLayerEvents({layerName: MARKER_LAYER_NAME});
+
+        let lon1 = parseInt(pointA.lon * 1000000.0 + 0.5) / 1000000.0;
+        let lat1 = parseInt(pointA.lat * 1000000.0 + 0.5) / 1000000.0;
+        let lon2 = parseInt(pointB.lon * 1000000.0 + 0.5) / 1000000.0;
+        let lat2 = parseInt(pointB.lat * 1000000.0 + 0.5) / 1000000.0;
+        if (getId('sidepanel-routespeeds-a') !== undefined) {
+            getId('sidepanel-routespeeds-a').value = lon1 + ", " + lat1;
+            getId('sidepanel-routespeeds-b').value = lon2 + ", " + lat2;
+        }
+        var objprog1 = getId('routespeeds-button-livemap');
+        if (objprog1.style.backgroundColor === '') objprog1.style.backgroundColor = '#FF8000';
+
+        requestRouteFromLiveMap();
+    }
+
+    //--------------------------------------------------------------------------
+    // Sidebar event handlers
 
     function resetOptionsToLivemapRouteClick() {
         if (routewait) return;
@@ -2014,19 +2032,6 @@
                 $elem.prop('checked', options.passes.includes(passKey));
             });
             updatePassesLabel();
-        }
-    }
-
-    function onModelMergeEnd() {
-        // Detect when the "top" country changes and update the list of passes.
-        try {
-            const topCountry = W.model.getTopCountry();
-            if (topCountry && topCountry.attributes.id !== _lastTopCountryId) {
-                _lastTopCountryId = topCountry.attributes.id;
-                buildPassesDiv();
-            }
-        } catch (ex) {
-            error(ex);
         }
     }
 
