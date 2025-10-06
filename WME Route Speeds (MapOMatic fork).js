@@ -718,7 +718,7 @@
         }
 
         if (!z17_reached) {
-            if (W.map.getZoom() >= 17) {
+            if (sdk.Map.getZoomLevel() >= 17) {
                 z17_reached = true;
                 switchRoute();
             }
@@ -1147,7 +1147,7 @@
 
         var doubletrafficoffset = 0;
         if (doubletraffic) {
-            doubletrafficoffset = 11 * Math.pow(2.0, 17 - W.map.getZoom());
+            doubletrafficoffset = 11 * Math.pow(2.0, 17 - sdk.Map.getZoomLevel());
         }
 
 
@@ -1728,30 +1728,10 @@
     }
 
     function clickA() {
-        sdk.Map.centerMapOnGeometry({
-            geometry: {
-                type: "Point",
-                coordinates: [pointA.lon, pointA.lat]
-            }
-        })
+        if (pointA.lon !== undefined) sdk.Map.setMapCenter({lonLat: pointA});
     }
     function clickB() {
-        sdk.Map.centerMapOnGeometry({
-            geometry: {
-                type: "Point",
-                coordinates: [pointB.lon, pointB.lat]
-            }
-        })
-    }
-
-    function gotoMarker(marker) {
-
-        if (!options.enableScript || marker === undefined || !marker.created) return;
-
-        let pt = marker.lonlat;
-        let zoom = W.map.getZoom();
-
-        W.map.getOLMap().setCenter([pt.lon, pt.lat], zoom);
+        if (pointB.lon !== undefined) sdk.Map.setMapCenter({lonLat: pointB});
     }
 
     function clickEnableScript() {
