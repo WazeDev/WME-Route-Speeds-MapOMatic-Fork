@@ -726,7 +726,7 @@
     }
 
     function getRoutingManager() {
-        let region = sdk.DataModel.Countries.getTopCountry().regionCode;
+        let region = sdk.Settings.getRegionCode();
         if (region == "usa") {
             return 'https://routing-livemap-am.waze.com/RoutingManager/routingRequest';
         } else if (region == "il") {
