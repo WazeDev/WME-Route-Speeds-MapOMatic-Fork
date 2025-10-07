@@ -493,11 +493,6 @@
         if (!options.enableScript) getId('sidepanel-routespeeds').style.color = "#A0A0A0";
         else getId('sidepanel-routespeeds').style.color = "";
 
-        getId('routespeeds-maxroutes').value = options.maxRoutes;
-        getId('routespeeds-routetype').value = options.routeType;
-        getId('routespeeds-vehicletype').value = options.vehicleType;
-        getId('routespeeds-userbs').onclick = clickUseRBS;
-
         getId('routespeeds-enablescript').onclick = clickEnableScript;
         getId('routespeeds-showLabels').onclick = clickShowLabels;
         getId('routespeeds-showSpeeds').onclick = clickShowSpeeds;
@@ -513,6 +508,7 @@
         getId('routespeeds-routetype').onchange = clickRouteType;
         getId('routespeeds-allowuturns').onclick = clickAllowUTurns;
         getId('routespeeds-routingorder').onclick = clickRoutingOrder;
+        getId('routespeeds-userbs').onclick = clickUseRBS;
         getId('routespeeds-avoiddifficult').onclick = clickAvoidDifficult;
         getId('routespeeds-avoidferries').onclick = clickAvoidFerries;
         getId('routespeeds-vehicletype').onchange = clickVehicleType;
@@ -616,10 +612,7 @@
         //console.log(routespeedsbutton_ofsW, routespeedsbutton_ofsH);
         //if (routespeedsbutton_ofsW == 0 || routespeedsbutton_ofsH==0) return;
 
-
-        var WM = W.map;
-
-        var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+        var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
         if (rlayers.length === 0) {
 
             var drc_style = new OpenLayers.Style({
@@ -649,7 +642,7 @@
 
             I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeedsLines"] = SCRIPT_SHORT_NAME + " Lines";
             drc_mapLayer.setVisibility(true);
-            WM.addLayer(drc_mapLayer);
+            W.map.addLayer(drc_mapLayer);
 
             return;
         }
@@ -672,7 +665,7 @@
         }
 
 
-        var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+        var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
         var routeLayer = rlayers[0];
         if (routeLayer === undefined) return;
 
@@ -945,9 +938,7 @@
 
     function createRouteFeatures(id, routewsp, routeodc) {
 
-        var WM = W.map;
-
-        var rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+        var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
         var routeLayer = rlayers[0];
         if (routeLayer === undefined) return;
 
@@ -1747,8 +1738,6 @@
     }
 
     function clickEnableScript() {
-        var WM = W.map;
-
         options.enableScript = (getId('routespeeds-enablescript').checked === true);
 
         if (!options.enableScript) {
@@ -1756,7 +1745,7 @@
 
             getId('routespeeds-summaries').style.visibility = 'hidden';
 
-            let rlayers = WM.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
+            let rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
             let routeLayer = rlayers[0];
             if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
