@@ -1,17 +1,18 @@
 // ==UserScript==
-// @name                WME Route Speeds (MapOMatic fork)
-// @description         Shows segment speeds in a route.
-// @include             /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version             2025.06.28.000
-// @grant               GM_xmlhttpRequest
-// @grant               unsafeWindow
-// @namespace           https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
-// @require             https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
-// @author              wlodek76 (forked by MapOMatic)
-// @copyright           2014, 2015 wlodek76
-// @contributor         2014, 2015 FZ69617
-// @connect             greasyfork.org
-// @connect             waze.com
+// @name         WME Route Speeds (MapOMatic fork)
+// @description  Shows segment speeds in a route.
+// @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
+// @version      2025.06.28.000
+// @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
+// @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
+// @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
+// @require      https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js
+// @author       wlodek76 (forked by MapOMatic)
+// @copyright    2014, 2015 wlodek76
+// @contributor  2014, 2015 FZ69617
+// @connect      greasyfork.org
+// @connect      waze.com
 // ==/UserScript==
 
 /* global W */
@@ -672,18 +673,21 @@
         var numSelected = WazeWrap.getSelectedDataModelObjects().length;
         var seg1 = WazeWrap.getSelectedDataModelObjects()[0];
         var seg2 = WazeWrap.getSelectedDataModelObjects()[1];
+        let selection = sdk.Editing.getSelection();
+        let selectedIDs;
+        if (selection !== null) selectedIDs = selection.ids;
 
         if (seg1 !== undefined && seg2 !== undefined) {
             if (!selected) {
                 selected = 1;
 
-                var coords1 = getSegmentMidPoint(seg1, 0);
-                var coords2 = getSegmentMidPoint(seg2, 1);
+                var coords1 = getSegmentMidpoint(selectedIDs[0]);
+                var coords2 = getSegmentMidpoint(selectedIDs[1]);
 
-                var lon1 = parseInt(coords1.lon * 1000000.0 + 0.5) / 1000000.0;
-                var lat1 = parseInt(coords1.lat * 1000000.0 + 0.5) / 1000000.0;
-                var lon2 = parseInt(coords2.lon * 1000000.0 + 0.5) / 1000000.0;
-                var lat2 = parseInt(coords2.lat * 1000000.0 + 0.5) / 1000000.0;
+                var lon1 = parseInt(coords1[0] * 1000000.0 + 0.5) / 1000000.0;
+                var lat1 = parseInt(coords1[1] * 1000000.0 + 0.5) / 1000000.0;
+                var lon2 = parseInt(coords2[0] * 1000000.0 + 0.5) / 1000000.0;
+                var lat2 = parseInt(coords2[1] * 1000000.0 + 0.5) / 1000000.0;
 
                 if (getId('sidepanel-routespeeds-a') !== undefined) {
                     getId('sidepanel-routespeeds-a').value = lon1 + ", " + lat1;
@@ -726,61 +730,9 @@
         }
     }
 
-    function getSegmentMidPoint(seg, end) {
-
-        var points, p1, p2, dx, dy, x, y;
-        var olGeo = W.userscripts.toOLGeometry(seg.getGeometry());
-        points = olGeo.components.length;
-
-        if (points == 2) {
-            p1 = olGeo.components[0];
-            p2 = olGeo.components[1];
-
-            x = p1.x + (p2.x - p1.x) * 0.5;
-            y = p1.y + (p2.y - p1.y) * 0.5;
-            return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
-        }
-
-        var length = 0;
-        for (var i = 0; i < points - 1; i++) {
-            p1 = olGeo.components[i + 0];
-            p2 = olGeo.components[i + 1];
-            dx = p2.x - p1.x;
-            dy = p2.y - p1.y;
-            length += Math.sqrt(dx * dx + dy * dy);
-        }
-        var midlen = length / 2.0;
-
-        var length1 = 0;
-        var length2 = 0;
-        for (i = 0; i < points - 1; i++) {
-            p1 = olGeo.components[i + 0];
-            p2 = olGeo.components[i + 1];
-            dx = p2.x - p1.x;
-            dy = p2.y - p1.y;
-            length1 = length2;
-            length2 = length2 + Math.sqrt(dx * dx + dy * dy);
-
-            if (midlen >= length1 && midlen < length2) {
-                var proc = (midlen - length1) / (length2 - length1);
-                x = p1.x + (p2.x - p1.x) * proc;
-                y = p1.y + (p2.y - p1.y) * proc;
-                return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
-            }
-        }
-
-        if (end === 0) {
-            p1 = olGeo.components[0];
-            p2 = olGeo.components[1];
-        }
-        else {
-            p1 = olGeo.components[points - 2];
-            p2 = olGeo.components[points - 1];
-        }
-
-        x = p1.x + (p2.x - p1.x) * 0.5;
-        y = p1.y + (p2.y - p1.y) * 0.5;
-        return OpenLayers.Layer.SphericalMercator.inverseMercator(x, y);
+    function getSegmentMidpoint(id) {
+        let geometry = sdk.DataModel.Segments.getById({segmentId: id}).geometry;
+        return turf.along(geometry, turf.length(geometry) / 2).geometry.coordinates;
     }
 
     function getLabelTime(segmentInfo) {
