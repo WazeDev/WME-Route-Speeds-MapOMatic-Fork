@@ -152,15 +152,18 @@
     let pointA = {};
     let pointB = {};
 
+    let tabStatus = 0;
+    let jQueryStatus = 0;
+
     let z17_reached = false;
     let baseZIndex = 0;
     let originalZIndices = [];
     let layersMoved = [];
 
+    let twoSegmentsSelected = false;
+
     var epsg900913;
     var epsg4326;
-
-    var selected = 0;
 
     var routesReceived = [];
     var routesShown = [];
@@ -169,8 +172,6 @@
     var routeSelected = 0;
     var routeSelectedLast = -1;
 
-    var jqueryinfo = 0;
-    var tabswitched = 0;
 
     function log(msg) {
         console.log(SCRIPT_SHORT_NAME + ":", msg);
@@ -587,23 +588,22 @@
 
         if (!options.enableScript) return;
 
-        var tabOpen = $('#user-tabs #routespeeds-tab-label').parent().parent().attr('aria-expanded') == "true";
-        if (!tabOpen) {
-            if (tabswitched !== 1) {
-                tabswitched = 1;
+        let tabOpen = $('#user-tabs #routespeeds-tab-label').parent().parent().attr('aria-expanded') == "true";
+        if (tabOpen) {
+            if (tabStatus !== 2) {
+                tabStatus = 2;
+                showRouteLayer(true);
+                sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
+                reorderLayers(1);
+            }
+        } else {
+            if (tabStatus !== 1) {
+                tabStatus = 1;
                 showRouteLayer(false);
                 sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: false});
                 reorderLayers(0);
             }
             return;
-        }
-        else {
-            if (tabswitched !== 2) {
-                tabswitched = 2;
-                showRouteLayer(true);
-                sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
-                reorderLayers(1);
-            }
         }
 
         //var routespeedsbutton = getId('routespeeds-button-livemap');
@@ -648,41 +648,35 @@
             return;
         }
 
-        if (jqueryinfo === 1) {
-            jqueryinfo = 2;
+        if (jQueryStatus === 1) {
+            jQueryStatus = 2;
             log('jQuery reloaded ver. ' + jQuery.fn.jquery);
         }
-        if (jqueryinfo === 0) {
+        if (jQueryStatus === 0) {
             if (typeof jQuery === 'undefined') {
                 log('jQuery current ver. ' + jQuery.fn.jquery);
-
-                var script = document.createElement('script');
+                let script = document.createElement('script');
                 script.type = "text/javascript";
                 script.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js";
                 //script.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js";
                 document.getElementsByTagName('head')[0].appendChild(script);
-                jqueryinfo = 1;
+                jQueryStatus = 1;
             }
         }
-
 
         var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
         var routeLayer = rlayers[0];
         if (routeLayer === undefined) return;
 
-        var numSelected = WazeWrap.getSelectedDataModelObjects().length;
-        var seg1 = WazeWrap.getSelectedDataModelObjects()[0];
-        var seg2 = WazeWrap.getSelectedDataModelObjects()[1];
         let selection = sdk.Editing.getSelection();
-        let selectedIDs;
-        if (selection !== null) selectedIDs = selection.ids;
-
-        if (seg1 !== undefined && seg2 !== undefined) {
-            if (!selected) {
-                selected = 1;
+        let selectedIDs = [];
+        if (selection !== null && selection.objectType == "segment") selectedIDs = selection.ids;
+        if (selectedIDs.length >= 2) {
+            if (!twoSegmentsSelected) {
+                twoSegmentsSelected = true;
 
                 var coords1 = getSegmentMidpoint(selectedIDs[0]);
-                var coords2 = getSegmentMidpoint(selectedIDs[1]);
+                var coords2 = getSegmentMidpoint(selectedIDs[selectedIDs.length - 1]);
 
                 var lon1 = parseInt(coords1[0] * 1000000.0 + 0.5) / 1000000.0;
                 var lat1 = parseInt(coords1[1] * 1000000.0 + 0.5) / 1000000.0;
@@ -698,16 +692,11 @@
 
                 requestRouteFromLiveMap();
             }
-        }
-        else {
-            if (seg1 !== undefined || seg2 !== undefined) {
-                if (selected) {
-                    selected = 0;
-
-                    routeLayer.removeAllFeatures();
-
-                    getId('routespeeds-summaries').style.visibility = 'hidden';
-                }
+        } else if (selectedIDs.length == 1) {
+            if (twoSegmentsSelected) {
+                twoSegmentsSelected = false;
+                routeLayer.removeAllFeatures();
+                getId('routespeeds-summaries').style.visibility = 'hidden';
             }
         }
 
