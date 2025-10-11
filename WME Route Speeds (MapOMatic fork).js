@@ -519,7 +519,7 @@
         getId('sidepanel-routespeeds-b').onkeydown = enterAB;
 
         getId('routespeeds-button-livemap').onclick = livemapRouteClick;
-        getId('routespeeds-button-reverse').onclick = reverseRoute;
+        getId('routespeeds-button-reverse').onclick = clickReverseRoute;
         getId('routespeeds-reset-options-to-livemap-route').onclick = resetOptionsToLivemapRouteClick;
 
         getId('routespeeds-hour').onchange = hourChange;
@@ -606,16 +606,24 @@
             return;
         }
 
-        //var routespeedsbutton = getId('routespeeds-button-livemap');
-        //if (routespeedsbutton == 'undefined') return;
-        //var routespeedsbutton_ofsW = routespeedsbutton.offsetWidth;
-        //var routespeedsbutton_ofsH = routespeedsbutton.offsetHeight;
-        //console.log(routespeedsbutton_ofsW, routespeedsbutton_ofsH);
-        //if (routespeedsbutton_ofsW == 0 || routespeedsbutton_ofsH==0) return;
+        if (jQueryStatus === 1) {
+            jQueryStatus = 2;
+            log('jQuery reloaded ver. ' + jQuery.fn.jquery);
+        }
+        if (jQueryStatus === 0) {
+            if (typeof jQuery === 'undefined') {
+                log('jQuery current ver. ' + jQuery.fn.jquery);
+                let script = document.createElement('script');
+                script.type = "text/javascript";
+                script.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js";
+                //script.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js";
+                document.getElementsByTagName('head')[0].appendChild(script);
+                jQueryStatus = 1;
+            }
+        }
 
         var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
         if (rlayers.length === 0) {
-
             var drc_style = new OpenLayers.Style({
                 strokeDashstyle: 'solid',
                 strokeColor: "${strokeColor}",
@@ -634,39 +642,16 @@
                 fontSize: "10px",
                 display: 'block'
             });
-
             var drc_mapLayer = new OpenLayers.Layer.Vector(SCRIPT_SHORT_NAME + " Lines", {
                 displayInLayerSwitcher: true,
                 uniqueName: "__DrawRouteSpeedsLines",
                 styleMap: new OpenLayers.StyleMap(drc_style)
             });
-
             I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeedsLines"] = SCRIPT_SHORT_NAME + " Lines";
             drc_mapLayer.setVisibility(true);
             W.map.addLayer(drc_mapLayer);
-
             return;
         }
-
-        if (jQueryStatus === 1) {
-            jQueryStatus = 2;
-            log('jQuery reloaded ver. ' + jQuery.fn.jquery);
-        }
-        if (jQueryStatus === 0) {
-            if (typeof jQuery === 'undefined') {
-                log('jQuery current ver. ' + jQuery.fn.jquery);
-                let script = document.createElement('script');
-                script.type = "text/javascript";
-                script.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js";
-                //script.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js";
-                document.getElementsByTagName('head')[0].appendChild(script);
-                jQueryStatus = 1;
-            }
-        }
-
-        var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
-        var routeLayer = rlayers[0];
-        if (routeLayer === undefined) return;
 
         let selection = sdk.Editing.getSelection();
         let selectedIDs = [];
@@ -674,22 +659,13 @@
         if (selectedIDs.length >= 2) {
             if (!twoSegmentsSelected) {
                 twoSegmentsSelected = true;
-
-                var coords1 = getSegmentMidpoint(selectedIDs[0]);
-                var coords2 = getSegmentMidpoint(selectedIDs[selectedIDs.length - 1]);
-
-                var lon1 = parseInt(coords1[0] * 1000000.0 + 0.5) / 1000000.0;
-                var lat1 = parseInt(coords1[1] * 1000000.0 + 0.5) / 1000000.0;
-                var lon2 = parseInt(coords2[0] * 1000000.0 + 0.5) / 1000000.0;
-                var lat2 = parseInt(coords2[1] * 1000000.0 + 0.5) / 1000000.0;
-
+                let midpointA = getSegmentMidpoint(selectedIDs[0]);
+                let midpointB = getSegmentMidpoint(selectedIDs[selectedIDs.length - 1]);
                 if (getId('sidepanel-routespeeds-a') !== undefined) {
-                    getId('sidepanel-routespeeds-a').value = lon1 + ", " + lat1;
-                    getId('sidepanel-routespeeds-b').value = lon2 + ", " + lat2;
+                    getId('sidepanel-routespeeds-a').value = midpointA[0].toFixed(6) + ", " + midpointA[1].toFixed(6);
+                    getId('sidepanel-routespeeds-b').value = midpointB[0].toFixed(6) + ", " + midpointB[1].toFixed(6);
                 }
-
-                createMarkers(lon1, lat1, lon2, lat2, true);
-
+                createMarkers(midpointA[0], midpointA[1], midpointB[0], midpointB[1]);
                 requestRouteFromLiveMap();
             }
         } else if (selectedIDs.length == 1) {
@@ -835,11 +811,11 @@
         else return null;
     }
 
-    function createMarkers(lon1, lat1, lon2, lat2, disp) {
+    function createMarkers(lon1, lat1, lon2, lat2) {
         sdk.Map.removeAllFeaturesFromLayer({layerName: MARKER_LAYER_NAME});
         placeMarker("A", lon1, lat1);
         placeMarker("B", lon2, lat2);
-        sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: disp});
+        sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
     }
 
     function placeMarker(id, lon, lat) {
@@ -1442,58 +1418,11 @@
         let objprog1 = getId('routespeeds-button-livemap');
         objprog1.style.backgroundColor = '#FF8000';
 
-        createMarkers(x1, y1, x2, y2, true);
+        createMarkers(x1, y1, x2, y2);
 
         if (pastedlink) {
             clickA();
         }
-
-        requestRouteFromLiveMap();
-    }
-
-    function reverseRoute() {
-
-        if (!options.enableScript) return;
-        if (routewait) return;
-
-        let stra = getId('sidepanel-routespeeds-b').value;
-        let strb = getId('sidepanel-routespeeds-a').value;
-        if (stra === "") return;
-        if (strb === "") return;
-
-        getId('sidepanel-routespeeds-a').value = stra;
-        getId('sidepanel-routespeeds-b').value = strb;
-
-        let p1 = stra.split(",");
-        let p2 = strb.split(",");
-
-        if (p1.length < 2) return;
-        if (p2.length < 2) return;
-
-        let x1 = p1[0].trim();
-        let y1 = p1[1].trim();
-        let x2 = p2[0].trim();
-        let y2 = p2[1].trim();
-
-        x1 = parseFloat(x1);
-        y1 = parseFloat(y1);
-        x2 = parseFloat(x2);
-        y2 = parseFloat(y2);
-
-        if (isNaN(x1)) return;
-        if (isNaN(y1)) return;
-        if (isNaN(x2)) return;
-        if (isNaN(y2)) return;
-
-        if (x1 < -180 || x1 > 180) x1 = 0;
-        if (x2 < -180 || x2 > 180) x2 = 0;
-        if (y1 < -90 || y1 > 90) y1 = 0;
-        if (y2 < -90 || y2 > 90) y2 = 0;
-
-        let objprog2 = getId('routespeeds-button-reverse');
-        objprog2.style.backgroundColor = '#FF8000';
-
-        createMarkers(x1, y1, x2, y2, true);
 
         requestRouteFromLiveMap();
     }
@@ -1699,6 +1628,18 @@
             if (routesShown.length > 0) drawRoutes();
             reorderLayers(1);
         }
+    }
+
+    function clickReverseRoute() {
+        if (!options.enableScript || routewait) return;
+        let newA = [pointB.lon, pointB.lat];
+        let newB = [pointA.lon, pointA.lat];
+        if (getId('sidepanel-routespeeds-a') !== undefined) {
+            getId('sidepanel-routespeeds-a').value = newA[0].toFixed(6) + ", " + newA[1].toFixed(6);
+            getId('sidepanel-routespeeds-b').value = newB[0].toFixed(6) + ", " + newB[1].toFixed(6);
+        }
+        createMarkers(newA[0], newA[1], newB[0], newB[1]);
+        requestRouteFromLiveMap();
     }
 
     function clickShowLabels() {
