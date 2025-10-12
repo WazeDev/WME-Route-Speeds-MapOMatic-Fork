@@ -876,6 +876,19 @@
         routeLayer.setVisibility(disp);
     }
 
+    function routeRevisitsAnyNode(routeIndex) {
+        let nodes = {};
+        for (let i = 0; i < routesShown[routeIndex].response.results.length; i++) {
+            let nodeIDString = routesShown[routeIndex].response.results[i].path.nodeId.toString();
+            if (nodes[nodeIDString] === undefined) {
+                nodes[nodeIDString] = 1;
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function createRouteFeatures(routeIndex) {
         console.log(routesShown[routeIndex]);
         var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
@@ -900,37 +913,21 @@
             odcy = routesShown[routeIndex].response.results[odc + 1].path.y;
         }
 
-        var speedColor = getSpeedColor(getSpeed(odclen, odctime));
+        let speedColor = getSpeedColor(getSpeed(odclen, odctime));
 
         var ptA = new OpenLayers.Geometry.Point(0, 0);
         var ptB = new OpenLayers.Geometry.Point(0, 0);
 
-        var doubletraffic = false;
         var p1 = null;
         var p2 = null;
-        var doublepoints = {};
-        var wsp1, wsp2, dlon, dlat, dx, dy, label, len, i;
+        var wsp1, wsp2, dlon, dlat, dx, dy, label, len;
 
-        // checking whether the route passes through the same node twice, if it does it will be drawn with an offset to avoid ambiguity
-        let nodeUsedTwice = false;
-        let nodes = {};
-        for (i = 0; i < routesShown[routeIndex].response.results.length; i++) {
-            let nodeIDString = routesShown[routeIndex].response.results[i].path.nodeId.toString();
-            if (nodes[nodeIDString] === undefined) {
-                nodes[nodeIDString] = 1;
-            } else {
-                nodeUsedTwice = true;
-                break;
-            }
+        let offset = 0;
+        if (routeRevisitsAnyNode(routeIndex)) {
+            offset = 11 * Math.pow(2.0, 17 - sdk.Map.getZoomLevel());
         }
 
-        var doubletrafficoffset = 0;
-        if (doubletraffic) {
-            doubletrafficoffset = 11 * Math.pow(2.0, 17 - sdk.Map.getZoomLevel());
-        }
-
-
-        for (i = 0; i < routesShown[routeIndex].coords.length - 1; i++) {
+        for (let i = 0; i < routesShown[routeIndex].coords.length - 1; i++) {
             wsp1 = routesShown[routeIndex].coords[i + 0];
             wsp2 = routesShown[routeIndex].coords[i + 1];
 
@@ -992,7 +989,7 @@
             var p3 = new OpenLayers.Geometry.Point(wsp1.x, wsp1.y).transform(epsg4326, epsg900913);
             var p4 = new OpenLayers.Geometry.Point(wsp2.x, wsp2.y).transform(epsg4326, epsg900913);
 
-            if (doubletraffic) {
+            if (offset != 0) {
                 dx = p4.x - p3.x;
                 dy = p4.y - p3.y;
                 var r = Math.sqrt(dx * dx + dy * dy);
@@ -1001,10 +998,10 @@
                 angle = angle - 0.5 * Math.PI;
                 if (topCountry.isLeftHandTraffic) angle += Math.PI;
 
-                p3.x += doubletrafficoffset * Math.cos(angle) * 0.6;
-                p3.y += doubletrafficoffset * Math.sin(angle) * 0.6;
-                p4.x += doubletrafficoffset * Math.cos(angle) * 0.6;
-                p4.y += doubletrafficoffset * Math.sin(angle) * 0.6;
+                p3.x += offset * Math.cos(angle) * 0.6;
+                p3.y += offset * Math.sin(angle) * 0.6;
+                p4.x += offset * Math.cos(angle) * 0.6;
+                p4.y += offset * Math.sin(angle) * 0.6;
 
                 if (p1 !== null && p2 !== null) {
 
