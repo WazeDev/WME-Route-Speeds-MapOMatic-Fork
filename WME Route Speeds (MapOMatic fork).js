@@ -576,7 +576,28 @@
             eventHandler: mouseLeaveHandler
         });
 
-        // sdk.Map.addLayer(ROUTE_LAYER_NAME, ...);
+        sdk.Map.addLayer({
+            layerName: ROUTE_LAYER_NAME,
+            styleRules: [{
+                style: {
+                    strokeWidth: "${getStrokeWidth}",
+                    strokeColor: "${getStrokeColor}",
+                    fillColor: "#0040FF",
+                    label: "${getLabelText}",
+                    fontWeight: "${getFontWeight}",
+                    labelOutlineColor: "#404040",
+                    labelOutlineWidth: 2,
+                    fontColor: "${getFontColor}"
+                }
+            }],
+            styleContext: {
+                getStrokeWidth: ({feature}) => feature.properties.strokeWidth,
+                getStrokeColor: ({feature}) => feature.properties.strokeColor,
+                getLabelText: ({feature}) => feature.properties.labelText,
+                getFontWeight: ({feature}) => feature.properties.fontWeight,
+                getFontColor: ({feature}) => feature.properties.fontColor
+            }
+        });
 
         window.setInterval(loopWMERouteSpeeds, 500);
     }
@@ -594,6 +615,7 @@
                 tabStatus = 2;
                 showRouteLayer(true);
                 sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
+                sdk.Map.setLayerVisibility({layerName: ROUTE_LAYER_NAME, visibility: true});
                 reorderLayers(1);
             }
         } else {
@@ -601,6 +623,7 @@
                 tabStatus = 1;
                 showRouteLayer(false);
                 sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: false});
+                sdk.Map.setLayerVisibility({layerName: ROUTE_LAYER_NAME, visibility: false});
                 reorderLayers(0);
             }
             return;
@@ -853,8 +876,8 @@
         routeLayer.setVisibility(disp);
     }
 
-    function createRouteFeatures(id, routewsp, routeodc) {
-
+    function createRouteFeatures(routeIndex) {
+        console.log(routesShown[routeIndex]);
         var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
         var routeLayer = rlayers[0];
         if (routeLayer === undefined) return;
@@ -867,14 +890,14 @@
         var segmentID = 0;
         var odc = 0;
 
-        segmentID = routeodc[odc].path.segmentId;
-        var odclen = routeodc[odc].length;
-        var odctime = getLabelTime(routeodc[odc]);
+        segmentID = routesShown[routeIndex].response.results[odc].path.segmentId;
+        var odclen = routesShown[routeIndex].response.results[odc].length;
+        var odctime = getLabelTime(routesShown[routeIndex].response.results[odc]);
         var odcx = 0;
         var odcy = 0;
-        if (odc + 1 < routeodc.length) {
-            odcx = routeodc[odc + 1].path.x;
-            odcy = routeodc[odc + 1].path.y;
+        if (odc + 1 < routesShown[routeIndex].response.results.length) {
+            odcx = routesShown[routeIndex].response.results[odc + 1].path.x;
+            odcy = routesShown[routeIndex].response.results[odc + 1].path.y;
         }
 
         var speedColor = getSpeedColor(getSpeed(odclen, odctime));
@@ -888,30 +911,15 @@
         var doublepoints = {};
         var wsp1, wsp2, dlon, dlat, dx, dy, label, len, i;
 
-
-        //wykrycie czy trasa przechodzi dwa razy przez te same punkty, jeżeli tak to rysowanie trasy z odstępem, aby był widoczny przebieg trasy
-        //(detection whether the route passes through the same points twice, if so drawing the route with a gap to make the route visible)
-        for (i = 0; i < routewsp.length - 1; i++) {
-            wsp1 = routewsp[i + 0];
-            wsp2 = routewsp[i + 1];
-
-            dlon = Math.abs(wsp1.x - wsp2.x);
-            dlat = Math.abs(wsp1.y - wsp2.y);
-
-            if (dlon < 0.0000001 && dlat < 0.0000001) continue;
-
-            var s1 = parseInt(wsp1.x * 10000000 + 0.5) + ',' + parseInt(wsp1.y * 10000000 + 0.5);
-            var s2 = parseInt(wsp2.x * 10000000 + 0.5) + ',' + parseInt(wsp2.y * 10000000 + 0.5);
-
-            if (s1 === s2) continue;
-
-            if (doublepoints[s1] === undefined) doublepoints[s1] = 0;
-            if (doublepoints[s2] === undefined) doublepoints[s2] = 0;
-            doublepoints[s1]++;
-            doublepoints[s2]++;
-
-            if (doublepoints[s2] >= 2) {
-                doubletraffic = true;
+        // checking whether the route passes through the same node twice, if it does it will be drawn with an offset to avoid ambiguity
+        let nodeUsedTwice = false;
+        let nodes = {};
+        for (i = 0; i < routesShown[routeIndex].response.results.length; i++) {
+            let nodeIDString = routesShown[routeIndex].response.results[i].path.nodeId.toString();
+            if (nodes[nodeIDString] === undefined) {
+                nodes[nodeIDString] = 1;
+            } else {
+                nodeUsedTwice = true;
                 break;
             }
         }
@@ -922,9 +930,9 @@
         }
 
 
-        for (i = 0; i < routewsp.length - 1; i++) {
-            wsp1 = routewsp[i + 0];
-            wsp2 = routewsp[i + 1];
+        for (i = 0; i < routesShown[routeIndex].coords.length - 1; i++) {
+            wsp1 = routesShown[routeIndex].coords[i + 0];
+            wsp2 = routesShown[routeIndex].coords[i + 1];
 
             if (i === 0) {
                 ptA.x = wsp1.x;
@@ -935,7 +943,7 @@
                 //var textFeature = new drc_OpenLayers.Feature.Vector( ptA, {labelText: "A", pointRadius: 8, fontColor: '#FFFFFF' } );
                 //labelFeatures.push(textFeature);
             }
-            if (i === routewsp.length - 2) {
+            if (i === routesShown[routeIndex].coords.length - 2) {
                 ptB.x = wsp2.x;
                 ptB.y = wsp2.y;
                 ptB = ptB.transform(epsg4326, epsg900913);
@@ -952,8 +960,8 @@
 
             if (dx < 0.000001 && dy < 0.000001) {
 
-                if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
-                    label = addLabel(lines, routeodc[odc]);
+                if (options.showLabels && (routeSelected == routeIndex || routeSelected == -1)) {
+                    label = addLabel(lines, routesShown[routeIndex].response.results[odc]);
                     if (label !== null) {
                         if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
                         labelFeatures.push(label);
@@ -961,14 +969,14 @@
                 }
                 while (lines.length > 0) lines.pop();
 
-                if (odc + 1 < routeodc.length) {
+                if (odc + 1 < routesShown[routeIndex].response.results.length) {
                     odc++;
-                    segmentID = routeodc[odc].path.segmentId;
-                    odclen = routeodc[odc].length;
-                    odctime = getLabelTime(routeodc[odc]);
-                    if (odc + 1 < routeodc.length) {
-                        odcx = routeodc[odc + 1].path.x;
-                        odcy = routeodc[odc + 1].path.y;
+                    segmentID = routesShown[routeIndex].response.results[odc].path.segmentId;
+                    odclen = routesShown[routeIndex].response.results[odc].length;
+                    odctime = getLabelTime(routesShown[routeIndex].response.results[odc]);
+                    if (odc + 1 < routesShown[routeIndex].response.results.length) {
+                        odcx = routesShown[routeIndex].response.results[odc + 1].path.x;
+                        odcy = routesShown[routeIndex].response.results[odc + 1].path.y;
                     }
 
                     speedColor = getSpeedColor(getSpeed(odclen, odctime));
@@ -1053,10 +1061,10 @@
             lines.push(line);
 
             let lineFeature;
-            if (routeSelected == id || routeSelected == -1) {
+            if (routeSelected == routeIndex || routeSelected == -1) {
                 lineFeature = new OpenLayers.Feature.Vector(line, {labelText: '', strokeWidth: 10, strokeColor: speedColor });
             } else {
-                lineFeature = new OpenLayers.Feature.Vector(line, {labelText: '', strokeWidth: 5, strokeColor: getRouteColor(id) });
+                lineFeature = new OpenLayers.Feature.Vector(line, {labelText: '', strokeWidth: 5, strokeColor: getRouteColor(routeIndex) });
             }
 
             lineFeatures.push(lineFeature);
@@ -1065,8 +1073,8 @@
             p2 = p4;
         }
 
-        if (options.showLabels && (routeSelected == id || routeSelected == -1)) {
-            label = addLabel(lines, routeodc[odc]);
+        if (options.showLabels && (routeSelected == routeIndex || routeSelected == -1)) {
+            label = addLabel(lines, routesShown[routeIndex].response.results[odc]);
             if (label !== null) {
                 if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
                 labelFeatures.push(label);
@@ -1076,11 +1084,10 @@
 
         let outlinestring = new OpenLayers.Geometry.LineString(outlinepoints);
         let outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { labelText: '', strokeWidth: 12, strokeColor: '#404040' });
-        if (routeSelected == id || routeSelected == -1) routeLayer.addFeatures(outlineFeature);
+        if (routeSelected == routeIndex || routeSelected == -1) routeLayer.addFeatures(outlineFeature);
 
         routeLayer.addFeatures(lineFeatures);
         routeLayer.addFeatures(labelFeatures);
-        //showRouteLayer(true);
     }
 
     function getElementsByClassName(classname, node) {
@@ -1620,6 +1627,7 @@
             if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
             sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: false});
+            sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
             reorderLayers(0);
         }
         else {
@@ -1819,12 +1827,13 @@
         var routeLayer = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines")[0];
         if (routeLayer !== undefined) routeLayer.removeAllFeatures();
 
+        sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
         for (let i = routesShown.length - 1; i >= 0; i--) {
             if (i == routeSelected) continue;
-            createRouteFeatures(i, routesShown[i].coords, routesShown[i].response.results)
+            createRouteFeatures(i)
         }
         if (routeSelected != -1 && routesShown.length) {
-            createRouteFeatures(routeSelected, routesShown[routeSelected].coords, routesShown[routeSelected].response.results)
+            createRouteFeatures(routeSelected)
         }
     }
 
