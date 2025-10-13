@@ -585,7 +585,7 @@
                     fillColor: "#0040FF",
                     pointRadius: 0,
                     label: "${getLabelText}",
-                    fontSize: "10px",
+                    fontSize: "11px",
                     fontWeight: "${getFontWeight}",
                     fontColor: "${getFontColor}",
                     labelOutlineWidth: 2,
@@ -977,42 +977,6 @@
     }
 
     function createRouteFeatures(routeIndex) {
-        var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
-        var routeLayer = rlayers[0];
-        if (routeLayer === undefined) return;
-
-        var lineFeatures = [];
-        var labelFeatures = [];
-        var lines = [];
-        var outlinepoints = [];
-
-        var segmentID = 0;
-        var odc = 0;
-
-        segmentID = routesShown[routeIndex].response.results[odc].path.segmentId;
-        var odclen = routesShown[routeIndex].response.results[odc].length;
-        var odctime = getLabelTime(routesShown[routeIndex].response.results[odc]);
-        var odcx = 0;
-        var odcy = 0;
-        if (odc + 1 < routesShown[routeIndex].response.results.length) {
-            odcx = routesShown[routeIndex].response.results[odc + 1].path.x;
-            odcy = routesShown[routeIndex].response.results[odc + 1].path.y;
-        }
-
-        let speedColor = getSpeedColor(getSpeed(odclen, odctime));
-
-        var ptA = new OpenLayers.Geometry.Point(0, 0);
-        var ptB = new OpenLayers.Geometry.Point(0, 0);
-
-        var p1 = null;
-        var p2 = null;
-        var wsp1, wsp2, dlon, dlat, dx, dy, label, len;
-
-        let offset = 0;
-        if (routeRevisitsAnyNode(routeIndex)) {
-            offset = 11 * Math.pow(2.0, 17 - sdk.Map.getZoomLevel());
-        }
-
         let geometries = splitGeometryIntoSegments(routeIndex);
         if (routeSelected == routeIndex || routeSelected == -1) {
             let sdk_outlineFeatures = [];
@@ -1049,166 +1013,6 @@
                 features: sdk_simpleFeatures
             });
         }
-
-
-        for (let i = 0; i < routesShown[routeIndex].coords.length - 1; i++) {
-            wsp1 = routesShown[routeIndex].coords[i + 0];
-            wsp2 = routesShown[routeIndex].coords[i + 1];
-
-            if (i === 0) {
-                ptA.x = wsp1.x;
-                ptA.y = wsp1.y;
-                ptA = ptA.transform(epsg4326, epsg900913);
-                //var p = new drc_OpenLayers.Geometry.Point(wsp1.x, wsp1.y).transform(epsg4326, epsg900913);
-                //var pt = new drc_OpenLayers.Geometry.Point(p.x, p.y);
-                //var textFeature = new drc_OpenLayers.Feature.Vector( ptA, {labelText: "A", pointRadius: 8, fontColor: '#FFFFFF' } );
-                //labelFeatures.push(textFeature);
-            }
-            if (i === routesShown[routeIndex].coords.length - 2) {
-                ptB.x = wsp2.x;
-                ptB.y = wsp2.y;
-                ptB = ptB.transform(epsg4326, epsg900913);
-                //var p = new drc_OpenLayers.Geometry.Point(wsp2.x, wsp2.y).transform(epsg4326, epsg900913);
-                //var pt = new drc_OpenLayers.Geometry.Point(p.x, p.y);
-                //var textFeature = new drc_OpenLayers.Feature.Vector( ptB, {labelText: "B", pointRadius: 8, fontColor: '#FFFFFF' } );
-                //labelFeatures.push(textFeature);
-            }
-
-            dx = Math.abs(wsp1.x - odcx);
-            dy = Math.abs(wsp1.y - odcy);
-
-            //console.log(wsp1, odcx, odcy, dx, dy);
-
-            if (dx < 0.000001 && dy < 0.000001) {
-
-                if (options.showLabels && (routeSelected == routeIndex || routeSelected == -1)) {
-                    label = addLabel(lines, routesShown[routeIndex].response.results[odc]);
-                    if (label !== null) {
-                        if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
-                        labelFeatures.push(label);
-                    }
-                }
-                while (lines.length > 0) lines.pop();
-
-                if (odc + 1 < routesShown[routeIndex].response.results.length) {
-                    odc++;
-                    segmentID = routesShown[routeIndex].response.results[odc].path.segmentId;
-                    odclen = routesShown[routeIndex].response.results[odc].length;
-                    odctime = getLabelTime(routesShown[routeIndex].response.results[odc]);
-                    if (odc + 1 < routesShown[routeIndex].response.results.length) {
-                        odcx = routesShown[routeIndex].response.results[odc + 1].path.x;
-                        odcy = routesShown[routeIndex].response.results[odc + 1].path.y;
-                    }
-
-                    speedColor = getSpeedColor(getSpeed(odclen, odctime));
-
-                }
-            }
-
-            dlon = Math.abs(wsp1.x - wsp2.x);
-            dlat = Math.abs(wsp1.y - wsp2.y);
-
-            if (dlon < 0.0000001 && dlat < 0.0000001) continue;
-
-            var p3 = new OpenLayers.Geometry.Point(wsp1.x, wsp1.y).transform(epsg4326, epsg900913);
-            var p4 = new OpenLayers.Geometry.Point(wsp2.x, wsp2.y).transform(epsg4326, epsg900913);
-
-            if (offset != 0) {
-                dx = p4.x - p3.x;
-                dy = p4.y - p3.y;
-                var r = Math.sqrt(dx * dx + dy * dy);
-                var angle = Math.acos(dx / r);
-                if (dy < 0) angle = -angle;
-                angle = angle - 0.5 * Math.PI;
-                if (topCountry.isLeftHandTraffic) angle += Math.PI;
-
-                p3.x += offset * Math.cos(angle) * 0.6;
-                p3.y += offset * Math.sin(angle) * 0.6;
-                p4.x += offset * Math.cos(angle) * 0.6;
-                p4.y += offset * Math.sin(angle) * 0.6;
-
-                if (p1 !== null && p2 !== null) {
-
-                    var Ax = p1.x;
-                    var Ay = p1.y;
-                    var Bx = p2.x;
-                    var By = p2.y;
-                    var Cx = p3.x;
-                    var Cy = p3.y;
-                    var Dx = p4.x;
-                    var Dy = p4.y;
-
-                    dx = Cx - Bx;
-                    dy = Cy - By;
-
-                    var delta = Math.sqrt(dx * dx + dy * dy);
-
-                    var mx = ((By - Ay) * (Dx - Cx) - (Dy - Cy) * (Bx - Ax));
-                    var my = ((Dy - Cy) * (Bx - Ax) - (By - Ay) * (Dx - Cx));
-
-                    if (Math.abs(mx) > 0.000000001 && Math.abs(my) > 0.000000001 && delta > 0.1) {
-
-                        var x = ((Bx - Ax) * (Dx * Cy - Dy * Cx) - (Dx - Cx) * (Bx * Ay - By * Ax)) / mx;
-                        var y = ((Dy - Cy) * (Bx * Ay - By * Ax) - (By - Ay) * (Dx * Cy - Dy * Cx)) / my;
-
-                        var dx2 = x - Bx;
-                        var dy2 = y - By;
-                        var delta2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-
-                        if (delta2 < 1000) {      // checking if point of crossing is close to segments
-
-                            len = lineFeatures.length;
-                            if (len > 0) {
-                                var lf = lineFeatures[len - 1];
-                                lf.geometry.components[1].x = x;
-                                lf.geometry.components[1].y = y;
-                            }
-
-                            p3.x = x;
-                            p3.y = y;
-                        }
-                    }
-                }
-            }
-
-            outlinepoints.push(p3);
-            outlinepoints.push(p4);
-
-            let points = [];
-            points.push(p3);
-            points.push(p4);
-
-            let line = new OpenLayers.Geometry.LineString(points);
-            lines.push(line);
-
-            let lineFeature;
-            if (routeSelected == routeIndex || routeSelected == -1) {
-                lineFeature = new OpenLayers.Feature.Vector(line, {labelText: '', strokeWidth: 10, strokeColor: speedColor });
-            } else {
-                lineFeature = new OpenLayers.Feature.Vector(line, {labelText: '', strokeWidth: 5, strokeColor: getRouteColor(routeIndex) });
-            }
-
-            lineFeatures.push(lineFeature);
-
-            p1 = p3;
-            p2 = p4;
-        }
-
-        if (options.showLabels && (routeSelected == routeIndex || routeSelected == -1)) {
-            label = addLabel(lines, routesShown[routeIndex].response.results[odc]);
-            if (label !== null) {
-                if (routeSelected == -1) routeLayer.removeFeatures(routeLayer.getFeaturesByAttribute("segmentID", segmentID));
-                labelFeatures.push(label);
-            }
-        }
-        while (lines.length > 0) lines.pop();
-
-        let outlinestring = new OpenLayers.Geometry.LineString(outlinepoints);
-        let outlineFeature = new OpenLayers.Feature.Vector(outlinestring, { labelText: '', strokeWidth: 12, strokeColor: '#404040' });
-        if (routeSelected == routeIndex || routeSelected == -1) routeLayer.addFeatures(outlineFeature);
-
-        routeLayer.addFeatures(lineFeatures);
-        routeLayer.addFeatures(labelFeatures);
     }
 
     function getElementsByClassName(classname, node) {
