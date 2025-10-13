@@ -583,11 +583,13 @@
                     strokeWidth: "${getStrokeWidth}",
                     strokeColor: "${getStrokeColor}",
                     fillColor: "#0040FF",
+                    pointRadius: 0,
                     label: "${getLabelText}",
+                    fontSize: "10px",
                     fontWeight: "${getFontWeight}",
-                    labelOutlineColor: "#404040",
+                    fontColor: "${getFontColor}",
                     labelOutlineWidth: 2,
-                    fontColor: "${getFontColor}"
+                    labelOutlineColor: "#404040"
                 }
             }],
             styleContext: {
@@ -694,7 +696,7 @@
         } else if (selectedIDs.length == 1) {
             if (twoSegmentsSelected) {
                 twoSegmentsSelected = false;
-                routeLayer.removeAllFeatures();
+                rlayers[0].removeAllFeatures();
                 getId('routespeeds-summaries').style.visibility = 'hidden';
             }
         }
@@ -889,8 +891,92 @@
         return false;
     }
 
+    function getRouteFeature(routeIndex, segmentIndex, geometry, mode) {
+        let feature = {};
+        if (mode == "label") {
+            feature = turf.along(geometry, turf.length(geometry) / 2);
+            let labelText;
+            if (options.showSpeeds) {
+                let speed = getSpeed(routesShown[routeIndex].response.results[segmentIndex].length, getLabelTime(routesShown[routeIndex].response.results[segmentIndex]));
+                if (speed >= 1) labelText = Math.round(speed);
+                else if (speed == 0) labelText = '?';
+                else labelText = '<1';
+            } else {
+                labelText = getLabelTime(routesShown[routeIndex].response.results[segmentIndex]) + 's';
+            }
+            feature.properties = {
+                labelText: labelText,
+                fontWeight: getLabelWeight(routesShown[routeIndex].response.results[segmentIndex]),
+                fontColor: getLabelColor(routesShown[routeIndex].response.results[segmentIndex])
+            };
+        } else {
+            feature.type = "Feature";
+            feature.geometry = geometry;
+            feature.properties = {labelText: ""};
+            if (mode == "simple") {
+                feature.properties.strokeWidth = 5;
+                feature.properties.strokeColor = getRouteColor(routeIndex);
+            } else if (mode == "outline") {
+                feature.properties.strokeWidth = 12;
+                feature.properties.strokeColor = "#404040";
+            } else {
+                feature.properties.strokeWidth = 10;
+                feature.properties.strokeColor = getSpeedColor(getSpeed(routesShown[routeIndex].response.results[segmentIndex].length,
+                                                                        getLabelTime(routesShown[routeIndex].response.results[segmentIndex])));
+            }
+        }
+        feature.id = "route " + routeIndex + ", segment " + segmentIndex + ": " + mode;
+        return feature;
+    }
+
+    function splitGeometryIntoSegments(routeIndex) {
+        let offset = 0;
+        if (routeRevisitsAnyNode(routeIndex)) {
+            offset = topCountry.isLeftHandTraffic ? -10 : 10;
+        }
+        let geometries = [];
+        let currentSegmentIndex = 0;
+        let currentSegmentCoords = [[routesShown[routeIndex].coords[0].x, routesShown[routeIndex].coords[0].y]];
+        let startNextSegment = [0, 0];
+        if (routesShown[routeIndex].response.results.length > 1) {
+            startNextSegment = [routesShown[routeIndex].response.results[1].path.x, routesShown[routeIndex].response.results[1].path.y];
+        }
+        for (let i = 1; i < routesShown[routeIndex].coords.length; i++) {
+            let currentPoint = [routesShown[routeIndex].coords[i].x, routesShown[routeIndex].coords[i].y];
+            currentSegmentCoords.push(currentPoint);
+            if (Math.abs(currentPoint[0] - startNextSegment[0]) < 10 ** -8 && Math.abs(currentPoint[1] - startNextSegment[1]) < 10 ** -8) {
+                let currentGeometry = {
+                    type: "LineString",
+                    coordinates: currentSegmentCoords
+                };
+                if (offset) {
+                    currentGeometry = turf.lineOffset(currentGeometry, offset, {units: "meters"}).geometry;
+                }
+                geometries.push(currentGeometry);
+                currentSegmentIndex++;
+                currentSegmentCoords = [];
+                if (currentSegmentIndex + 1 < routesShown[routeIndex].response.results.length) {
+                    startNextSegment = [routesShown[routeIndex].response.results[currentSegmentIndex + 1].path.x, routesShown[routeIndex].response.results[currentSegmentIndex + 1].path.y];
+                } else {
+                    startNextSegment = [0, 0];
+                }
+            }
+        }
+        let lastGeometry = {
+            type: "LineString",
+            coordinates: currentSegmentCoords
+        };
+        if (offset) {
+            lastGeometry = turf.lineOffset(lastGeometry, offset, {units: "meters"}).geometry;
+        }
+        geometries.push(lastGeometry);
+        if (offset) {
+            //clean up offset geometry using more turf functions?
+        }
+        return geometries;
+    }
+
     function createRouteFeatures(routeIndex) {
-        console.log(routesShown[routeIndex]);
         var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
         var routeLayer = rlayers[0];
         if (routeLayer === undefined) return;
@@ -926,6 +1012,44 @@
         if (routeRevisitsAnyNode(routeIndex)) {
             offset = 11 * Math.pow(2.0, 17 - sdk.Map.getZoomLevel());
         }
+
+        let geometries = splitGeometryIntoSegments(routeIndex);
+        if (routeSelected == routeIndex || routeSelected == -1) {
+            let sdk_outlineFeatures = [];
+            let sdk_mainFeatures = [];
+            for (let i = 0; i < geometries.length; i++) {
+                sdk_outlineFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "outline"));
+                sdk_mainFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "main"));
+            }
+            sdk.Map.addFeaturesToLayer({
+                layerName: ROUTE_LAYER_NAME,
+                features: sdk_outlineFeatures
+            });
+            sdk.Map.addFeaturesToLayer({
+                layerName: ROUTE_LAYER_NAME,
+                features: sdk_mainFeatures
+            });
+            if (options.showLabels) {
+                let sdk_labelFeatures = [];
+                for (let i = 0; i < geometries.length; i++) {
+                    sdk_labelFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "label"));
+                }
+                sdk.Map.addFeaturesToLayer({
+                    layerName: ROUTE_LAYER_NAME,
+                    features: sdk_labelFeatures
+                });
+            }
+        } else {
+            let sdk_simpleFeatures = [];
+            for (let i = 0; i < geometries.length; i++) {
+                sdk_simpleFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "simple"));
+            }
+            sdk.Map.addFeaturesToLayer({
+                layerName: ROUTE_LAYER_NAME,
+                features: sdk_simpleFeatures
+            });
+        }
+
 
         for (let i = 0; i < routesShown[routeIndex].coords.length - 1; i++) {
             wsp1 = routesShown[routeIndex].coords[i + 0];
