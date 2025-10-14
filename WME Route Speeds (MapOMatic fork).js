@@ -156,22 +156,18 @@
     let jQueryStatus = 0;
 
     let z17_reached = false;
-    let baseZIndex = 0;
+    let baseZIndex = -1;
     let originalZIndices = [];
-    let layersMoved = [];
+    let alreadyReportedWMELayer = false;
 
     let twoSegmentsSelected = false;
 
-    var epsg900913;
-    var epsg4326;
+    let routesReceived = [];
+    let routesShown = [];
 
-    var routesReceived = [];
-    var routesShown = [];
-
-    var routewait = 0;
-    var routeSelected = 0;
-    var routeSelectedLast = -1;
-
+    let waitingForRoute = false;
+    let routeSelected = 0;
+    let routeSelectedLast = -1;
 
     function log(msg) {
         console.log(SCRIPT_SHORT_NAME + ":", msg);
@@ -184,7 +180,7 @@
     };
 
     //--------------------------------------------------------------------------
-    // Functions that start up the script
+    // Script startup functions
 
     function onSDKInitialized() {
         sdk = getWmeSdk({scriptId: "wme-route-speeds",
@@ -226,9 +222,6 @@
     }
 
     async function initializeScript() {
-        epsg900913 = new OpenLayers.Projection("EPSG:900913");
-        epsg4326 = new OpenLayers.Projection("EPSG:4326");
-
         var addon = document.createElement('section');
         addon.id = "routespeeds-addon";
         addon.innerHTML = '' +
@@ -582,10 +575,10 @@
                 style: {
                     strokeWidth: "${getStrokeWidth}",
                     strokeColor: "${getStrokeColor}",
-                    fillColor: "#0040FF",
                     pointRadius: 0,
                     label: "${getLabelText}",
-                    fontSize: "11px",
+                    fontSize: "10px",
+                    fontFamily: "Tahoma, Courier New",
                     fontWeight: "${getFontWeight}",
                     fontColor: "${getFontColor}",
                     labelOutlineWidth: 2,
@@ -605,7 +598,7 @@
     }
 
     //--------------------------------------------------------------------------
-    // Functions that handle script operation
+    // Main loop function
 
     function loopWMERouteSpeeds() {
 
@@ -615,7 +608,6 @@
         if (tabOpen) {
             if (tabStatus !== 2) {
                 tabStatus = 2;
-                showRouteLayer(true);
                 sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
                 sdk.Map.setLayerVisibility({layerName: ROUTE_LAYER_NAME, visibility: true});
                 reorderLayers(1);
@@ -623,7 +615,6 @@
         } else {
             if (tabStatus !== 1) {
                 tabStatus = 1;
-                showRouteLayer(false);
                 sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: false});
                 sdk.Map.setLayerVisibility({layerName: ROUTE_LAYER_NAME, visibility: false});
                 reorderLayers(0);
@@ -645,37 +636,6 @@
                 document.getElementsByTagName('head')[0].appendChild(script);
                 jQueryStatus = 1;
             }
-        }
-
-        var rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
-        if (rlayers.length === 0) {
-            var drc_style = new OpenLayers.Style({
-                strokeDashstyle: 'solid',
-                strokeColor: "${strokeColor}",
-                strokeOpacity: 1.0,
-                strokeWidth: "${strokeWidth}",
-                fillColor: '#0040FF',
-                fillOpacity: 1.0,
-                pointRadius: "${pointRadius}",
-                label: "${labelText}",
-                fontFamily: "Tahoma, Courier New",
-                fontWeight: "${fontWeight}",
-                labelOutlineColor: '#404040',
-                labelOutlineWidth: 2,
-                fontColor: "${fontColor}",
-                fontOpacity: 1.0,
-                fontSize: "10px",
-                display: 'block'
-            });
-            var drc_mapLayer = new OpenLayers.Layer.Vector(SCRIPT_SHORT_NAME + " Lines", {
-                displayInLayerSwitcher: true,
-                uniqueName: "__DrawRouteSpeedsLines",
-                styleMap: new OpenLayers.StyleMap(drc_style)
-            });
-            I18n.translations[I18n.currentLocale()].layers.name["__DrawRouteSpeedsLines"] = SCRIPT_SHORT_NAME + " Lines";
-            drc_mapLayer.setVisibility(true);
-            W.map.addLayer(drc_mapLayer);
-            return;
         }
 
         let selection = sdk.Editing.getSelection();
@@ -708,6 +668,9 @@
             }
         }
     }
+
+    //--------------------------------------------------------------------------
+    // Routing and helper functions
 
     function getRoutingManager() {
         let region = sdk.Settings.getRegionCode();
@@ -772,70 +735,6 @@
         $('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${topCountry.restrictionSubscriptions.length})`);
     }
 
-    function addLabel(lines, segmentInfo) {
-
-        let labelText;
-        if (options.showSpeeds) {
-            let speed = getSpeed(segmentInfo.length, getLabelTime(segmentInfo));
-            if (speed >= 1) labelText = Math.round(speed);
-            else if (speed == 0) labelText = '?';
-            else labelText = '<1';
-        } else {
-            labelText = getLabelTime(segmentInfo) + 's';
-        }
-
-        var p1, p2, pt, textFeature, k, sx, sy;
-        var numlines = lines.length;
-        if (numlines >= 2) {
-            var line;
-            var ps = parseInt(numlines) >> 1;
-            p1 = lines[ps].components[0];
-            p2 = lines[ps].components[1];
-            var proc = 0.5;
-
-            var dist = [];
-            var dsum = 0;
-            for (k = 0; k < numlines; k++) {
-                line = lines[k];
-                var d = line.getGeodesicLength(epsg900913);
-                dsum += d;
-                dist.push(d);
-            }
-            var dmid = dsum / 2.0;
-            var d1 = 0;
-            var d2 = 0;
-            for (k = 0; k < numlines; k++) {
-                line = lines[k];
-                d1 = d2;
-                d2 += dist[k];
-                if (dmid >= d1 && dmid < d2) {
-                    p1 = lines[k].components[0];
-                    p2 = lines[k].components[1];
-                    proc = (dmid - d1) / (d2 - d1);
-                }
-            }
-
-            sx = p1.x + (p2.x - p1.x) * proc;
-            sy = p1.y + (p2.y - p1.y) * proc;
-
-            pt = new OpenLayers.Geometry.Point(sx, sy);
-            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontWeight: getLabelWeight(segmentInfo), fontColor: getLabelColor(segmentInfo), pointRadius: 0, segmentID: segmentInfo.path.segmentId });
-            return textFeature;
-        }
-        else if (numlines == 1) {
-            p1 = lines[0].components[0];
-            p2 = lines[0].components[1];
-
-            sx = (p1.x + p2.x) * 0.5;
-            sy = (p1.y + p2.y) * 0.5;
-
-            pt = new OpenLayers.Geometry.Point(sx, sy);
-            textFeature = new OpenLayers.Feature.Vector(pt, { labelText: labelText, fontWeight: getLabelWeight(segmentInfo), fontColor: getLabelColor(segmentInfo), pointRadius: 0, segmentID: segmentInfo.path.segmentId });
-            return textFeature;
-        }
-        else return null;
-    }
-
     function createMarkers(lon1, lat1, lon2, lat2) {
         sdk.Map.removeAllFeaturesFromLayer({layerName: MARKER_LAYER_NAME});
         placeMarker("A", lon1, lat1);
@@ -870,12 +769,6 @@
     function moveMarker(id, lon, lat) {
         sdk.Map.removeFeatureFromLayer({layerName: MARKER_LAYER_NAME, featureId: id});
         placeMarker(id, lon, lat);
-    }
-
-    function showRouteLayer(disp) {
-        var routeLayer = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines")[0];
-        if (routeLayer === undefined) return;
-        routeLayer.setVisibility(disp);
     }
 
     function routeRevisitsAnyNode(routeIndex) {
@@ -1124,7 +1017,7 @@
         };
         if (options.useRBS) data.id = "beta";
 
-        routewait = 1;
+        waitingForRoute = true;
         getId('routespeeds-error').innerHTML = "";
         console.time(SCRIPT_SHORT_NAME + ": routing time");
 
@@ -1140,7 +1033,7 @@
                 let str = "Route request failed" + (response.status !== null ? " with error " + response.status : "") + "!<br>";
                 handleRouteRequestError(str);
                 console.timeEnd(SCRIPT_SHORT_NAME + ": routing time");
-                routewait = 0;
+                waitingForRoute = false;
             },
             onload: function(response) {
                 if (response.response.error !== undefined) {
@@ -1167,7 +1060,7 @@
                 getId('routespeeds-button-reverse').style.backgroundColor = '';
                 switchRoute()
                 console.timeEnd(SCRIPT_SHORT_NAME + ": routing time");
-                routewait = 0;
+                waitingForRoute = false;
             },
         });
     }
@@ -1294,7 +1187,7 @@
     function livemapRoute() {
 
         if (!options.enableScript) return;
-        if (routewait) return;
+        if (waitingForRoute) return;
 
         let stra = getId('sidepanel-routespeeds-a').value;
         let strb = getId('sidepanel-routespeeds-b').value;
@@ -1512,7 +1405,7 @@
     // Sidebar event handlers
 
     function resetOptionsToLivemapRouteClick() {
-        if (routewait) return;
+        if (waitingForRoute) return;
 
         resetOptions();
 
@@ -1547,10 +1440,6 @@
 
             getId('routespeeds-summaries').style.visibility = 'hidden';
 
-            let rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
-            let routeLayer = rlayers[0];
-            if (routeLayer !== undefined) routeLayer.removeAllFeatures();
-
             sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: false});
             sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
             reorderLayers(0);
@@ -1564,7 +1453,7 @@
     }
 
     function clickReverseRoute() {
-        if (!options.enableScript || routewait) return;
+        if (!options.enableScript || waitingForRoute) return;
         let newA = [pointB.lon, pointB.lat];
         let newB = [pointA.lon, pointA.lat];
         if (getId('sidepanel-routespeeds-a') !== undefined) {
@@ -1710,19 +1599,17 @@
             summary.className = (routeSelected == i) ? 'routespeeds_summary_classB' : 'routespeeds_summary_classA';
         }
 
-        let rlayers = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines");
-        let routeLayer = rlayers[0];
-        if (routeLayer === undefined) return;
-
+        let z;
         for (let name of SCRIPT_LAYERS_TO_COVER) {
-            let layer = W.map.getLayerByName(name);
-            if (layer === undefined) continue;
-            baseZIndex = Math.max(baseZIndex, layer.getZIndex());
+            try {
+                baseZIndex = Math.max(baseZIndex, sdk.Map.getLayerZIndex({layerName: name}));
+            } catch (ex) {}
         }
-        if (routeLayer.getZIndex() < baseZIndex) {
-            routeLayer.setZIndex(baseZIndex + 1);
+        let routeLayerZIndex = sdk.Map.getLayerZIndex({layerName: ROUTE_LAYER_NAME});
+        if (routeLayerZIndex < baseZIndex) {
+            sdk.Map.setLayerZIndex({layerName: ROUTE_LAYER_NAME, zIndex: baseZIndex + 1});
         } else {
-            baseZIndex = routeLayer.getZIndex();
+            baseZIndex = routeLayerZIndex;
         }
         reorderLayers(1);
 
@@ -1730,28 +1617,40 @@
     }
 
     function reorderLayers(mode) {
-        if (baseZIndex == 0) return;
+        if (baseZIndex == -1) return;
+        if (originalZIndices.length == 0) {
+            for (let i = 0; i < WME_LAYERS_TO_MOVE.length; i++) {
+                originalZIndices[i] = -1;
+            }
+        }
         for (let i = 0; i < WME_LAYERS_TO_MOVE.length; i++) {
-            if (layersMoved[i] === undefined) {
-                let layer = W.map.getLayersBy("name", WME_LAYERS_TO_MOVE[i])[0];
-                if (layer === undefined) continue;
-                layersMoved[i] = layer;
-                originalZIndices[i] = layer.getZIndex();
+            let z = -1;
+            try {
+                z = sdk.Map.getLayerZIndex({layerName: WME_LAYERS_TO_MOVE[i]});
+                if (mode) {
+                    if (originalZIndices[i] == -1) {
+                        originalZIndices[i] = z;
+                    }
+                    if (z != baseZIndex - WME_LAYERS_TO_MOVE.length + i) {
+                        sdk.Map.setLayerZIndex({layerName: WME_LAYERS_TO_MOVE[i], zIndex: baseZIndex - WME_LAYERS_TO_MOVE.length + i});
+                        sdk.Map.redrawLayer({layerName: WME_LAYERS_TO_MOVE[i]});
+                    }
+                } else {
+                    if (z != originalZIndices[i]) {
+                        sdk.Map.setLayerZIndex({layerName: WME_LAYERS_TO_MOVE[i], zIndex: originalZIndices[i]});
+                        sdk.Map.redrawLayer({layerName: WME_LAYERS_TO_MOVE[i]});
+                    }
+                }
+            } catch (ex) {
+                if (!alreadyReportedWMELayer) {
+                    warn("WME layer " + WME_LAYERS_TO_MOVE[i] + " not found: " + ex);
+                    alreadyReportedWMELayer = true;
+                }
             }
-            if (mode) {
-                layersMoved[i].setZIndex(baseZIndex - WME_LAYERS_TO_MOVE.length + i);
-            } else {
-                layersMoved[i].setZIndex(originalZIndices[i]);
-            }
-            layersMoved[i].redraw();
         }
     }
 
     function drawRoutes() {
-
-        var routeLayer = W.map.getLayersBy("uniqueName", "__DrawRouteSpeedsLines")[0];
-        if (routeLayer !== undefined) routeLayer.removeAllFeatures();
-
         sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
         for (let i = routesShown.length - 1; i >= 0; i--) {
             if (i == routeSelected) continue;
