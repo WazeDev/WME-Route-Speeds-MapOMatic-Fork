@@ -15,9 +15,6 @@
 // @connect      waze.com
 // ==/UserScript==
 
-/* global W */
-/* global OpenLayers */
-
 /* eslint-disable */
 (function () {
     "use strict";
