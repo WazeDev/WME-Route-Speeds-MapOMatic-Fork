@@ -142,8 +142,8 @@
 
     let topCountry;
 
-    let mouseDownHandler;
-    let mouseUpHandler;
+    let markerMoving = "none";
+    let startFirstClickRegistered = false;
     let mouseMoveHandler;
 
     let pointA = {};
@@ -523,7 +523,6 @@
             topCountry = newTopCountry;
             buildPassesDiv();
         }
-
         sdk.Events.on({
             eventName: "wme-map-data-loaded",
             eventHandler: onMapDataLoaded
@@ -589,6 +588,10 @@
                 getFontWeight: ({feature}) => feature.properties.fontWeight,
                 getFontColor: ({feature}) => feature.properties.fontColor
             }
+        });
+        sdk.Events.on({
+            eventName: "wme-map-move-end",
+            eventHandler: onMapMoveEnd
         });
 
         window.setInterval(loopWMERouteSpeeds, 500);
@@ -1264,35 +1267,39 @@
         }
     }
 
+    function onMapMoveEnd(event) {
+        if (!options.enableScript) return;
+        drawRoutes();
+    }
+
     function mouseEnterHandler(event) {
-        if (mouseDownHandler) {
-            sdk.Events.off({
+        if (!startFirstClickRegistered) {
+            sdk.Events.on({
                 eventName: "wme-map-mouse-down",
-                eventHandler: mouseDownHandler
+                eventHandler: startFirstClick
             });
+            startFirstClickRegistered = true;
         }
-        mouseDownHandler = () => startFirstClick(event.featureId);
-        sdk.Events.on({
-            eventName: "wme-map-mouse-down",
-            eventHandler: mouseDownHandler
-        });
+        if (markerMoving != event.featureId) {
+            markerMoving = event.featureId;
+        }
     }
 
     function mouseLeaveHandler(event) {
-        if (mouseDownHandler) {
+        if (startFirstClickRegistered) {
             sdk.Events.off({
                 eventName: "wme-map-mouse-down",
-                eventHandler: mouseDownHandler
+                eventHandler: startFirstClick
             });
-            mouseDownHandler = false;
+            startFirstClickRegistered = false;
         }
+        markerMoving = "none";
     }
 
-    function startFirstClick(id) {
-        mouseUpHandler = (event) => onFirstClick(id, event);
+    function startFirstClick(event) {
         sdk.Events.on({
             eventName: "wme-map-mouse-up",
-            eventHandler: mouseUpHandler
+            eventHandler: onFirstClick
         });
         sdk.Events.on({
             eventName: "wme-map-mouse-move",
@@ -1303,7 +1310,7 @@
     function cancelFirstClick(event) {
         sdk.Events.off({
             eventName: "wme-map-mouse-up",
-            eventHandler: mouseUpHandler
+            eventHandler: onFirstClick
         });
         sdk.Events.off({
             eventName: "wme-map-mouse-move",
@@ -1311,9 +1318,13 @@
         });
     }
 
-    function onFirstClick(id, event) {
+    function onFirstClick(event) {
         sdk.Events.stopLayerEventsTracking({layerName: MARKER_LAYER_NAME});
-        mouseLeaveHandler(event);
+        sdk.Events.off({
+            eventName: "wme-map-mouse-down",
+            eventHandler: startFirstClick
+        });
+        startFirstClickRegistered = false;
         cancelFirstClick(event);
         sdk.Events.on({
             eventName: "wme-map-mouse-down",
@@ -1321,13 +1332,13 @@
         });
         let markerLocationPixel = sdk.Map.getMapPixelFromLonLat({
             lonLat: {
-                lon: id == "A" ? pointA.lon : pointB.lon,
-                lat: id == "A" ? pointA.lat : pointB.lat
+                lon: markerMoving == "A" ? pointA.lon : pointB.lon,
+                lat: markerMoving == "A" ? pointA.lat : pointB.lat
             }
         });
         let offsetX = markerLocationPixel.x - event.x;
         let offsetY = markerLocationPixel.y - event.y;
-        mouseMoveHandler = ({x, y}) => onMouseMoveWithMarker(id, x + offsetX, y + offsetY);
+        mouseMoveHandler = ({x, y}) => onMouseMoveWithMarker(markerMoving, x + offsetX, y + offsetY);
         sdk.Events.on({
             eventName: "wme-map-mouse-move",
             eventHandler: mouseMoveHandler
@@ -1382,6 +1393,7 @@
             eventName: "wme-map-mouse-move",
             eventHandler: cancelSecondClick
         });
+        mouseEnterHandler({featureId: markerMoving});
         sdk.Events.trackLayerEvents({layerName: MARKER_LAYER_NAME});
 
         let lon1 = parseInt(pointA.lon * 1000000.0 + 0.5) / 1000000.0;
