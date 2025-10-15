@@ -361,6 +361,7 @@
             '<br>' +
             'Vehicle type:<select id=routespeeds-vehicletype style="margin-left:10px;" >' +
             '<option id=routespeeds-vehicletype value="PRIVATE">Private</option>' +
+            '<option id=routespeeds-vehicletype value="EV">Electric</option>' +
             '<option id=routespeeds-vehicletype value="TAXI">Taxi</option>' +
             '<option id=routespeeds-vehicletype value="MOTORCYCLE">Motorcycle</option>' +
             '</select>' +
