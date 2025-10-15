@@ -651,7 +651,7 @@
                     getId('sidepanel-routespeeds-b').value = midpointB[0].toFixed(6) + ", " + midpointB[1].toFixed(6);
                 }
                 createMarkers(midpointA[0], midpointA[1], midpointB[0], midpointB[1]);
-                requestRouteFromLiveMap();
+                requestRouteFromLiveMap(true);
             }
         } else if (selectedIDs.length == 1) {
             if (twoSegmentsSelected) {
@@ -960,7 +960,7 @@
         return tsel - tnow;
     }
 
-    function requestRouteFromLiveMap() {
+    function requestRouteFromLiveMap(clearSelection) {
         var atTime = getnowtoday();
         var numRoutes = Math.min(10, options.getAlternatives ? options.maxRoutes : 1);
         var routeType = (options.routeType === 3) ? "TIME" : "HISTORIC_TIME";
@@ -1034,6 +1034,7 @@
                 handleRouteRequestError(str);
                 console.timeEnd(SCRIPT_SHORT_NAME + ": routing time");
                 waitingForRoute = false;
+                sdk.Editing.clearSelection();
             },
             onload: function(response) {
                 if (response.response.error !== undefined) {
@@ -1061,6 +1062,7 @@
                 switchRoute()
                 console.timeEnd(SCRIPT_SHORT_NAME + ": routing time");
                 waitingForRoute = false;
+                sdk.Editing.clearSelection();
             },
         });
     }
@@ -1249,7 +1251,7 @@
             clickA();
         }
 
-        requestRouteFromLiveMap();
+        requestRouteFromLiveMap(false);
     }
 
     //--------------------------------------------------------------------------
@@ -1407,7 +1409,7 @@
         var objprog1 = getId('routespeeds-button-livemap');
         if (objprog1.style.backgroundColor === '') objprog1.style.backgroundColor = '#FF8000';
 
-        requestRouteFromLiveMap();
+        requestRouteFromLiveMap(true);
     }
 
     //--------------------------------------------------------------------------
@@ -1470,7 +1472,7 @@
             getId('sidepanel-routespeeds-b').value = newB[0].toFixed(6) + ", " + newB[1].toFixed(6);
         }
         createMarkers(newA[0], newA[1], newB[0], newB[1]);
-        requestRouteFromLiveMap();
+        requestRouteFromLiveMap(false);
     }
 
     function clickShowLabels() {
