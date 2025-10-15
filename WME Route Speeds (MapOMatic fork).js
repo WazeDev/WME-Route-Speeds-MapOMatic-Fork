@@ -656,7 +656,7 @@
         } else if (selectedIDs.length == 1) {
             if (twoSegmentsSelected) {
                 twoSegmentsSelected = false;
-                rlayers[0].removeAllFeatures();
+                sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
                 getId('routespeeds-summaries').style.visibility = 'hidden';
             }
         }
