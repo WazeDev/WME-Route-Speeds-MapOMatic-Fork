@@ -166,6 +166,8 @@
     let routeSelected = 0;
     let routeSelectedLast = -1;
 
+    let storedFeatures = [];
+
     function log(msg) {
         console.log(SCRIPT_SHORT_NAME + ":", msg);
     };
@@ -907,39 +909,21 @@
     function createRouteFeatures(routeIndex) {
         let geometries = splitGeometryIntoSegments(routeIndex);
         if (routeSelected == routeIndex || routeSelected == -1) {
-            let outlineFeatures = [];
-            let mainFeatures = [];
             for (let i = 0; i < geometries.length; i++) {
-                outlineFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "outline"));
-                mainFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "main"));
+                storedFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "outline"));
             }
-            sdk.Map.addFeaturesToLayer({
-                layerName: ROUTE_LAYER_NAME,
-                features: outlineFeatures
-            });
-            sdk.Map.addFeaturesToLayer({
-                layerName: ROUTE_LAYER_NAME,
-                features: mainFeatures
-            });
+            for (let i = 0; i < geometries.length; i++) {
+                storedFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "main"));
+            }
             if (options.showLabels) {
-                let labelFeatures = [];
                 for (let i = 0; i < geometries.length; i++) {
-                    labelFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "label"));
+                    storedFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "label"));
                 }
-                sdk.Map.addFeaturesToLayer({
-                    layerName: ROUTE_LAYER_NAME,
-                    features: labelFeatures
-                });
             }
         } else {
-            let simpleFeatures = [];
             for (let i = 0; i < geometries.length; i++) {
-                simpleFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "simple"));
+                storedFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "simple"));
             }
-            sdk.Map.addFeaturesToLayer({
-                layerName: ROUTE_LAYER_NAME,
-                features: simpleFeatures
-            });
         }
     }
 
@@ -1125,7 +1109,7 @@
         if (routeSelectedLast != -1) routeSelected = routeSelectedLast;
         if (routeSelected >= routesShown.length) routeSelected = routesShown.length - 1;
         createSummaries();
-        drawRoutes();
+        drawRoutes(true);
     }
 
     function createSummaries() {
@@ -1306,7 +1290,7 @@
 
     function onMapMoveEnd(event) {
         if (!options.enableScript) return;
-        drawRoutes();
+        drawRoutes(false);
     }
 
     function mouseEnterHandler(event) {
@@ -1493,7 +1477,7 @@
         else {
             getId('sidepanel-routespeeds').style.color = "";
             sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
-            if (routesShown.length > 0) drawRoutes();
+            if (routesShown.length > 0) drawRoutes(false);
             reorderLayers(1);
         }
     }
@@ -1512,18 +1496,18 @@
 
     function clickShowLabels() {
         options.showLabels = (getId('routespeeds-showLabels').checked === true);
-        drawRoutes();
+        drawRoutes(true);
     }
 
     function clickShowSpeeds() {
         options.showSpeeds = (getId('routespeeds-showSpeeds').checked === true);
-        drawRoutes();
+        drawRoutes(true);
     }
 
     function clickUseMiles() {
         options.useMiles = (getId('routespeeds-usemiles').checked === true);
         createSummaries();
-        drawRoutes();
+        drawRoutes(options.showLabels && options.showSpeeds);
     }
 
     function clickShowRouteText() {
@@ -1659,7 +1643,7 @@
         }
         reorderLayers(1);
 
-        drawRoutes();
+        drawRoutes(true);
     }
 
     function reorderLayers(mode) {
@@ -1696,15 +1680,22 @@
         }
     }
 
-    function drawRoutes() {
+    function drawRoutes(recreate) {
         sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
-        for (let i = routesShown.length - 1; i >= 0; i--) {
-            if (i == routeSelected) continue;
-            createRouteFeatures(i)
+        if (recreate) {
+            storedFeatures = [];
+            for (let i = routesShown.length - 1; i >= 0; i--) {
+                if (i == routeSelected) continue;
+                createRouteFeatures(i)
+            }
+            if (routeSelected != -1 && routesShown.length) {
+                createRouteFeatures(routeSelected)
+            }
         }
-        if (routeSelected != -1 && routesShown.length) {
-            createRouteFeatures(routeSelected)
-        }
+        sdk.Map.addFeaturesToLayer({
+            layerName: ROUTE_LAYER_NAME,
+            features: storedFeatures
+        });
     }
 
     function enterAB(ev) {
