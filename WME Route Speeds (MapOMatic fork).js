@@ -418,7 +418,11 @@
             '</style>'
         ].join('\n'));
 
-        WazeWrap.Interface.Tab(SCRIPT_SHORT_NAME, addon.innerHTML, onFirstTabClick, '<span id="routespeeds-tab-label">' + SCRIPT_SHORT_NAME + '</span>');
+        sdk.Sidebar.registerScriptTab().then((tab) => {
+            tab.tabLabel.innerHTML = '<span id="routespeeds-tab-label">' + SCRIPT_SHORT_NAME + '</span>';
+            tab.tabPane.innerHTML = addon.innerHTML;
+            onTabCreated();
+        });
 
         window.addEventListener("beforeunload", saveRouteSpeedsOptions, true);
     }
@@ -479,7 +483,7 @@
         getId('routespeeds-vehicletype').value = options.vehicleType;
     }
 
-    function onFirstTabClick() {
+    function onTabCreated() {
         resetOptions();
         loadRouteSpeedsOptions();
 
