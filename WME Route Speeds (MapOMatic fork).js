@@ -830,7 +830,7 @@
     function splitGeometryIntoSegments(routeIndex) {
         let offset = 0;
         if (routeRevisitsAnyNode(routeIndex)) {
-            offset = topCountry.isLeftHandTraffic ? -10 : 10;
+            offset = topCountry.isLeftHandTraffic ? -0.01 : 0.01;
         }
         let geometries = [];
         let currentSegmentIndex = 0;
@@ -848,7 +848,7 @@
                     coordinates: currentSegmentCoords
                 };
                 if (offset) {
-                    currentGeometry = turf.lineOffset(currentGeometry, offset, {units: "meters"}).geometry;
+                    currentGeometry = turf.lineOffset(currentGeometry, offset).geometry;
                 }
                 geometries.push(currentGeometry);
                 currentSegmentIndex++;
@@ -865,50 +865,80 @@
             coordinates: currentSegmentCoords
         };
         if (offset) {
-            lastGeometry = turf.lineOffset(lastGeometry, offset, {units: "meters"}).geometry;
+            lastGeometry = turf.lineOffset(lastGeometry, offset).geometry;
         }
         geometries.push(lastGeometry);
         if (offset) {
-            //clean up offset geometry using more turf functions?
+            cleanOffsetGeometries(geometries);
         }
         return geometries;
+    }
+
+    function cleanOffsetGeometries(geometries) {
+        if (geometries.length < 2) return;
+        for (let i = 1; i < geometries.length; i++) {
+            let intersections = turf.lineIntersect(geometries[i - 1], geometries[i]).features;
+            for (let j = 0; j < intersections.length; j++) {
+                if (turf.distance(intersections[j], getFirstPoint(geometries[i])) < 0.0201) {
+                    geometries[i - 1] = turf.cleanCoords(turf.lineSlice(getFirstPoint(geometries[i - 1]), intersections[j].geometry, geometries[i - 1]).geometry);
+                    geometries[i] = turf.cleanCoords(turf.lineSlice(intersections[j].geometry, getLastPoint(geometries[i]), geometries[i]).geometry);
+                    break;
+                }
+            }
+            if (!turf.booleanEqual(getLastPoint(geometries[i - 1]), getFirstPoint(geometries[i]))) {
+                geometries[i - 1].coordinates.push(getFirstPoint(geometries[i]).coordinates);
+            }
+        }
+    }
+
+    function getFirstPoint(geometry) {
+        return {
+            type: "Point",
+            coordinates: geometry.coordinates[0]
+        };
+    }
+    function getLastPoint(geometry) {
+        return {
+            type: "Point",
+            coordinates: geometry.coordinates[geometry.coordinates.length - 1]
+        };
     }
 
     function createRouteFeatures(routeIndex) {
         let geometries = splitGeometryIntoSegments(routeIndex);
         if (routeSelected == routeIndex || routeSelected == -1) {
-            let sdk_outlineFeatures = [];
-            let sdk_mainFeatures = [];
+            let outlineFeatures = [];
+            let mainFeatures = [];
             for (let i = 0; i < geometries.length; i++) {
-                sdk_outlineFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "outline"));
-                sdk_mainFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "main"));
+                outlineFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "outline"));
+                mainFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "main"));
             }
             sdk.Map.addFeaturesToLayer({
                 layerName: ROUTE_LAYER_NAME,
-                features: sdk_outlineFeatures
+                features: outlineFeatures
             });
             sdk.Map.addFeaturesToLayer({
                 layerName: ROUTE_LAYER_NAME,
-                features: sdk_mainFeatures
+                features: mainFeatures
             });
             if (options.showLabels) {
-                let sdk_labelFeatures = [];
+                let labelFeatures = [];
                 for (let i = 0; i < geometries.length; i++) {
-                    sdk_labelFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "label"));
+                    labelFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "label"));
                 }
                 sdk.Map.addFeaturesToLayer({
                     layerName: ROUTE_LAYER_NAME,
-                    features: sdk_labelFeatures
+                    features: labelFeatures
                 });
             }
         } else {
-            let sdk_simpleFeatures = [];
+            let simpleFeatures = [];
             for (let i = 0; i < geometries.length; i++) {
-                sdk_simpleFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "simple"));
+                simpleFeatures.push(getRouteFeature(routeIndex, i, geometries[i], "simple"));
             }
             sdk.Map.addFeaturesToLayer({
                 layerName: ROUTE_LAYER_NAME,
-                features: sdk_simpleFeatures
+                features: simpleFeatures
             });
         }
     }
