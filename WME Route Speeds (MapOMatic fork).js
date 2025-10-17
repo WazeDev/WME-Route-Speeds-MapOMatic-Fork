@@ -236,8 +236,9 @@
             '<div style="float:right; padding-right:20px; padding-top:6%; ">' +
             '<button id=routespeeds-button-reverse class="waze-btn waze-btn-blue waze-btn-smaller" style="padding-left:15px; padding-right:15px;" title="Calculate reverse route" >A &#8596; B</button></div>' +
             '<div style="clear:both; "></div>' +
+            '<div id="routespeeds-marker-click-explanation" style="font-size:11px; color:#404040; line-height:1.1; display:none;">Click the A or B marker on the map to move it. Click again to finish moving the marker.</div>' +
 
-            '<div style="margin-top:8px;">' +
+            '<div style="margin-top:5px;">' +
             '<select id=routespeeds-hour>' +
             '<option value="now">Now</option>' +
             '<option value="0"  >00:00</option>' +
@@ -525,25 +526,25 @@
             layerName: MARKER_LAYER_NAME,
             styleRules: [
                 {
-                    predicate: (featureProperties) => featureProperties.A,
                     style: {
-                        externalGraphic: MARKER_A_IMAGE,
                         graphicWidth: 27,
                         graphicHeight: 36,
                         graphicXOffset: -13.5,
                         graphicYOffset: -33.5,
                         graphicOpacity: 1,
+                        cursor: "pointer"
+                    }
+                },
+                {
+                    predicate: (featureProperties) => featureProperties.A,
+                    style: {
+                        externalGraphic: MARKER_A_IMAGE
                     },
                 },
                 {
                     predicate: (featureProperties) => !featureProperties.A,
                     style: {
-                        externalGraphic: MARKER_B_IMAGE,
-                        graphicWidth: 27,
-                        graphicHeight: 36,
-                        graphicXOffset: -13.5,
-                        graphicYOffset: -33.5,
-                        graphicOpacity: 1,
+                        externalGraphic: MARKER_B_IMAGE
                     },
                 },
             ],
@@ -800,6 +801,7 @@
         placeMarker("A", lon1, lat1);
         placeMarker("B", lon2, lat2);
         sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
+        getId("routespeeds-marker-click-explanation").style.display = "block";
     }
 
     function placeMarker(id, lon, lat) {
