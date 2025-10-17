@@ -15,9 +15,12 @@
 // @connect      waze.com
 // ==/UserScript==
 
-/* eslint-disable */
+/* global getWmeSdk, $, jQuery, WazeWrap, turf */
 (function () {
     "use strict";
+
+    //--------------------------------------------------------------------------
+    // Constants and global variables
 
     const DOWNLOAD_URL = 'https://update.greasyfork.org/scripts/369630/WME%20Route%20Speeds%20%28MapOMatic%20fork%29.user.js';
     const SCRIPT_NAME = GM_info.script.name;
@@ -49,7 +52,7 @@
         '#ecd4ff', // route 17
         '#7c00ff', // route 18
         '#caeeff', // route 19
-        '#ffdab8'  // route 20
+        '#ffdab8', // route 20
     ];
     function getRouteColor(routeIndex) {
         return ROUTE_COLORS[routeIndex % ROUTE_COLORS.length];
@@ -75,7 +78,7 @@
         '#5e00e0', // < 120.5 km/h
         '#a504cd', // < 130.5 km/h
         '#851680', // < 140.5 km/h
-        '#531947'  // >= 140.5 km/h
+        '#531947', // >= 140.5 km/h
     ];
     const IMPERIAL_SPEED_COLORS = [
         '#2e131c', // < 3.5 mph
@@ -97,7 +100,7 @@
         '#5e00e0', // < 75.5 mph
         '#a504cd', // < 80.5 mph
         '#851680', // < 85.5 mph
-        '#531947'  // >= 85.5 mph
+        '#531947', // >= 85.5 mph
     ];
     function getSpeedColor(speed) {
         if (speed === 0) return INVALID_SPEED_COLOR;
@@ -140,7 +143,7 @@
 
     let sdk;
 
-    let topCountry;
+    let topCountry = {id: null};
 
     let markerMoving = "none";
     let startFirstClickRegistered = false;
@@ -168,63 +171,50 @@
 
     let storedFeatures = [];
 
-    function log(msg) {
-        console.log(SCRIPT_SHORT_NAME + ":", msg);
-    };
-    function warn(msg) {
-        console.warn(SCRIPT_SHORT_NAME + ":", msg);
-    };
-    function error(msg) {
-        console.error(SCRIPT_SHORT_NAME + ":", msg);
-    };
-
     //--------------------------------------------------------------------------
     // Script startup functions
 
     function onSDKInitialized() {
-        sdk = getWmeSdk({scriptId: "wme-route-speeds",
-                         scriptName: SCRIPT_SHORT_NAME});
+        sdk = getWmeSdk({scriptId: "wme-route-speeds", scriptName: SCRIPT_SHORT_NAME});
         if (sdk.State.isReady()) {
-            onWmeReady();
+            onWMEReady();
         } else {
-            log('Waiting for WME...');
-            sdk.Events.once({ eventName: "wme-ready" }).then(onWmeReady);
+            log("Waiting for WME...");
+            sdk.Events.once({ eventName: "wme-ready" }).then(onWMEReady);
         }
     }
 
-    async function onWmeReady(tries = 0) {
+    function onWMEReady() {
+        log("Initializing...");
+        initializeScript();
+        log(SCRIPT_VERSION + " loaded.");
+        startScriptUpdateMonitor();
+    }
+
+    function startScriptUpdateMonitor(tries = 0) {
         if (WazeWrap && WazeWrap.Ready) {
-            startScriptUpdateMonitor();
-            log('Initializing...');
-            await initializeScript();
-            log(SCRIPT_VERSION + " loaded.");
+            log("Checking for script updates...");
+            try {
+                let updateMonitor = new WazeWrap.Alerts.ScriptUpdateMonitor(SCRIPT_NAME, SCRIPT_VERSION, DOWNLOAD_URL, GM_xmlhttpRequest);
+                updateMonitor.start();
+            } catch (ex) {
+                error(ex);
+            }
         } else {
-            if (tries === 0) {
-                log('Waiting for WazeWrap...');
-            } else if (tries === 300) {
-                error("WazeWrap loading failed after 300 tries. Giving up.");
+            if (tries == 0) {
+                log("Waiting for WazeWrap...");
+            } else if (tries >= 60) {
+                warn("WazeWrap loading failed after 60 tries. Script updates will not be detected.");
                 return;
             }
-            setTimeout(onWmeReady, 100, ++tries);
+            setTimeout(startScriptUpdateMonitor, 500, tries + 1);
         }
     }
 
-    function startScriptUpdateMonitor() {
-        log('Checking for script updates...');
-        let updateMonitor;
-        try {
-            updateMonitor = new WazeWrap.Alerts.ScriptUpdateMonitor(SCRIPT_NAME, SCRIPT_VERSION, DOWNLOAD_URL, GM_xmlhttpRequest);
-            updateMonitor.start();
-        } catch (ex) {
-            warn(ex);
-        }
-    }
-
-    async function initializeScript() {
-        var addon = document.createElement('section');
+    function initializeScript() {
+        let addon = document.createElement('section');
         addon.id = "routespeeds-addon";
-        addon.innerHTML = '' +
-            '<div id="sidepanel-routespeeds" style="margin: 0px 8px; width: auto;">' +
+        addon.innerHTML = '<div id="sidepanel-routespeeds" style="margin: 0px 8px; width: auto;">' +
             '<div style="margin-bottom:4px; padding:0px;"><a href="https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork" target="_blank">' +
             '<span style="font-weight:bold; text-decoration:underline">WME Route Speeds</span></a><span style="margin-left:6px; color:#888; font-size:11px;">v' + SCRIPT_VERSION + '</span>' +
             '</div>' +
@@ -401,17 +391,17 @@
             '</style>' +
             '</div>';
 
-        /*var userTabs = getId('user-info');
-	var navTabs = getElementsByClassName('nav-tabs', userTabs)[0];
-	var tabContent = getElementsByClassName('tab-content', userTabs)[0];
+        /* var userTabs = getId('user-info');
+        var navTabs = getElementsByClassName('nav-tabs', userTabs)[0];
+        var tabContent = getElementsByClassName('tab-content', userTabs)[0];
 
-	newtab = document.createElement('li');
-	newtab.innerHTML = '<a id=sidepanel-routespeeds href="#sidepanel-routespeeds" data-toggle="tab" style="" >Route Speeds</a>';
-	navTabs.appendChild(newtab);
+        newtab = document.createElement('li');
+        newtab.innerHTML = '<a id=sidepanel-routespeeds href="#sidepanel-routespeeds" data-toggle="tab" style="" >Route Speeds</a>';
+        navTabs.appendChild(newtab);
 
-	addon.id = "sidepanel-routespeeds";
-	addon.className = "tab-pane";
-	tabContent.appendChild(addon);*/
+        addon.id = "sidepanel-routespeeds";
+        addon.className = "tab-pane";
+        tabContent.appendChild(addon); */
 
         $('head').append([
             '<style>',
@@ -462,7 +452,7 @@
         try {
             Object.assign(options, JSON.parse(localStorage.getItem(SAVED_OPTIONS_KEY)));
         } catch {
-            log("Error loading saved options. Using defaults.");
+            warn("Saved options could not be loaded. Using defaults.");
         }
         getId('routespeeds-enablescript').checked = options.enableScript;
         getId('routespeeds-showLabels').checked = options.showLabels;
@@ -525,11 +515,7 @@
         getId('routespeeds-button-A').onclick = clickA;
         getId('routespeeds-button-B').onclick = clickB;
 
-        const newTopCountry = sdk.DataModel.Countries.getTopCountry();
-        if (newTopCountry) {
-            topCountry = newTopCountry;
-            buildPassesDiv();
-        }
+        updateTopCountry();
         sdk.Events.on({
             eventName: "wme-map-data-loaded",
             eventHandler: onMapDataLoaded
@@ -604,11 +590,73 @@
         window.setInterval(loopWMERouteSpeeds, 500);
     }
 
+    function updateTopCountry() {
+        let newTopCountry = sdk.DataModel.Countries.getTopCountry();
+        if (newTopCountry && newTopCountry.id != topCountry.id) {
+            topCountry = newTopCountry;
+            buildPassesDiv();
+        }
+    }
+
+    function buildPassesDiv() {
+        $('#routespeeds-passes-container').empty();
+        if (topCountry.restrictionSubscriptions.length == 0) return;
+        $('#routespeeds-passes-container').append(
+            '<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
+            '  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
+            '    <i class="fa fa-fw fa-chevron-down" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>' +
+            '    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
+            '  </legend>' +
+            '  <div id="routespeeds-passes-internal-container" style="padding-top:0px;">' +
+            topCountry.restrictionSubscriptions.map((pass, i) => {
+                //let id = 'routespeeds-pass-' + pass.key;
+                return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
+                    '      <input id="routespeeds-pass-' + i + '" type="checkbox" class="routespeeds-pass-checkbox" data-pass-key = "' + pass.id + '">' +
+                    '      <label for="routespeeds-pass-' + i + '" style="white-space:pre-line">' + pass.name + '</label>' +
+                    '    </div>';
+            }).join(' ') +
+            '  </div>' +
+            '</fieldset>'
+        );
+
+        $('.routespeeds-pass-checkbox').click(clickPassOption);
+
+        $('#routespeeds-passes-legend').click(function () {
+            let $this = $(this);
+            let $chevron = $($this.children()[0]);
+            $chevron
+                .toggleClass('fa fa-fw fa-chevron-down')
+                .toggleClass('fa fa-fw fa-chevron-right');
+            let collapse = $chevron.hasClass('fa-chevron-right');
+            let checkboxDivs = $('input.routespeeds-pass-checkbox:not(:checked)').parent();
+            if (collapse) {
+                checkboxDivs.css('display', 'none');
+            } else {
+                checkboxDivs.css('display', 'block');
+            }
+            // $($this.children()[0])
+            // 	.toggleClass('fa fa-fw fa-chevron-down')
+            // 	.toggleClass('fa fa-fw fa-chevron-right');
+            // $($this.siblings()[0]).toggleClass('collapse');
+        })
+
+        $('.routespeeds-pass-checkbox').each((i, elem) => {
+            const $elem = $(elem);
+            const passKey = $elem.data('pass-key');
+            $elem.prop('checked', options.passes.includes(passKey));
+        });
+        updatePassesLabel();
+    }
+
+    function updatePassesLabel() {
+        let count = topCountry.restrictionSubscriptions.filter(pass => options.passes.indexOf(pass.id) > -1).length;
+        $('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${topCountry.restrictionSubscriptions.length})`);
+    }
+
     //--------------------------------------------------------------------------
     // Main loop function
 
     function loopWMERouteSpeeds() {
-
         if (!options.enableScript) return;
 
         let tabOpen = $('#user-tabs #routespeeds-tab-label').parent().parent().attr('aria-expanded') == "true";
@@ -679,6 +727,16 @@
     //--------------------------------------------------------------------------
     // Routing and helper functions
 
+    function log(msg) {
+        console.log(SCRIPT_SHORT_NAME + ":", msg);
+    };
+    function warn(msg) {
+        console.warn(SCRIPT_SHORT_NAME + ":", msg);
+    };
+    function error(msg) {
+        console.error(SCRIPT_SHORT_NAME + ":", msg);
+    };
+
     function getRoutingManager() {
         let region = sdk.Settings.getRegionCode();
         if (region == "usa") {
@@ -735,11 +793,6 @@
         let minutes = Math.floor((time_s % 3600) / 60);
         let hours = Math.floor(time_s / 3600);
         return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-    }
-
-    function updatePassesLabel() {
-        let count = topCountry.restrictionSubscriptions.filter(pass => options.passes.indexOf(pass.id) > -1).length;
-        $('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${topCountry.restrictionSubscriptions.length})`);
     }
 
     function createMarkers(lon1, lat1, lon2, lat2) {
@@ -932,8 +985,9 @@
         var a = [];
         var re = new RegExp('\\b' + classname + '\\b');
         var els = node.getElementsByTagName("*");
-        for (var i = 0, j = els.length; i < j; i++)
+        for (var i = 0, j = els.length; i < j; i++) {
             if (re.test(els[i].className)) a.push(els[i]);
+        }
         return a;
     }
 
@@ -1038,7 +1092,6 @@
 
         waitingForRoute = true;
         getId('routespeeds-error').innerHTML = "";
-        console.time(SCRIPT_SHORT_NAME + ": routing time");
 
         GM_xmlhttpRequest({
             method: "GET",
@@ -1051,7 +1104,6 @@
             onerror: function(response) {
                 let str = "Route request failed" + (response.status !== null ? " with error " + response.status : "") + "!<br>";
                 handleRouteRequestError(str);
-                console.timeEnd(SCRIPT_SHORT_NAME + ": routing time");
                 waitingForRoute = false;
                 sdk.Editing.clearSelection();
             },
@@ -1062,14 +1114,10 @@
                     handleRouteRequestError(str);
                 } else {
                     if (response.response.coords !== undefined) {
-                        log("1 route received (" + numRoutes + " requested)");
-
                         if (routeSelected > 0) routeSelected = 0;
-
                         routesReceived = [response.response];
                     }
                     if (response.response.alternatives !== undefined) {
-                        log(response.response.alternatives.length + " routes received (" + numRoutes + " requested)");
                         routesReceived = response.response.alternatives;
                     }
                     getId('routespeeds-routecount').innerHTML = 'Received <b>' + routesReceived.length + '</b> route' + (routesReceived.length == 1 ? '' : "s") + ' from the server';
@@ -1078,8 +1126,7 @@
 
                 getId('routespeeds-button-livemap').style.backgroundColor = '';
                 getId('routespeeds-button-reverse').style.backgroundColor = '';
-                switchRoute()
-                console.timeEnd(SCRIPT_SHORT_NAME + ": routing time");
+                switchRoute();
                 waitingForRoute = false;
                 sdk.Editing.clearSelection();
             },
@@ -1110,6 +1157,81 @@
         if (routeSelected >= routesShown.length) routeSelected = routesShown.length - 1;
         createSummaries();
         drawRoutes(true);
+    }
+
+    function switchRoute() {
+        for (let i = 0; i < routesShown.length; i++) {
+            let summary = getId('routespeeds-summary-' + i);
+            summary.className = (routeSelected == i) ? 'routespeeds_summary_classB' : 'routespeeds_summary_classA';
+        }
+
+        let z;
+        for (let name of SCRIPT_LAYERS_TO_COVER) {
+            try {
+                baseZIndex = Math.max(baseZIndex, sdk.Map.getLayerZIndex({layerName: name}));
+            } catch (ex) {}
+        }
+        let routeLayerZIndex = sdk.Map.getLayerZIndex({layerName: ROUTE_LAYER_NAME});
+        if (routeLayerZIndex < baseZIndex) {
+            sdk.Map.setLayerZIndex({layerName: ROUTE_LAYER_NAME, zIndex: baseZIndex + 1});
+        } else {
+            baseZIndex = routeLayerZIndex;
+        }
+        reorderLayers(1);
+
+        drawRoutes(true);
+    }
+
+    function reorderLayers(mode) {
+        if (baseZIndex == -1) return;
+        if (originalZIndices.length == 0) {
+            for (let i = 0; i < WME_LAYERS_TO_MOVE.length; i++) {
+                originalZIndices[i] = -1;
+            }
+        }
+        for (let i = 0; i < WME_LAYERS_TO_MOVE.length; i++) {
+            let z = -1;
+            try {
+                z = sdk.Map.getLayerZIndex({layerName: WME_LAYERS_TO_MOVE[i]});
+                if (mode) {
+                    if (originalZIndices[i] == -1) {
+                        originalZIndices[i] = z;
+                    }
+                    if (z != baseZIndex - WME_LAYERS_TO_MOVE.length + i) {
+                        sdk.Map.setLayerZIndex({layerName: WME_LAYERS_TO_MOVE[i], zIndex: baseZIndex - WME_LAYERS_TO_MOVE.length + i});
+                        sdk.Map.redrawLayer({layerName: WME_LAYERS_TO_MOVE[i]});
+                    }
+                } else {
+                    if (z != originalZIndices[i]) {
+                        sdk.Map.setLayerZIndex({layerName: WME_LAYERS_TO_MOVE[i], zIndex: originalZIndices[i]});
+                        sdk.Map.redrawLayer({layerName: WME_LAYERS_TO_MOVE[i]});
+                    }
+                }
+            } catch (ex) {
+                if (!alreadyReportedWMELayer) {
+                    error("WME layer " + WME_LAYERS_TO_MOVE[i] + " not found: " + ex);
+                    alreadyReportedWMELayer = true;
+                }
+            }
+        }
+    }
+
+    function drawRoutes(recreate) {
+        sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
+        if (recreate) {
+            storedFeatures = [];
+            for (let i = routesShown.length - 1; i >= 0; i--) {
+                if (i == routeSelected) continue;
+                createRouteFeatures(i)
+            }
+            if (routeSelected != -1 && routesShown.length) {
+                createRouteFeatures(routeSelected)
+            }
+        }
+        sdk.Map.addFeaturesToLayer({
+            layerName: ROUTE_LAYER_NAME,
+            features: storedFeatures
+        });
     }
 
     function createSummaries() {
@@ -1277,15 +1399,8 @@
     // Map event handlers
 
     function onMapDataLoaded(event) {
-        try {
-            const newTopCountry = sdk.DataModel.Countries.getTopCountry();
-            if (newTopCountry && (!topCountry || newTopCountry.id != topCountry.id)) {
-                topCountry = newTopCountry;
-                buildPassesDiv();
-            }
-        } catch (ex) {
-            error(ex);
-        }
+        if (!options.enableScript) return;
+        updateTopCountry();
     }
 
     function onMapMoveEnd(event) {
@@ -1617,141 +1732,17 @@
         livemapRoute();
     }
 
-    function toggleRoute(routeNo) {
-        if (routeSelected === routeNo) routeNo = -1;
-        routeSelectedLast = routeSelected = routeNo;
+    function toggleRoute(routeIndex) {
+        if (routeSelected == routeIndex) routeIndex = -1;
+        routeSelected = routeIndex;
+        routeSelectedLast = routeIndex;
         switchRoute();
-    }
-
-    function switchRoute() {
-        for (let i = 0; i < routesShown.length; i++) {
-            let summary = getId('routespeeds-summary-' + i);
-            summary.className = (routeSelected == i) ? 'routespeeds_summary_classB' : 'routespeeds_summary_classA';
-        }
-
-        let z;
-        for (let name of SCRIPT_LAYERS_TO_COVER) {
-            try {
-                baseZIndex = Math.max(baseZIndex, sdk.Map.getLayerZIndex({layerName: name}));
-            } catch (ex) {}
-        }
-        let routeLayerZIndex = sdk.Map.getLayerZIndex({layerName: ROUTE_LAYER_NAME});
-        if (routeLayerZIndex < baseZIndex) {
-            sdk.Map.setLayerZIndex({layerName: ROUTE_LAYER_NAME, zIndex: baseZIndex + 1});
-        } else {
-            baseZIndex = routeLayerZIndex;
-        }
-        reorderLayers(1);
-
-        drawRoutes(true);
-    }
-
-    function reorderLayers(mode) {
-        if (baseZIndex == -1) return;
-        if (originalZIndices.length == 0) {
-            for (let i = 0; i < WME_LAYERS_TO_MOVE.length; i++) {
-                originalZIndices[i] = -1;
-            }
-        }
-        for (let i = 0; i < WME_LAYERS_TO_MOVE.length; i++) {
-            let z = -1;
-            try {
-                z = sdk.Map.getLayerZIndex({layerName: WME_LAYERS_TO_MOVE[i]});
-                if (mode) {
-                    if (originalZIndices[i] == -1) {
-                        originalZIndices[i] = z;
-                    }
-                    if (z != baseZIndex - WME_LAYERS_TO_MOVE.length + i) {
-                        sdk.Map.setLayerZIndex({layerName: WME_LAYERS_TO_MOVE[i], zIndex: baseZIndex - WME_LAYERS_TO_MOVE.length + i});
-                        sdk.Map.redrawLayer({layerName: WME_LAYERS_TO_MOVE[i]});
-                    }
-                } else {
-                    if (z != originalZIndices[i]) {
-                        sdk.Map.setLayerZIndex({layerName: WME_LAYERS_TO_MOVE[i], zIndex: originalZIndices[i]});
-                        sdk.Map.redrawLayer({layerName: WME_LAYERS_TO_MOVE[i]});
-                    }
-                }
-            } catch (ex) {
-                if (!alreadyReportedWMELayer) {
-                    warn("WME layer " + WME_LAYERS_TO_MOVE[i] + " not found: " + ex);
-                    alreadyReportedWMELayer = true;
-                }
-            }
-        }
-    }
-
-    function drawRoutes(recreate) {
-        sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
-        if (recreate) {
-            storedFeatures = [];
-            for (let i = routesShown.length - 1; i >= 0; i--) {
-                if (i == routeSelected) continue;
-                createRouteFeatures(i)
-            }
-            if (routeSelected != -1 && routesShown.length) {
-                createRouteFeatures(routeSelected)
-            }
-        }
-        sdk.Map.addFeaturesToLayer({
-            layerName: ROUTE_LAYER_NAME,
-            features: storedFeatures
-        });
     }
 
     function enterAB(ev) {
         if (ev.keyCode === 13) {
             livemapRoute();
         }
-    }
-
-    function buildPassesDiv() {
-        $('#routespeeds-passes-container').empty();
-        if (topCountry.restrictionSubscriptions.length == 0) return;
-        $('#routespeeds-passes-container').append(
-            '<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
-            '  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
-            '    <i class="fa fa-fw fa-chevron-down" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>' +
-            '    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
-            '  </legend>' +
-            '  <div id="routespeeds-passes-internal-container" style="padding-top:0px;">' +
-            topCountry.restrictionSubscriptions.map((pass, i) => {
-                //let id = 'routespeeds-pass-' + pass.key;
-                return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
-                    '      <input id="routespeeds-pass-' + i + '" type="checkbox" class="routespeeds-pass-checkbox" data-pass-key = "' + pass.id + '">' +
-                    '      <label for="routespeeds-pass-' + i + '" style="white-space:pre-line">' + pass.name + '</label>' +
-                    '    </div>';
-            }).join(' ') +
-            '  </div>' +
-            '</fieldset>'
-        );
-
-        $('.routespeeds-pass-checkbox').click(clickPassOption);
-
-        $('#routespeeds-passes-legend').click(function () {
-            let $this = $(this);
-            let $chevron = $($this.children()[0]);
-            $chevron
-                .toggleClass('fa fa-fw fa-chevron-down')
-                .toggleClass('fa fa-fw fa-chevron-right');
-            let collapse = $chevron.hasClass('fa-chevron-right');
-            let checkboxDivs = $('input.routespeeds-pass-checkbox:not(:checked)').parent();
-            if (collapse) {
-                checkboxDivs.css('display', 'none');
-            } else {
-                checkboxDivs.css('display', 'block');
-            }
-            // $($this.children()[0])
-            // 	.toggleClass('fa fa-fw fa-chevron-down')
-            // 	.toggleClass('fa fa-fw fa-chevron-right');
-            // $($this.siblings()[0]).toggleClass('collapse');
-        })
-
-        $('.routespeeds-pass-checkbox').each((i, elem) => {
-            const $elem = $(elem);
-            const passKey = $elem.data('pass-key');
-            $elem.prop('checked', options.passes.includes(passKey));
-        });
-        updatePassesLabel();
     }
 
     //--------------------------------------------------------------------------
