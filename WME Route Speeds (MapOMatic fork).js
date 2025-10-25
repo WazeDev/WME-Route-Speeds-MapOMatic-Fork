@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.10.17.0
+// @version      2025.10.24.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -1107,7 +1107,7 @@
                 let str = "Route request failed" + (response.status !== null ? " with error " + response.status : "") + "!<br>";
                 handleRouteRequestError(str);
                 waitingForRoute = false;
-                sdk.Editing.clearSelection();
+                if (clearSelection) sdk.Editing.clearSelection();
             },
             onload: function(response) {
                 if (response.response.error !== undefined) {
@@ -1130,7 +1130,7 @@
                 getId('routespeeds-button-reverse').style.backgroundColor = '';
                 switchRoute();
                 waitingForRoute = false;
-                sdk.Editing.clearSelection();
+                if (clearSelection) sdk.Editing.clearSelection();
             },
         });
     }
