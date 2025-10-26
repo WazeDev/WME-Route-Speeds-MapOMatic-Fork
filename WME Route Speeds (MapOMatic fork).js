@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.10.24.0
+// @version      2025.10.25.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -697,7 +697,7 @@
         let selection = sdk.Editing.getSelection();
         let selectedIDs = [];
         if (selection !== null && selection.objectType == "segment") selectedIDs = selection.ids;
-        if (selectedIDs.length >= 2) {
+        if (selectedIDs.length == 2) {
             if (!twoSegmentsSelected) {
                 twoSegmentsSelected = true;
                 let midpointA = getSegmentMidpoint(selectedIDs[0]);
@@ -707,7 +707,7 @@
                     getId('sidepanel-routespeeds-b').value = midpointB[0].toFixed(6) + ", " + midpointB[1].toFixed(6);
                 }
                 createMarkers(midpointA[0], midpointA[1], midpointB[0], midpointB[1]);
-                requestRouteFromLiveMap(true);
+                requestRouteFromLiveMap(false);
             }
         } else if (selectedIDs.length == 1) {
             if (twoSegmentsSelected) {
