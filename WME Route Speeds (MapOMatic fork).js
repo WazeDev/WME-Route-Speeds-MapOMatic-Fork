@@ -5,7 +5,7 @@
 // @version      2025.10.25.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
-// @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
+// @namespace    https://greasyfork.org/en/scripts/369630
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @require      https://cdn.jsdelivr.net/npm/@turf/turf@7.2.0/turf.min.js
 // @author       wlodek76 (forked by MapOMatic)
@@ -26,6 +26,7 @@
     const SCRIPT_NAME = GM_info.script.name;
     const SCRIPT_VERSION = GM_info.script.version.toString();
     const SCRIPT_SHORT_NAME = "Route Speeds";
+    const SCRIPT_ID = "routespeeds";
 
     const MARKER_LAYER_NAME = SCRIPT_SHORT_NAME + ": Markers";
     const MARKER_A_IMAGE = "data:image/png;base64,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";
@@ -175,7 +176,7 @@
     // Script startup functions
 
     function onSDKInitialized() {
-        sdk = getWmeSdk({scriptId: "wme-route-speeds", scriptName: SCRIPT_SHORT_NAME});
+        sdk = getWmeSdk({scriptId: SCRIPT_ID, scriptName: SCRIPT_SHORT_NAME});
         if (sdk.State.isReady()) {
             onWMEReady();
         } else {
@@ -213,33 +214,33 @@
 
     function initializeScript() {
         let addon = document.createElement('section');
-        addon.id = "routespeeds-addon";
-        addon.innerHTML = '<div id="sidepanel-routespeeds" style="margin: 0px 8px; width: auto;">' +
-            '<div style="margin-bottom:4px; padding:0px;"><a href="https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork" target="_blank">' +
+        addon.id = SCRIPT_ID + "-addon";
+        addon.innerHTML = '<div id="' + SCRIPT_ID + '-sidepanel" style="margin: 0px 8px; width: auto;">' +
+            '<div style="margin-bottom:4px; padding:0px;"><a href="https://greasyfork.org/en/scripts/369630" target="_blank">' +
             '<span style="font-weight:bold; text-decoration:underline">WME Route Speeds</span></a><span style="margin-left:6px; color:#888; font-size:11px;">v' + SCRIPT_VERSION + '</span>' +
             '</div>' +
             '<style>\n' +
-            '#sidepanel-routespeeds select { margin-left:20px; font-size:12px; height:22px; border:1px solid; border-color:rgb(169, 169, 169); border-radius:4px; border: 1px solid; border-color: rgb(169, 169, 169); -webkit-border-radius:4px; -moz-border-radius:4px; }\n' +
-            '#sidepanel-routespeeds select, #sidepanel-routespeeds input { margin-top:2px; margin-bottom:2px; width:initial; }\n' +
-            '#sidepanel-routespeeds input[type="checkbox"] { margin-bottom:0px; }\n' +
-            '#sidepanel-routespeeds label ~ label, #sidepanel-routespeeds span label { margin-left:20px; }\n' +
-            '#sidepanel-routespeeds .controls-container { padding:0px; }\n' +
-            '#sidepanel-routespeeds label { font-weight:normal; }\n' +
+            '#' + SCRIPT_ID + '-sidepanel select { margin-left:20px; font-size:12px; height:22px; border:1px solid; border-color:rgb(169, 169, 169); border-radius:4px; border: 1px solid; border-color: rgb(169, 169, 169); -webkit-border-radius:4px; -moz-border-radius:4px; }\n' +
+            '#' + SCRIPT_ID + '-sidepanel select, #' + SCRIPT_ID + '-sidepanel input { margin-top:2px; margin-bottom:2px; width:initial; }\n' +
+            '#' + SCRIPT_ID + '-sidepanel input[type="checkbox"] { margin-bottom:0px; }\n' +
+            '#' + SCRIPT_ID + '-sidepanel label ~ label, #' + SCRIPT_ID + '-sidepanel span label { margin-left:20px; }\n' +
+            '#' + SCRIPT_ID + '-sidepanel .controls-container { padding:0px; }\n' +
+            '#' + SCRIPT_ID + '-sidepanel label { font-weight:normal; }\n' +
             '</style>' +
             '<div style="float:left; display:inline-block;">' +
-            '<a id="routespeeds-button-A" onclick="return false;" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on A marker">A:</a>' +
-            '<input id="sidepanel-routespeeds-a" class="form-control" style="width:165px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
+            '<a id="' + SCRIPT_ID + '-button-A" onclick="return false;" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on A marker">A:</a>' +
+            '<input id="' + SCRIPT_ID + '-sidepanel-a" class="form-control" style="width:165px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
             '<br><div style="height: 4px;"></div>' +
-            '<a id="routespeeds-button-B" onclick="return false;" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on B marker">B:</a>' +
-            '<input id="sidepanel-routespeeds-b" class="form-control" style="width:165px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
+            '<a id="' + SCRIPT_ID + '-button-B" onclick="return false;" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on B marker">B:</a>' +
+            '<input id="' + SCRIPT_ID + '-sidepanel-b" class="form-control" style="width:165px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
             '</div>' +
             '<div style="float:right; padding-right:20px; padding-top:6%; ">' +
-            '<button id=routespeeds-button-reverse class="waze-btn waze-btn-blue waze-btn-smaller" style="padding-left:15px; padding-right:15px;" title="Calculate reverse route" >A &#8596; B</button></div>' +
+            '<button id=' + SCRIPT_ID + '-button-reverse class="waze-btn waze-btn-blue waze-btn-smaller" style="padding-left:15px; padding-right:15px;" title="Calculate reverse route" >A &#8596; B</button></div>' +
             '<div style="clear:both; "></div>' +
-            '<div id="routespeeds-marker-click-explanation" style="font-size:11px; color:#404040; line-height:1.1; display:none;">Click the A or B marker on the map to move it. Click again to finish moving the marker.</div>' +
+            '<div id="' + SCRIPT_ID + '-marker-click-explanation" style="font-size:11px; color:#404040; line-height:1.1; display:none;">Click the A or B marker on the map to move it. Click again to finish moving the marker.</div>' +
 
             '<div style="margin-top:5px;">' +
-            '<select id=routespeeds-hour>' +
+            '<select id=' + SCRIPT_ID + '-hour>' +
             '<option value="now">Now</option>' +
             '<option value="0"  >00:00</option>' +
             '<option value="30" >00:30</option>' +
@@ -290,7 +291,7 @@
             '<option value="1380">23:00</option>' +
             '<option value="1410">23:30</option>' +
             '</select>' +
-            '<select id=routespeeds-day style="margin-left:5px;" >' +
+            '<select id=' + SCRIPT_ID + '-day style="margin-left:5px;" >' +
             '<option value="today">Today</option>' +
             '<option value="1">Monday</option>' +
             '<option value="2">Tuesday</option>' +
@@ -303,16 +304,16 @@
             '</div>' +
 
             '<div style="padding-top:8px; padding-bottom:6px;">' +
-            '<button id=routespeeds-button-livemap class="waze-btn waze-btn-blue waze-btn-smaller" style="width:100%;">Calculate Route</button>' +
+            '<button id=' + SCRIPT_ID + '-button-livemap class="waze-btn waze-btn-blue waze-btn-smaller" style="width:100%;">Calculate Route</button>' +
             '</div>' +
-            '<b><div id=routespeeds-error style="color:#FF0000"></div></b>' +
-            '<div id=routespeeds-routecount></div>' +
+            '<b><div id=' + SCRIPT_ID + '-error style="color:#FF0000"></div></b>' +
+            '<div id=' + SCRIPT_ID + '-routecount></div>' +
 
-            '<div id=routespeeds-summaries style="font-size:11px; font-variant-numeric:tabular-nums;"></div>' +
+            '<div id=' + SCRIPT_ID + '-summaries style="font-size:11px; font-variant-numeric:tabular-nums;"></div>' +
 
             '<div style="margin-bottom:4px;">' +
             '<b>Options:</b>' +
-            '<a id="routespeeds-reset-options-to-livemap-route" onclick="return false;" style="cursor:pointer; float:right; margin-right:20px;" title="Reset routing options to the Livemap Route equivalents">Reset to Livemap Route</a>' +
+            '<a id="' + SCRIPT_ID + '-reset-options-to-livemap-route" onclick="return false;" style="cursor:pointer; float:right; margin-right:20px;" title="Reset routing options to the Livemap Route equivalents">Reset to Livemap Route</a>' +
             '</div>' +
 
             getCheckboxHtml('enablescript', 'Enable script') +
@@ -324,19 +325,19 @@
 
             '<div>' +
             getCheckboxHtml('getalternatives', 'Alternative routes: show', '', { display: 'inline-block' }) +
-            '<select id=routespeeds-maxroutes style="margin-left:-4px; display:inline-block;" >' +
-            '<option id=routespeeds-maxroutes value="1">1</option>' +
-            '<option id=routespeeds-maxroutes value="2">2</option>' +
-            '<option id=routespeeds-maxroutes value="3">3</option>' +
-            '<option id=routespeeds-maxroutes value="4">4</option>' +
-            '<option id=routespeeds-maxroutes value="5">5</option>' +
-            '<option id=routespeeds-maxroutes value="6">6</option>' +
-            '<option id=routespeeds-maxroutes value="7">7</option>' +
-            '<option id=routespeeds-maxroutes value="8">8</option>' +
-            '<option id=routespeeds-maxroutes value="10">10</option>' +
-            '<option id=routespeeds-maxroutes value="12">12</option>' +
-            '<option id=routespeeds-maxroutes value="15">15</option>' +
-            '<option id=routespeeds-maxroutes value="40">all</option>' +
+            '<select id=' + SCRIPT_ID + '-maxroutes style="margin-left:-4px; display:inline-block;" >' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="1">1</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="2">2</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="3">3</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="4">4</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="5">5</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="6">6</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="7">7</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="8">8</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="10">10</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="12">12</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="15">15</option>' +
+            '<option id=' + SCRIPT_ID + '-maxroutes value="40">all</option>' +
 
             '</select>' +
             '</div>' +
@@ -347,16 +348,16 @@
 
             '<div>' +
             '<label class="" style="display:inline-block;">' +
-            'Route type:<select id=routespeeds-routetype style="margin-left:10px;" >' +
+            'Route type:<select id=' + SCRIPT_ID + '-routetype style="margin-left:10px;" >' +
             '<option value="1">Fastest</option>' +
             '<option value="3">Fastest (no history)</option>' +
             '</select>' +
             '<br>' +
-            'Vehicle type:<select id=routespeeds-vehicletype style="margin-left:10px;" >' +
-            '<option id=routespeeds-vehicletype value="PRIVATE">Private</option>' +
-            '<option id=routespeeds-vehicletype value="EV">Electric</option>' +
-            '<option id=routespeeds-vehicletype value="TAXI">Taxi</option>' +
-            '<option id=routespeeds-vehicletype value="MOTORCYCLE">Motorcycle</option>' +
+            'Vehicle type:<select id=' + SCRIPT_ID + '-vehicletype style="margin-left:10px;" >' +
+            '<option id=' + SCRIPT_ID + '-vehicletype value="PRIVATE">Private</option>' +
+            '<option id=' + SCRIPT_ID + '-vehicletype value="EV">Electric</option>' +
+            '<option id=' + SCRIPT_ID + '-vehicletype value="TAXI">Taxi</option>' +
+            '<option id=' + SCRIPT_ID + '-vehicletype value="MOTORCYCLE">Motorcycle</option>' +
             '</select>' +
             '</div>' +
 
@@ -366,7 +367,7 @@
             getCheckboxHtml('avoiddifficult', 'Difficult turns') +
             getCheckboxHtml('avoidferries', 'Ferries') +
             getCheckboxHtml('avoidunpaved', 'Unpaved') +
-            '<div id="routespeeds-avoidunpaved-span" style="display:inline;">' +
+            '<div id="' + SCRIPT_ID + '-avoidunpaved-span" style="display:inline;">' +
             getCheckboxHtml('avoidlongunpaved', 'Long unpaved roads', '', { marginLeft: '10px' }) +
             '</div>' +
             '</td></tr></tbody></table>' +
@@ -374,21 +375,21 @@
             '<table style="margin-top:3px;"><tbody><tr><td style="vertical-align:top; padding-right:4px;"><b>Allow:</b></td><td>' +
             getCheckboxHtml('allowuturns', 'U-Turns') +
             '</td></tr></tbody></table>' +
-            '<div id="routespeeds-passes-container"></div>' +
+            '<div id="' + SCRIPT_ID + '-passes-container"></div>' +
             '<style>' +
-            '.routespeedsmarkerA                  { display:block; width:27px; height:36px; margin-left:-13px; margin-top:-34px; }' +
-            '.routespeedsmarkerB                  { display:block; width:27px; height:36px; margin-left:-13px; margin-top:-34px; }' +
+            '.' + SCRIPT_ID + 'markerA                  { display:block; width:27px; height:36px; margin-left:-13px; margin-top:-34px; }' +
+            '.' + SCRIPT_ID + 'markerB                  { display:block; width:27px; height:36px; margin-left:-13px; margin-top:-34px; }' +
             //+ '.routespeedsmarkerA                  { background:url("http://341444cc-a-62cb3a1a-s-sites.googlegroups.com/site/wazeaddons/routespeeds_marker_a.png"); }'
             //+ '.routespeedsmarkerB                  { background:url("http://341444cc-a-62cb3a1a-s-sites.googlegroups.com/site/wazeaddons/routespeeds_marker_b.png"); }'
-            '.routespeedsmarkerA                  { background-image:url(data:image/png;base64,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); }' +
-            '.routespeedsmarkerB                  { background-image:url(data:image/png;base64,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); }' +
-            '.routespeedsmarkerA:hover            { cursor:move }' +
-            '.routespeedsmarkerB:hover            { cursor:move }' +
-            '.routespeeds_summary_classA          { visibility:hidden; display:inline-block; color:#000000; margin:2px 0px 2px 0px; padding:2px 6px 2px 4px; border:1px solid #c0c0c0; background:#F8F8F8; border-radius:4px; vertical-align:middle; white-space:nowrap; }' +
-            '.routespeeds_summary_classB          { visibility:hidden; display:inline-block; color:#000000; margin:2px 0px 2px 0px; padding:2px 6px 2px 4px; border:1px solid #c0c0c0; background:#d0fffe; border-radius:4px; vertical-align:middle; white-space:nowrap; }' +
-            '.routespeeds_summary_classA:hover    { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
-            '.routespeeds_summary_classB:hover    { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
-            '.routespeeds_header                  { display:inline-block; width:14px; height:14px; text-align:center; border-radius:2px; margin-right:2px; position:relative; top:2px; }' +
+            '.' + SCRIPT_ID + 'markerA                  { background-image:url(data:image/png;base64,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); }' +
+            '.' + SCRIPT_ID + 'markerB                  { background-image:url(data:image/png;base64,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); }' +
+            '.' + SCRIPT_ID + 'markerA:hover            { cursor:move }' +
+            '.' + SCRIPT_ID + 'markerB:hover            { cursor:move }' +
+            '.' + SCRIPT_ID + '_summary_classA          { visibility:hidden; display:inline-block; color:#000000; margin:2px 0px 2px 0px; padding:2px 6px 2px 4px; border:1px solid #c0c0c0; background:#F8F8F8; border-radius:4px; vertical-align:middle; white-space:nowrap; }' +
+            '.' + SCRIPT_ID + '_summary_classB          { visibility:hidden; display:inline-block; color:#000000; margin:2px 0px 2px 0px; padding:2px 6px 2px 4px; border:1px solid #c0c0c0; background:#d0fffe; border-radius:4px; vertical-align:middle; white-space:nowrap; }' +
+            '.' + SCRIPT_ID + '_summary_classA:hover    { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
+            '.' + SCRIPT_ID + '_summary_classB:hover    { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
+            '.' + SCRIPT_ID + '_header                  { display:inline-block; width:14px; height:14px; text-align:center; border-radius:2px; margin-right:2px; position:relative; top:2px; }' +
             '</style>' +
             '</div>';
 
@@ -406,13 +407,13 @@
 
         $('head').append([
             '<style>',
-            'label[for^="routespeeds-"] { margin-right: 10px;padding-left: 19px; }',
+            'label[for^="' + SCRIPT_ID + '-"] { margin-right: 10px;padding-left: 19px; }',
             '.hidden { display:none; }',
             '</style>'
         ].join('\n'));
 
         sdk.Sidebar.registerScriptTab().then((tab) => {
-            tab.tabLabel.innerHTML = '<span id="routespeeds-tab-label">' + SCRIPT_SHORT_NAME + '</span>';
+            tab.tabLabel.innerHTML = '<span id="' + SCRIPT_ID + '-tab-label">' + SCRIPT_SHORT_NAME + '</span>';
             tab.tabPane.innerHTML = addon.innerHTML;
             onTabCreated();
         });
@@ -421,7 +422,7 @@
     }
 
     function getCheckboxHtml(idSuffix, text, title, divCss = {}, labelCss = {}) {
-        let id = 'routespeeds-' + idSuffix;
+        let id = SCRIPT_ID + '-' + idSuffix;
         return $('<div>', { class: 'controls-container' }).append(
             $('<input>', { id: id, type: 'checkbox' }),
             $('<label>', { for: id, title: title }).text(text).css(labelCss)
@@ -433,20 +434,20 @@
     }
 
     function resetOptions() {
-        getId('routespeeds-getalternatives').checked = options.getAlternatives = true;
-        getId('routespeeds-maxroutes').value = options.maxRoutes = 3;
-        getId('routespeeds-livetraffic').checked = options.liveTraffic = false;
-        getId('routespeeds-routetype').value = options.routeType = 1;
-        getId('routespeeds-avoidtolls').checked = options.avoidTolls = false;
-        getId('routespeeds-avoidfreeways').checked = options.avoidFreeways = false;
-        getId('routespeeds-avoidunpaved').checked = options.avoidUnpaved = true;
-        getId('routespeeds-avoidlongunpaved').checked = options.avoidLongUnpaved = false;
-        getId('routespeeds-allowuturns').checked = options.allowUTurns = true;
-        getId('routespeeds-routingorder').checked = options.routingOrder = true;
-        getId('routespeeds-userbs').checked = options.useRBS = false;
-        getId('routespeeds-avoiddifficult').checked = options.avoidDifficult = false;
-        getId('routespeeds-avoidferries').checked = options.avoidFerries = false;
-        getId('routespeeds-vehicletype').value = options.vehicleType = 'PRIVATE';
+        getByID('getalternatives').checked = options.getAlternatives = true;
+        getByID('maxroutes').value = options.maxRoutes = 3;
+        getByID('livetraffic').checked = options.liveTraffic = false;
+        getByID('routetype').value = options.routeType = 1;
+        getByID('avoidtolls').checked = options.avoidTolls = false;
+        getByID('avoidfreeways').checked = options.avoidFreeways = false;
+        getByID('avoidunpaved').checked = options.avoidUnpaved = true;
+        getByID('avoidlongunpaved').checked = options.avoidLongUnpaved = false;
+        getByID('allowuturns').checked = options.allowUTurns = true;
+        getByID('routingorder').checked = options.routingOrder = true;
+        getByID('userbs').checked = options.useRBS = false;
+        getByID('avoiddifficult').checked = options.avoidDifficult = false;
+        getByID('avoidferries').checked = options.avoidFerries = false;
+        getByID('vehicletype').value = options.vehicleType = 'PRIVATE';
     }
 
     function loadRouteSpeedsOptions() {
@@ -455,66 +456,66 @@
         } catch {
             warn("Saved options could not be loaded. Using defaults.");
         }
-        getId('routespeeds-enablescript').checked = options.enableScript;
-        getId('routespeeds-showLabels').checked = options.showLabels;
-        getId('routespeeds-showSpeeds').checked = options.showSpeeds;
-        getId('routespeeds-usemiles').checked = options.useMiles;
-        getId('routespeeds-routetext').checked = options.showRouteText;
-        getId('routespeeds-getalternatives').checked = options.getAlternatives;
-        getId('routespeeds-maxroutes').value = options.maxRoutes;
-        getId('routespeeds-livetraffic').checked = options.liveTraffic;
-        getId('routespeeds-avoidtolls').checked = options.avoidTolls;
-        getId('routespeeds-avoidfreeways').checked = options.avoidFreeways;
-        getId('routespeeds-avoidunpaved').checked = options.avoidUnpaved;
-        getId('routespeeds-avoidlongunpaved').checked = options.avoidLongUnpaved;
-        getId('routespeeds-routetype').value = options.routeType;
-        getId('routespeeds-allowuturns').checked = options.allowUTurns;
-        getId('routespeeds-routingorder').checked = options.routingOrder;
-        getId('routespeeds-userbs').checked = options.useRBS;
-        getId('routespeeds-avoiddifficult').checked = options.avoidDifficult;
-        getId('routespeeds-avoidferries').checked = options.avoidFerries;
-        getId('routespeeds-vehicletype').value = options.vehicleType;
+        getByID('enablescript').checked = options.enableScript;
+        getByID('showLabels').checked = options.showLabels;
+        getByID('showSpeeds').checked = options.showSpeeds;
+        getByID('usemiles').checked = options.useMiles;
+        getByID('routetext').checked = options.showRouteText;
+        getByID('getalternatives').checked = options.getAlternatives;
+        getByID('maxroutes').value = options.maxRoutes;
+        getByID('livetraffic').checked = options.liveTraffic;
+        getByID('avoidtolls').checked = options.avoidTolls;
+        getByID('avoidfreeways').checked = options.avoidFreeways;
+        getByID('avoidunpaved').checked = options.avoidUnpaved;
+        getByID('avoidlongunpaved').checked = options.avoidLongUnpaved;
+        getByID('routetype').value = options.routeType;
+        getByID('allowuturns').checked = options.allowUTurns;
+        getByID('routingorder').checked = options.routingOrder;
+        getByID('userbs').checked = options.useRBS;
+        getByID('avoiddifficult').checked = options.avoidDifficult;
+        getByID('avoidferries').checked = options.avoidFerries;
+        getByID('vehicletype').value = options.vehicleType;
     }
 
     function onTabCreated() {
         resetOptions();
         loadRouteSpeedsOptions();
 
-        if (!options.enableScript) getId('sidepanel-routespeeds').style.color = "#A0A0A0";
-        else getId('sidepanel-routespeeds').style.color = "";
+        if (!options.enableScript) getByID('sidepanel').style.color = "#A0A0A0";
+        else getByID('sidepanel').style.color = "";
 
-        getId('routespeeds-enablescript').onclick = clickEnableScript;
-        getId('routespeeds-showLabels').onclick = clickShowLabels;
-        getId('routespeeds-showSpeeds').onclick = clickShowSpeeds;
-        getId('routespeeds-usemiles').onclick = clickUseMiles;
-        getId('routespeeds-routetext').onclick = clickShowRouteText;
-        getId('routespeeds-getalternatives').onclick = clickGetAlternatives;
-        getId('routespeeds-maxroutes').onchange = clickMaxRoutes;
-        getId('routespeeds-livetraffic').onclick = clickLiveTraffic;
-        getId('routespeeds-avoidtolls').onclick = clickAvoidTolls;
-        getId('routespeeds-avoidfreeways').onclick = clickAvoidFreeways;
-        getId('routespeeds-avoidunpaved').onclick = clickAvoidUnpaved;
-        getId('routespeeds-avoidlongunpaved').onclick = clickAvoidLongUnpaved;
-        getId('routespeeds-routetype').onchange = clickRouteType;
-        getId('routespeeds-allowuturns').onclick = clickAllowUTurns;
-        getId('routespeeds-routingorder').onclick = clickRoutingOrder;
-        getId('routespeeds-userbs').onclick = clickUseRBS;
-        getId('routespeeds-avoiddifficult').onclick = clickAvoidDifficult;
-        getId('routespeeds-avoidferries').onclick = clickAvoidFerries;
-        getId('routespeeds-vehicletype').onchange = clickVehicleType;
+        getByID('enablescript').onclick = clickEnableScript;
+        getByID('showLabels').onclick = clickShowLabels;
+        getByID('showSpeeds').onclick = clickShowSpeeds;
+        getByID('usemiles').onclick = clickUseMiles;
+        getByID('routetext').onclick = clickShowRouteText;
+        getByID('getalternatives').onclick = clickGetAlternatives;
+        getByID('maxroutes').onchange = clickMaxRoutes;
+        getByID('livetraffic').onclick = clickLiveTraffic;
+        getByID('avoidtolls').onclick = clickAvoidTolls;
+        getByID('avoidfreeways').onclick = clickAvoidFreeways;
+        getByID('avoidunpaved').onclick = clickAvoidUnpaved;
+        getByID('avoidlongunpaved').onclick = clickAvoidLongUnpaved;
+        getByID('routetype').onchange = clickRouteType;
+        getByID('allowuturns').onclick = clickAllowUTurns;
+        getByID('routingorder').onclick = clickRoutingOrder;
+        getByID('userbs').onclick = clickUseRBS;
+        getByID('avoiddifficult').onclick = clickAvoidDifficult;
+        getByID('avoidferries').onclick = clickAvoidFerries;
+        getByID('vehicletype').onchange = clickVehicleType;
 
-        getId('sidepanel-routespeeds-a').onkeydown = enterAB;
-        getId('sidepanel-routespeeds-b').onkeydown = enterAB;
+        getByID('sidepanel-a').onkeydown = enterAB;
+        getByID('sidepanel-b').onkeydown = enterAB;
 
-        getId('routespeeds-button-livemap').onclick = livemapRouteClick;
-        getId('routespeeds-button-reverse').onclick = clickReverseRoute;
-        getId('routespeeds-reset-options-to-livemap-route').onclick = resetOptionsToLivemapRouteClick;
+        getByID('button-livemap').onclick = livemapRouteClick;
+        getByID('button-reverse').onclick = clickReverseRoute;
+        getByID('reset-options-to-livemap-route').onclick = resetOptionsToLivemapRouteClick;
 
-        getId('routespeeds-hour').onchange = hourChange;
-        getId('routespeeds-day').onchange = dayChange;
+        getByID('hour').onchange = hourChange;
+        getByID('day').onchange = dayChange;
 
-        getId('routespeeds-button-A').onclick = clickA;
-        getId('routespeeds-button-B').onclick = clickB;
+        getByID('button-A').onclick = clickA;
+        getByID('button-B').onclick = clickB;
 
         updateTopCountry();
         sdk.Events.on({
@@ -600,36 +601,36 @@
     }
 
     function buildPassesDiv() {
-        $('#routespeeds-passes-container').empty();
+        $('#' + SCRIPT_ID + '-passes-container').empty();
         if (topCountry.restrictionSubscriptions.length == 0) return;
-        $('#routespeeds-passes-container').append(
+        $('#' + SCRIPT_ID + '-passes-container').append(
             '<fieldset style="border:1px solid silver;padding:8px;border-radius:4px;-webkit-padding-before: 0;">' +
-            '  <legend id="routespeeds-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
+            '  <legend id="' + SCRIPT_ID + '-passes-legend" style="margin-bottom:0px;border-bottom-style:none;width:auto;">' +
             '    <i class="fa fa-fw fa-chevron-down" style="cursor: pointer;font-size: 12px;margin-right: 4px"></i>' +
-            '    <span id="routespeeds-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
+            '    <span id="' + SCRIPT_ID + '-passes-label" style="font-size:14px;font-weight:600; cursor: pointer">Passes & Permits</span>' +
             '  </legend>' +
-            '  <div id="routespeeds-passes-internal-container" style="padding-top:0px;">' +
+            '  <div id="' + SCRIPT_ID + '-passes-internal-container" style="padding-top:0px;">' +
             topCountry.restrictionSubscriptions.map((pass, i) => {
                 //let id = 'routespeeds-pass-' + pass.key;
                 return '    <div class="controls-container" style="padding-top:2px;display:block;">' +
-                    '      <input id="routespeeds-pass-' + i + '" type="checkbox" class="routespeeds-pass-checkbox" data-pass-key = "' + pass.id + '">' +
-                    '      <label for="routespeeds-pass-' + i + '" style="white-space:pre-line">' + pass.name + '</label>' +
+                    '      <input id="' + SCRIPT_ID + '-pass-' + i + '" type="checkbox" class="' + SCRIPT_ID + '-pass-checkbox" data-pass-key = "' + pass.id + '">' +
+                    '      <label for="' + SCRIPT_ID + '-pass-' + i + '" style="white-space:pre-line">' + pass.name + '</label>' +
                     '    </div>';
             }).join(' ') +
             '  </div>' +
             '</fieldset>'
         );
 
-        $('.routespeeds-pass-checkbox').click(clickPassOption);
+        $('.' + SCRIPT_ID + '-pass-checkbox').click(clickPassOption);
 
-        $('#routespeeds-passes-legend').click(function () {
+        $('#' + SCRIPT_ID + '-passes-legend').click(function () {
             let $this = $(this);
             let $chevron = $($this.children()[0]);
             $chevron
                 .toggleClass('fa fa-fw fa-chevron-down')
                 .toggleClass('fa fa-fw fa-chevron-right');
             let collapse = $chevron.hasClass('fa-chevron-right');
-            let checkboxDivs = $('input.routespeeds-pass-checkbox:not(:checked)').parent();
+            let checkboxDivs = $('input.' + SCRIPT_ID + '-pass-checkbox:not(:checked)').parent();
             if (collapse) {
                 checkboxDivs.css('display', 'none');
             } else {
@@ -641,7 +642,7 @@
             // $($this.siblings()[0]).toggleClass('collapse');
         })
 
-        $('.routespeeds-pass-checkbox').each((i, elem) => {
+        $('.' + SCRIPT_ID + '-pass-checkbox').each((i, elem) => {
             const $elem = $(elem);
             const passKey = $elem.data('pass-key');
             $elem.prop('checked', options.passes.includes(passKey));
@@ -651,7 +652,7 @@
 
     function updatePassesLabel() {
         let count = topCountry.restrictionSubscriptions.filter(pass => options.passes.indexOf(pass.id) > -1).length;
-        $('#routespeeds-passes-label').text(`Passes & Permits (${count} of ${topCountry.restrictionSubscriptions.length})`);
+        $('#' + SCRIPT_ID + '-passes-label').text(`Passes & Permits (${count} of ${topCountry.restrictionSubscriptions.length})`);
     }
 
     //--------------------------------------------------------------------------
@@ -660,7 +661,7 @@
     function loopWMERouteSpeeds() {
         if (!options.enableScript) return;
 
-        let tabOpen = $('#user-tabs #routespeeds-tab-label').parent().parent().attr('aria-expanded') == "true";
+        let tabOpen = $('#user-tabs #' + SCRIPT_ID + '-tab-label').parent().parent().attr('aria-expanded') == "true";
         if (tabOpen) {
             if (tabStatus !== 2) {
                 tabStatus = 2;
@@ -702,9 +703,9 @@
                 twoSegmentsSelected = true;
                 let midpointA = getSegmentMidpoint(selectedIDs[0]);
                 let midpointB = getSegmentMidpoint(selectedIDs[selectedIDs.length - 1]);
-                if (getId('sidepanel-routespeeds-a') !== undefined) {
-                    getId('sidepanel-routespeeds-a').value = midpointA[0].toFixed(6) + ", " + midpointA[1].toFixed(6);
-                    getId('sidepanel-routespeeds-b').value = midpointB[0].toFixed(6) + ", " + midpointB[1].toFixed(6);
+                if (getByID('sidepanel-a') !== undefined) {
+                    getByID('sidepanel-a').value = midpointA[0].toFixed(6) + ", " + midpointA[1].toFixed(6);
+                    getByID('sidepanel-b').value = midpointB[0].toFixed(6) + ", " + midpointB[1].toFixed(6);
                 }
                 createMarkers(midpointA[0], midpointA[1], midpointB[0], midpointB[1]);
                 requestRouteFromLiveMap(false);
@@ -713,7 +714,7 @@
             if (twoSegmentsSelected) {
                 twoSegmentsSelected = false;
                 sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
-                getId('routespeeds-summaries').style.visibility = 'hidden';
+                getByID('summaries').style.visibility = 'hidden';
             }
         }
 
@@ -801,7 +802,7 @@
         placeMarker("A", lon1, lat1);
         placeMarker("B", lon2, lat2);
         sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
-        getId("routespeeds-marker-click-explanation").style.display = "block";
+        getByID("marker-click-explanation").style.display = "block";
     }
 
     function placeMarker(id, lon, lat) {
@@ -993,13 +994,13 @@
         return a;
     }
 
-    function getId(node) {
-        return document.getElementById(node);
+    function getByID(node) {
+        return document.getElementById(SCRIPT_ID + "-" + node);
     }
 
     function getnowtoday() {
-        let hour = getId('routespeeds-hour').value;
-        let day = getId('routespeeds-day').value;
+        let hour = getByID('hour').value;
+        let day = getByID('day').value;
         if (hour === '---') hour = 'now';
         if (day === '---') day = 'today';
         if (hour === '') hour = 'now';
@@ -1093,7 +1094,7 @@
         if (options.useRBS) data.id = "beta";
 
         waitingForRoute = true;
-        getId('routespeeds-error').innerHTML = "";
+        getByID('error').innerHTML = "";
 
         GM_xmlhttpRequest({
             method: "GET",
@@ -1122,12 +1123,12 @@
                     if (response.response.alternatives !== undefined) {
                         routesReceived = response.response.alternatives;
                     }
-                    getId('routespeeds-routecount').innerHTML = 'Received <b>' + routesReceived.length + '</b> route' + (routesReceived.length == 1 ? '' : "s") + ' from the server';
+                    getByID('routecount').innerHTML = 'Received <b>' + routesReceived.length + '</b> route' + (routesReceived.length == 1 ? '' : "s") + ' from the server';
                     sortRoutes();
                 }
 
-                getId('routespeeds-button-livemap').style.backgroundColor = '';
-                getId('routespeeds-button-reverse').style.backgroundColor = '';
+                getByID('button-livemap').style.backgroundColor = '';
+                getByID('button-reverse').style.backgroundColor = '';
                 switchRoute();
                 waitingForRoute = false;
                 if (clearSelection) sdk.Editing.clearSelection();
@@ -1163,8 +1164,8 @@
 
     function switchRoute() {
         for (let i = 0; i < routesShown.length; i++) {
-            let summary = getId('routespeeds-summary-' + i);
-            summary.className = (routeSelected == i) ? 'routespeeds_summary_classB' : 'routespeeds_summary_classA';
+            let summary = getByID('summary-' + i);
+            summary.className = (routeSelected == i) ? SCRIPT_ID + '_summary_classB' : SCRIPT_ID + '_summary_classA';
         }
 
         let z;
@@ -1237,19 +1238,19 @@
     }
 
     function createSummaries() {
-        var summaryDiv = getId('routespeeds-summaries');
+        var summaryDiv = getByID('summaries');
         summaryDiv.innerHTML = '';
         let lengthUnit = options.useMiles ? "miles" : "km";
         let speedUnit = options.useMiles ? "mph" : "km/h";
         for (let i = 0; i < routesShown.length; i++) {
-            summaryDiv.innerHTML += '<div id=routespeeds-summary-' + i + ' class=routespeeds_summary_classA></div>';
+            summaryDiv.innerHTML += '<div id=' + SCRIPT_ID + '-summary-' + i + ' class=' + SCRIPT_ID + '_summary_classA></div>';
         }
         for (let i = 0; i < routesShown.length; i++) {
-            let routeDiv = getId('routespeeds-summary-' + i);
+            let routeDiv = getByID('summary-' + i);
             routeDiv.onclick = function(){ toggleRoute(i) };
-            if (routeSelected == i) routeDiv.className = 'routespeeds_summary_classB';
+            if (routeSelected == i) routeDiv.className = SCRIPT_ID + '_summary_classB';
 
-            let html = '<div class=routespeeds_header style="background: ' + getRouteColor(i) + '; color:#e0e0e0; "></div>' + '<div style="min-width:24px; display:inline-block; font-size:14px; color:#404040; text-align:right;"><b>' + (i+1) + '.</b></div>';
+            let html = '<div class=' + SCRIPT_ID + '_header style="background: ' + getRouteColor(i) + '; color:#e0e0e0; "></div>' + '<div style="min-width:24px; display:inline-block; font-size:14px; color:#404040; text-align:right;"><b>' + (i+1) + '.</b></div>';
 
             let lengthM = 0;
             for (let s = 0; s < routesShown[i].response.results.length; s++) {
@@ -1289,17 +1290,17 @@
     function handleRouteRequestError(message) {
         warn("route request error: " + message.replace("<br>", "\n"));
 
-        getId('routespeeds-button-livemap').style.backgroundColor = '';
-        getId('routespeeds-button-reverse').style.backgroundColor = '';
+        getByID('button-livemap').style.backgroundColor = '';
+        getByID('button-reverse').style.backgroundColor = '';
 
-        getId('routespeeds-summaries').style.visibility = 'hidden';
-        getId('routespeeds-summaries').innerHTML = '';
+        getByID('summaries').style.visibility = 'hidden';
+        getByID('summaries').innerHTML = '';
 
         routesReceived = [];
         sortRoutes();
 
-        getId('routespeeds-error').innerHTML = "<br>" + message;
-        getId('routespeeds-routecount').innerHTML = '';
+        getByID('error').innerHTML = "<br>" + message;
+        getByID('routecount').innerHTML = '';
     }
 
     function livemapRouteClick() {
@@ -1325,8 +1326,8 @@
             if (o.indexOf('to_lat=') === 0) lat2 = ', ' + o.substring(7, 30);
         }
 
-        getId('sidepanel-routespeeds-a').value = lon1 + lat1;
-        getId('sidepanel-routespeeds-b').value = lon2 + lat2;
+        getByID('sidepanel-a').value = lon1 + lat1;
+        getByID('sidepanel-b').value = lon2 + lat2;
     }
 
     function livemapRoute() {
@@ -1334,8 +1335,8 @@
         if (!options.enableScript) return;
         if (waitingForRoute) return;
 
-        let stra = getId('sidepanel-routespeeds-a').value;
-        let strb = getId('sidepanel-routespeeds-b').value;
+        let stra = getByID('sidepanel-a').value;
+        let strb = getByID('sidepanel-b').value;
 
         let pastedlink = false;
 
@@ -1343,19 +1344,19 @@
         //(checking if the link from LiveMap has been pasted, if yes, paring and reformatting the coordinates and moving the map view to the location of the pasted route)
         if (stra.indexOf('livemap?') >= 0 || stra.indexOf('livemap/?') >= 0) {
             get_coords_from_livemap_link(stra);
-            stra = getId('sidepanel-routespeeds-a').value;
-            strb = getId('sidepanel-routespeeds-b').value;
+            stra = getByID('sidepanel-a').value;
+            strb = getByID('sidepanel-b').value;
             pastedlink = true;
         }
         else if (strb.indexOf('livemap?') >= 0 || strb.indexOf('livemap/?') >= 0) {
             get_coords_from_livemap_link(strb);
-            stra = getId('sidepanel-routespeeds-a').value;
-            strb = getId('sidepanel-routespeeds-b').value;
+            stra = getByID('sidepanel-a').value;
+            strb = getByID('sidepanel-b').value;
             pastedlink = true;
         }
 
-        stra = getId('sidepanel-routespeeds-a').value;
-        strb = getId('sidepanel-routespeeds-b').value;
+        stra = getByID('sidepanel-a').value;
+        strb = getByID('sidepanel-b').value;
         if (stra === "") return;
         if (strb === "") return;
 
@@ -1385,7 +1386,7 @@
         if (y1 < -90 || y1 > 90) y1 = 0;
         if (y2 < -90 || y2 > 90) y2 = 0;
 
-        let objprog1 = getId('routespeeds-button-livemap');
+        let objprog1 = getByID('button-livemap');
         objprog1.style.backgroundColor = '#FF8000';
 
         createMarkers(x1, y1, x2, y2);
@@ -1538,11 +1539,11 @@
         let lat1 = parseInt(pointA.lat * 1000000.0 + 0.5) / 1000000.0;
         let lon2 = parseInt(pointB.lon * 1000000.0 + 0.5) / 1000000.0;
         let lat2 = parseInt(pointB.lat * 1000000.0 + 0.5) / 1000000.0;
-        if (getId('sidepanel-routespeeds-a') !== undefined) {
-            getId('sidepanel-routespeeds-a').value = lon1 + ", " + lat1;
-            getId('sidepanel-routespeeds-b').value = lon2 + ", " + lat2;
+        if (getByID('sidepanel-a') !== undefined) {
+            getByID('sidepanel-a').value = lon1 + ", " + lat1;
+            getByID('sidepanel-b').value = lon2 + ", " + lat2;
         }
-        var objprog1 = getId('routespeeds-button-livemap');
+        var objprog1 = getByID('button-livemap');
         if (objprog1.style.backgroundColor === '') objprog1.style.backgroundColor = '#FF8000';
 
         requestRouteFromLiveMap(true);
@@ -1556,7 +1557,7 @@
 
         resetOptions();
 
-        $(`.routespeeds-pass-checkbox`).prop( "checked", false );;
+        $(`.` + SCRIPT_ID + `-pass-checkbox`).prop( "checked", false );;
         options.passes = [];
 
         livemapRoute();
@@ -1580,19 +1581,19 @@
     }
 
     function clickEnableScript() {
-        options.enableScript = (getId('routespeeds-enablescript').checked === true);
+        options.enableScript = (getByID('enablescript').checked === true);
 
         if (!options.enableScript) {
-            getId('sidepanel-routespeeds').style.color = "#A0A0A0";
+            getByID('sidepanel').style.color = "#A0A0A0";
 
-            getId('routespeeds-summaries').style.visibility = 'hidden';
+            getByID('summaries').style.visibility = 'hidden';
 
             sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: false});
             sdk.Map.removeAllFeaturesFromLayer({layerName: ROUTE_LAYER_NAME});
             reorderLayers(0);
         }
         else {
-            getId('sidepanel-routespeeds').style.color = "";
+            getByID('sidepanel').style.color = "";
             sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
             if (routesShown.length > 0) drawRoutes(false);
             reorderLayers(1);
@@ -1603,32 +1604,32 @@
         if (!options.enableScript || waitingForRoute) return;
         let newA = [pointB.lon, pointB.lat];
         let newB = [pointA.lon, pointA.lat];
-        if (getId('sidepanel-routespeeds-a') !== undefined) {
-            getId('sidepanel-routespeeds-a').value = newA[0].toFixed(6) + ", " + newA[1].toFixed(6);
-            getId('sidepanel-routespeeds-b').value = newB[0].toFixed(6) + ", " + newB[1].toFixed(6);
+        if (getByID('sidepanel-a') !== undefined) {
+            getByID('sidepanel-a').value = newA[0].toFixed(6) + ", " + newA[1].toFixed(6);
+            getByID('sidepanel-b').value = newB[0].toFixed(6) + ", " + newB[1].toFixed(6);
         }
         createMarkers(newA[0], newA[1], newB[0], newB[1]);
         requestRouteFromLiveMap(false);
     }
 
     function clickShowLabels() {
-        options.showLabels = (getId('routespeeds-showLabels').checked === true);
+        options.showLabels = (getByID('showLabels').checked === true);
         drawRoutes(true);
     }
 
     function clickShowSpeeds() {
-        options.showSpeeds = (getId('routespeeds-showSpeeds').checked === true);
+        options.showSpeeds = (getByID('showSpeeds').checked === true);
         drawRoutes(true);
     }
 
     function clickUseMiles() {
-        options.useMiles = (getId('routespeeds-usemiles').checked === true);
+        options.useMiles = (getByID('usemiles').checked === true);
         createSummaries();
         drawRoutes(options.showLabels && options.showSpeeds);
     }
 
     function clickShowRouteText() {
-        options.showRouteText = (getId('routespeeds-routetext').checked === true);
+        options.showRouteText = (getByID('routetext').checked === true);
         createSummaries();
     }
 
@@ -1636,7 +1637,7 @@
         routeSelected = 0;
         routeSelectedLast = -1;
 
-        options.getAlternatives = (getId('routespeeds-getalternatives').checked === true);
+        options.getAlternatives = (getByID('getalternatives').checked === true);
         if (options.getAlternatives && routesReceived.length < options.maxRoutes) {
             livemapRoute();
         } else {
@@ -1645,9 +1646,9 @@
     }
 
     function clickMaxRoutes() {
-        options.getAlternatives = (getId('routespeeds-getalternatives').checked === true);
+        options.getAlternatives = (getByID('getalternatives').checked === true);
 
-        options.maxRoutes = parseInt(getId('routespeeds-maxroutes').value);
+        options.maxRoutes = parseInt(getByID('maxroutes').value);
         if (options.getAlternatives && routesReceived.length < options.maxRoutes) {
             livemapRoute();
         } else {
@@ -1656,70 +1657,70 @@
     }
 
     function clickLiveTraffic() {
-        options.liveTraffic = (getId('routespeeds-livetraffic').checked === true);
+        options.liveTraffic = (getByID('livetraffic').checked === true);
         sortRoutes();
     }
 
     function clickAvoidTolls() {
-        options.avoidTolls = (getId('routespeeds-avoidtolls').checked === true);
+        options.avoidTolls = (getByID('avoidtolls').checked === true);
         livemapRoute();
     }
 
     function clickAvoidFreeways() {
-        options.avoidFreeways = (getId('routespeeds-avoidfreeways').checked === true);
+        options.avoidFreeways = (getByID('avoidfreeways').checked === true);
         livemapRoute();
     }
 
     function clickAvoidUnpaved() {
-        options.avoidUnpaved = (getId('routespeeds-avoidunpaved').checked === true);
+        options.avoidUnpaved = (getByID('avoidunpaved').checked === true);
 
         options.avoidLongUnpaved = false;
-        getId('routespeeds-avoidlongunpaved').checked = false;
+        getByID('avoidlongunpaved').checked = false;
 
         livemapRoute();
     }
 
     function clickAvoidLongUnpaved() {
-        options.avoidLongUnpaved = (getId('routespeeds-avoidlongunpaved').checked === true);
+        options.avoidLongUnpaved = (getByID('avoidlongunpaved').checked === true);
 
         options.avoidUnpaved = false;
-        getId('routespeeds-avoidunpaved').checked = false;
+        getByID('avoidunpaved').checked = false;
 
         livemapRoute();
     }
 
     function clickRouteType() {
-        options.routeType = parseInt(getId('routespeeds-routetype').value);
+        options.routeType = parseInt(getByID('routetype').value);
         livemapRoute();
     }
 
     function clickAllowUTurns() {
-        options.allowUTurns = (getId('routespeeds-allowuturns').checked === true);
+        options.allowUTurns = (getByID('allowuturns').checked === true);
         livemapRoute();
     }
 
     function clickRoutingOrder() {
-        options.routingOrder = (getId('routespeeds-routingorder').checked === true);
+        options.routingOrder = (getByID('routingorder').checked === true);
         sortRoutes();
     }
 
     function clickUseRBS() {
-        options.useRBS = (getId('routespeeds-userbs').checked === true);
+        options.useRBS = (getByID('userbs').checked === true);
         livemapRoute();
     }
 
     function clickAvoidDifficult() {
-        options.avoidDifficult = (getId('routespeeds-avoiddifficult').checked === true);
+        options.avoidDifficult = (getByID('avoiddifficult').checked === true);
         livemapRoute();
     }
 
     function clickAvoidFerries() {
-        options.avoidFerries = (getId('routespeeds-avoidferries').checked === true);
+        options.avoidFerries = (getByID('avoidferries').checked === true);
         livemapRoute();
     }
 
     function clickVehicleType() {
-        options.vehicleType = (getId('routespeeds-vehicletype').value);
+        options.vehicleType = (getByID('vehicletype').value);
         livemapRoute();
     }
 
