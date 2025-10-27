@@ -313,7 +313,7 @@
 
             '<div id=' + SCRIPT_ID + '-summaries style="font-size:11px; font-variant-numeric:tabular-nums;"></div>' +
 
-            '<div><b>Options:</b></div>' +
+            '<div><b>Script Options:</b></div>' +
 
             getCheckboxHtml('enablescript', 'Enable script') +
             getCheckboxHtml('showLabels', 'Show segment labels') +
@@ -323,9 +323,9 @@
             getCheckboxHtml('livetraffic', 'Use real-time traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
             getCheckboxHtml('routingorder', 'Use routing order', 'Sorts routes in the same order they would appear in the app or livemap (only works if the server returned more routes than requested)') +
 
-            '<div style="margin-top:4px;">' +
+            '<div style="padding-top:4px;">' +
             '<b>Routing Options:</b>' +
-            '<a id="' + SCRIPT_ID + '-reset-routing-options" onclick="return false;" style="cursor:pointer; float:right;" title="Reset routing options to the app defaults">Reset to Default</a>' +
+            '<a id="' + SCRIPT_ID + '-reset-routing-options" onclick="return false;" style="cursor:pointer; float:right; padding-right:8px;">Reset to App Defaults</a>' +
             '</div>' +
             getCheckboxHtml('userbs', 'Use Routing Beta Server (RBS)', '', { display: window.location.hostname.includes('beta') ? 'inline' : 'none' }) +
 
@@ -348,7 +348,6 @@
             '</div>' +
 
             '<div>' +
-            '<label class="" style="display:inline-block;">' +
             'Route type:<select id=' + SCRIPT_ID + '-routetype style="margin-left:10px;" >' +
             '<option value="1">Fastest</option>' +
             '<option value="3">Fastest (no history)</option>' +
@@ -362,21 +361,22 @@
             '</select>' +
             '</div>' +
 
-            '<table><tbody><tr><td style="vertical-align:top; padding-right:4px;"><b>Avoid:</b></td><td>' +
+            '<table><tbody><tr><td style="vertical-align:top; padding-right:4px;">Avoid:</td><td>' +
             getCheckboxHtml('avoidtolls', 'Tolls') +
+            getCheckboxHtml('avoidferries', 'Ferries') +
             getCheckboxHtml('avoidfreeways', 'Freeways') +
             getCheckboxHtml('avoiddifficult', 'Difficult turns') +
-            getCheckboxHtml('avoidferries', 'Ferries') +
-            getCheckboxHtml('avoidunpaved', 'Unpaved') +
-            '<div id="' + SCRIPT_ID + '-avoidunpaved-span" style="display:inline;">' +
-            getCheckboxHtml('avoidlongunpaved', 'Long unpaved roads', '', { marginLeft: '10px' }) +
-            '</div>' +
             '</td></tr></tbody></table>' +
 
-            '<table style="margin-top:3px;"><tbody><tr><td style="vertical-align:top; padding-right:4px;"><b>Allow:</b></td><td>' +
-            getCheckboxHtml('allowuturns', 'U-Turns') +
-            '</td></tr></tbody></table>' +
+            'Unpaved roads:<select id=' + SCRIPT_ID + '-unpaved-rule style="margin-left:10px;">' +
+            '<option id=' + SCRIPT_ID + '-unpaved-rule value="2">Allow</option>' +
+            '<option id=' + SCRIPT_ID + '-unpaved-rule value="0">Don\'t allow</option>' +
+            '<option id=' + SCRIPT_ID + '-unpaved-rule value="1">Avoid long ones</option>' +
+            '</select>' +
+            getCheckboxHtml('allowuturns', 'Allow U-turns', 'The app allows U-turns, but the live map avoids them.') +
+
             '<div id="' + SCRIPT_ID + '-passes-container"></div>' +
+
             '<style>' +
             '.' + SCRIPT_ID + 'markerA                  { display:block; width:27px; height:36px; margin-left:-13px; margin-top:-34px; }' +
             '.' + SCRIPT_ID + 'markerB                  { display:block; width:27px; height:36px; margin-left:-13px; margin-top:-34px; }' +
@@ -440,8 +440,9 @@
         getByID('routetype').value = options.routeType = 1;
         getByID('avoidtolls').checked = options.avoidTolls = false;
         getByID('avoidfreeways').checked = options.avoidFreeways = false;
-        getByID('avoidunpaved').checked = options.avoidUnpaved = true;
-        getByID('avoidlongunpaved').checked = options.avoidLongUnpaved = false;
+        options.avoidUnpaved = true;
+        options.avoidLongUnpaved = false;
+        getByID('unpaved-rule').value = 0;
         getByID('allowuturns').checked = options.allowUTurns = true;
         getByID('userbs').checked = options.useRBS = false;
         getByID('avoiddifficult').checked = options.avoidDifficult = true;
@@ -465,8 +466,9 @@
         getByID('livetraffic').checked = options.liveTraffic;
         getByID('avoidtolls').checked = options.avoidTolls;
         getByID('avoidfreeways').checked = options.avoidFreeways;
-        getByID('avoidunpaved').checked = options.avoidUnpaved;
-        getByID('avoidlongunpaved').checked = options.avoidLongUnpaved;
+        if (options.avoidUnpaved) getByID('unpaved-rule').value = 0;
+        else if (options.avoidLongUnpaved) getByID('unpaved-rule').value = 1;
+        else getByID('unpaved-rule').value = 2;
         getByID('routetype').value = options.routeType;
         getByID('allowuturns').checked = options.allowUTurns;
         getByID('routingorder').checked = options.routingOrder;
@@ -493,8 +495,7 @@
         getByID('livetraffic').onclick = clickLiveTraffic;
         getByID('avoidtolls').onclick = clickAvoidTolls;
         getByID('avoidfreeways').onclick = clickAvoidFreeways;
-        getByID('avoidunpaved').onclick = clickAvoidUnpaved;
-        getByID('avoidlongunpaved').onclick = clickAvoidLongUnpaved;
+        getByID('unpaved-rule').onchange = changeUnpavedRule;
         getByID('routetype').onchange = clickRouteType;
         getByID('allowuturns').onclick = clickAllowUTurns;
         getByID('routingorder').onclick = clickRoutingOrder;
@@ -1670,21 +1671,18 @@
         livemapRoute();
     }
 
-    function clickAvoidUnpaved() {
-        options.avoidUnpaved = (getByID('avoidunpaved').checked === true);
-
-        options.avoidLongUnpaved = false;
-        getByID('avoidlongunpaved').checked = false;
-
-        livemapRoute();
-    }
-
-    function clickAvoidLongUnpaved() {
-        options.avoidLongUnpaved = (getByID('avoidlongunpaved').checked === true);
-
-        options.avoidUnpaved = false;
-        getByID('avoidunpaved').checked = false;
-
+    function changeUnpavedRule() {
+        let rule = parseInt(getByID('unpaved-rule').value);
+        if (rule == 0) {
+            options.avoidUnpaved = true;
+            options.avoidLongUnpaved = false;
+        } else if (rule == 1) {
+            options.avoidUnpaved = false;
+            options.avoidLongUnpaved = true;
+        } else {
+            options.avoidUnpaved = false;
+            options.avoidLongUnpaved = false;
+        }
         livemapRoute();
     }
 
