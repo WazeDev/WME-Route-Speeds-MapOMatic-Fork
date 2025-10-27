@@ -134,7 +134,7 @@
         vehicleType: 'PRIVATE',
         avoidTolls: false,
         avoidFreeways: false,
-        avoidDifficult: false,
+        avoidDifficult: true,
         avoidFerries: false,
         avoidUnpaved: true,
         avoidLongUnpaved: false,
@@ -215,10 +215,11 @@
     function initializeScript() {
         let addon = document.createElement('section');
         addon.id = SCRIPT_ID + "-addon";
-        addon.innerHTML = '<div id="' + SCRIPT_ID + '-sidepanel" style="margin: 0px 8px; width: auto;">' +
-            '<div style="margin-bottom:4px; padding:0px;"><a href="https://greasyfork.org/en/scripts/369630" target="_blank">' +
-            '<span style="font-weight:bold; text-decoration:underline">WME Route Speeds</span></a><span style="margin-left:6px; color:#888; font-size:11px;">v' + SCRIPT_VERSION + '</span>' +
+        addon.innerHTML = '<div id="' + SCRIPT_ID + '-sidepanel" style="margin: 0px; width: auto;">' +
+            '<div style="margin-bottom:4px; padding:0px;"><a href="https://greasyfork.org/en/scripts/369630" target="_blank"><span style="font-weight:bold; text-decoration:underline">WME Route Speeds</span></a>' +
+            '<span style="margin-left:6px; color:#888; font-size:11px;">v' + SCRIPT_VERSION + '</span>' +
             '</div>' +
+
             '<style>\n' +
             '#' + SCRIPT_ID + '-sidepanel select { margin-left:20px; font-size:12px; height:22px; border:1px solid; border-color:rgb(169, 169, 169); border-radius:4px; border: 1px solid; border-color: rgb(169, 169, 169); -webkit-border-radius:4px; -moz-border-radius:4px; }\n' +
             '#' + SCRIPT_ID + '-sidepanel select, #' + SCRIPT_ID + '-sidepanel input { margin-top:2px; margin-bottom:2px; width:initial; }\n' +
@@ -227,14 +228,15 @@
             '#' + SCRIPT_ID + '-sidepanel .controls-container { padding:0px; }\n' +
             '#' + SCRIPT_ID + '-sidepanel label { font-weight:normal; }\n' +
             '</style>' +
+
             '<div style="float:left; display:inline-block;">' +
             '<a id="' + SCRIPT_ID + '-button-A" onclick="return false;" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on A marker">A:</a>' +
-            '<input id="' + SCRIPT_ID + '-sidepanel-a" class="form-control" style="width:165px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
+            '<input id="' + SCRIPT_ID + '-sidepanel-a" class="form-control" style="width:180px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
             '<br><div style="height: 4px;"></div>' +
             '<a id="' + SCRIPT_ID + '-button-B" onclick="return false;" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on B marker">B:</a>' +
-            '<input id="' + SCRIPT_ID + '-sidepanel-b" class="form-control" style="width:165px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
+            '<input id="' + SCRIPT_ID + '-sidepanel-b" class="form-control" style="width:180px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
             '</div>' +
-            '<div style="float:right; padding-right:20px; padding-top:6%; ">' +
+            '<div style="float:right; padding-right:20px; padding-top:11px;">' +
             '<button id=' + SCRIPT_ID + '-button-reverse class="waze-btn waze-btn-blue waze-btn-smaller" style="padding-left:15px; padding-right:15px;" title="Calculate reverse route" >A &#8596; B</button></div>' +
             '<div style="clear:both; "></div>' +
             '<div id="' + SCRIPT_ID + '-marker-click-explanation" style="font-size:11px; color:#404040; line-height:1.1; display:none;">Click the A or B marker on the map to move it. Click again to finish moving the marker.</div>' +
@@ -311,17 +313,21 @@
 
             '<div id=' + SCRIPT_ID + '-summaries style="font-size:11px; font-variant-numeric:tabular-nums;"></div>' +
 
-            '<div style="margin-bottom:4px;">' +
-            '<b>Options:</b>' +
-            '<a id="' + SCRIPT_ID + '-reset-options-to-livemap-route" onclick="return false;" style="cursor:pointer; float:right; margin-right:20px;" title="Reset routing options to the Livemap Route equivalents">Reset to Livemap Route</a>' +
-            '</div>' +
+            '<div><b>Options:</b></div>' +
 
             getCheckboxHtml('enablescript', 'Enable script') +
             getCheckboxHtml('showLabels', 'Show segment labels') +
-            getCheckboxHtml('livetraffic', 'Use real-time traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
             getCheckboxHtml('showSpeeds', 'Show speed on labels') +
             getCheckboxHtml('usemiles', 'Use miles and mph') +
             getCheckboxHtml('routetext', 'Show route descriptions') +
+            getCheckboxHtml('livetraffic', 'Use real-time traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
+            getCheckboxHtml('routingorder', 'Use routing order', 'Sorts routes in the same order they would appear in the app or livemap (only works if the server returned more routes than requested)') +
+
+            '<div style="margin-top:4px;">' +
+            '<b>Routing Options:</b>' +
+            '<a id="' + SCRIPT_ID + '-reset-routing-options" onclick="return false;" style="cursor:pointer; float:right;" title="Reset routing options to the app defaults">Reset to Default</a>' +
+            '</div>' +
+            getCheckboxHtml('userbs', 'Use Routing Beta Server (RBS)', '', { display: window.location.hostname.includes('beta') ? 'inline' : 'none' }) +
 
             '<div>' +
             getCheckboxHtml('getalternatives', 'Alternative routes: show', '', { display: 'inline-block' }) +
@@ -338,13 +344,8 @@
             '<option id=' + SCRIPT_ID + '-maxroutes value="12">12</option>' +
             '<option id=' + SCRIPT_ID + '-maxroutes value="15">15</option>' +
             '<option id=' + SCRIPT_ID + '-maxroutes value="40">all</option>' +
-
             '</select>' +
             '</div>' +
-
-            getCheckboxHtml('routingorder', 'Use Routing Order', 'Sorts routes in the same order they would appear in the app or livemap (only works if the server returned more routes than requested)') +
-
-            getCheckboxHtml('userbs', 'Use Routing Beta Server (RBS)', '', { display: window.location.hostname.includes('beta') ? 'inline' : 'none' }) +
 
             '<div>' +
             '<label class="" style="display:inline-block;">' +
@@ -433,19 +434,17 @@
         localStorage.setItem(SAVED_OPTIONS_KEY, JSON.stringify(options));
     }
 
-    function resetOptions() {
+    function resetRoutingOptions() {
         getByID('getalternatives').checked = options.getAlternatives = true;
         getByID('maxroutes').value = options.maxRoutes = 3;
-        getByID('livetraffic').checked = options.liveTraffic = false;
         getByID('routetype').value = options.routeType = 1;
         getByID('avoidtolls').checked = options.avoidTolls = false;
         getByID('avoidfreeways').checked = options.avoidFreeways = false;
         getByID('avoidunpaved').checked = options.avoidUnpaved = true;
         getByID('avoidlongunpaved').checked = options.avoidLongUnpaved = false;
         getByID('allowuturns').checked = options.allowUTurns = true;
-        getByID('routingorder').checked = options.routingOrder = true;
         getByID('userbs').checked = options.useRBS = false;
-        getByID('avoiddifficult').checked = options.avoidDifficult = false;
+        getByID('avoiddifficult').checked = options.avoidDifficult = true;
         getByID('avoidferries').checked = options.avoidFerries = false;
         getByID('vehicletype').value = options.vehicleType = 'PRIVATE';
     }
@@ -478,7 +477,7 @@
     }
 
     function onTabCreated() {
-        resetOptions();
+        resetRoutingOptions();
         loadRouteSpeedsOptions();
 
         if (!options.enableScript) getByID('sidepanel').style.color = "#A0A0A0";
@@ -509,7 +508,7 @@
 
         getByID('button-livemap').onclick = livemapRouteClick;
         getByID('button-reverse').onclick = clickReverseRoute;
-        getByID('reset-options-to-livemap-route').onclick = resetOptionsToLivemapRouteClick;
+        getByID('reset-routing-options').onclick = resetRoutingOptionsClick;
 
         getByID('hour').onchange = hourChange;
         getByID('day').onchange = dayChange;
@@ -1552,10 +1551,10 @@
     //--------------------------------------------------------------------------
     // Sidebar event handlers
 
-    function resetOptionsToLivemapRouteClick() {
+    function resetRoutingOptionsClick() {
         if (waitingForRoute) return;
 
-        resetOptions();
+        resetRoutingOptions();
 
         $(`.` + SCRIPT_ID + `-pass-checkbox`).prop( "checked", false );;
         options.passes = [];
