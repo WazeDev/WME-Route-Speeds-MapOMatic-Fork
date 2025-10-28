@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.10.25.0
+// @version      2025.10.28.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630
@@ -121,6 +121,9 @@
     const SAVED_OPTIONS_KEY = "RouteSpeedsOptions";
     const options = {
         enableScript: true,
+        rememberEnabled: "remember",
+        requireTab: false,
+        clearSelection: false,
         showLabels: true,
         showSpeeds: true,
         useMiles: false,
@@ -313,9 +316,20 @@
 
             '<div id=' + SCRIPT_ID + '-summaries style="font-size:11px; font-variant-numeric:tabular-nums;"></div>' +
 
-            '<div><b>Script Options:</b></div>' +
-
+            '<div style="padding-top:4px;"><b>Script Options:</b></div>' +
             getCheckboxHtml('enablescript', 'Enable script') +
+            '<div>' +
+            'When WME loads:<select id=' + SCRIPT_ID + '-remember-enabled style="margin-left:6px;" >' +
+            '<option value="enable">Enable script</option>' +
+            '<option value="disable">Disable script</option>' +
+            '<option value="remember">Remember previous state</option>' +
+            '</select>' +
+            '<br>' +
+            getCheckboxHtml('require-tab', 'Require open script tab for routing') +
+            getCheckboxHtml('clear-selection', 'Deselect segments after routing') +
+            '</div>' +
+
+            '<div style="padding-top:4px;"><b>Route Display Options:</b></div>' +
             getCheckboxHtml('showLabels', 'Show segment labels') +
             getCheckboxHtml('showSpeeds', 'Show speed on labels') +
             getCheckboxHtml('usemiles', 'Use miles and mph') +
@@ -323,8 +337,7 @@
             getCheckboxHtml('livetraffic', 'Use real-time traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
             getCheckboxHtml('routingorder', 'Use routing order', 'Sorts routes in the same order they would appear in the app or livemap (only works if the server returned more routes than requested)') +
 
-            '<div style="padding-top:4px;">' +
-            '<b>Routing Options:</b>' +
+            '<div style="padding-top:4px;"><b>Routing Options:</b>' +
             '<a id="' + SCRIPT_ID + '-reset-routing-options" onclick="return false;" style="cursor:pointer; float:right; padding-right:8px;">Reset to App Defaults</a>' +
             '</div>' +
             getCheckboxHtml('userbs', 'Use Routing Beta Server (RBS)', '', { display: window.location.hostname.includes('beta') ? 'inline' : 'none' }) +
@@ -456,7 +469,12 @@
         } catch {
             warn("Saved options could not be loaded. Using defaults.");
         }
+        getByID('remember-enabled').value = options.rememberEnabled;
+        if (options.rememberEnabled == "enable") options.enableScript = true;
+        else if (options.rememberEnabled == "disable") options.enableScript = false;
         getByID('enablescript').checked = options.enableScript;
+        getByID('require-tab').checked = options.requireTab;
+        getByID('clear-selection').checked = options.clearSelection;
         getByID('showLabels').checked = options.showLabels;
         getByID('showSpeeds').checked = options.showSpeeds;
         getByID('usemiles').checked = options.useMiles;
@@ -486,6 +504,9 @@
         else getByID('sidepanel').style.color = "";
 
         getByID('enablescript').onclick = clickEnableScript;
+        getByID('remember-enabled').onclick = changeRememberEnabled;
+        getByID('require-tab').onclick = clickRequireTab;
+        getByID('clear-selection').onclick = clickClearSelection;
         getByID('showLabels').onclick = clickShowLabels;
         getByID('showSpeeds').onclick = clickShowSpeeds;
         getByID('usemiles').onclick = clickUseMiles;
@@ -661,8 +682,10 @@
     function loopWMERouteSpeeds() {
         if (!options.enableScript) return;
 
-        let tabOpen = $('#user-tabs #' + SCRIPT_ID + '-tab-label').parent().parent().attr('aria-expanded') == "true";
-        if (tabOpen) {
+        let tabOpenedOnce = $('#user-tabs #' + SCRIPT_ID + '-tab-label').parent().parent().attr('aria-expanded') == "true";
+        let tabOpen = $('#user-tabs #' + SCRIPT_ID + '-tab-label').parent().parent().parent().hasClass("active");
+        console.log(tabOpen);
+        if (tabOpenedOnce) {
             if (tabStatus !== 2) {
                 tabStatus = 2;
                 sdk.Map.setLayerVisibility({layerName: MARKER_LAYER_NAME, visibility: true});
@@ -698,7 +721,7 @@
         let selection = sdk.Editing.getSelection();
         let selectedIDs = [];
         if (selection !== null && selection.objectType == "segment") selectedIDs = selection.ids;
-        if (selectedIDs.length == 2) {
+        if (selectedIDs.length == 2 && (tabOpen || !options.requireTab)) {
             if (!twoSegmentsSelected) {
                 twoSegmentsSelected = true;
                 let midpointA = getSegmentMidpoint(selectedIDs[0]);
@@ -708,7 +731,7 @@
                     getByID('sidepanel-b').value = midpointB[0].toFixed(6) + ", " + midpointB[1].toFixed(6);
                 }
                 createMarkers(midpointA[0], midpointA[1], midpointB[0], midpointB[1]);
-                requestRouteFromLiveMap(false);
+                requestRouteFromLiveMap(options.clearSelection);
             }
         } else if (selectedIDs.length == 1) {
             if (twoSegmentsSelected) {
@@ -1551,6 +1574,18 @@
 
     //--------------------------------------------------------------------------
     // Sidebar event handlers
+
+    function changeRememberEnabled() {
+        options.rememberEnabled = getByID('remember-enabled').value;
+    }
+
+    function clickRequireTab() {
+        options.requireTab = (getByID('require-tab').checked === true);
+    }
+
+    function clickClearSelection() {
+        options.clearSelection = (getByID('clear-selection').checked === true);
+    }
 
     function resetRoutingOptionsClick() {
         if (waitingForRoute) return;
