@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.10.28.0
+// @version      2025.10.28.1
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630
@@ -684,7 +684,6 @@
 
         let tabOpenedOnce = $('#user-tabs #' + SCRIPT_ID + '-tab-label').parent().parent().attr('aria-expanded') == "true";
         let tabOpen = $('#user-tabs #' + SCRIPT_ID + '-tab-label').parent().parent().parent().hasClass("active");
-        console.log(tabOpen);
         if (tabOpenedOnce) {
             if (tabStatus !== 2) {
                 tabStatus = 2;
