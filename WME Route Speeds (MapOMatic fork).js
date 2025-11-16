@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.11.11.0
+// @version      2025.11.15.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -13,6 +13,8 @@
 // @contributor  2014, 2015 FZ69617
 // @connect      greasyfork.org
 // @connect      waze.com
+// @downloadURL  https://update.greasyfork.org/scripts/369630/WME%20Route%20Speeds%20%28MapOMatic%20fork%29.user.js
+// @updateURL    https://update.greasyfork.org/scripts/369630/WME%20Route%20Speeds%20%28MapOMatic%20fork%29.meta.js
 // ==/UserScript==
 
 /* global getWmeSdk, $, jQuery, WazeWrap, turf */
@@ -330,12 +332,12 @@
             '</div>' +
 
             '<div style="padding-top:4px;"><b>Route Display Options:</b></div>' +
-            getCheckboxHtml('showLabels', 'Show segment labels') +
-            getCheckboxHtml('showSpeeds', 'Show speed on labels') +
+            getCheckboxHtml('showLabels', 'Show segment cross time labels') +
+            getCheckboxHtml('showSpeeds', 'Show cross times as speeds', '', { marginLeft: '12px' }) +
             getCheckboxHtml('usemiles', 'Use miles and mph') +
             getCheckboxHtml('routetext', 'Show route descriptions') +
-            getCheckboxHtml('livetraffic', 'Use real-time traffic', 'Note: this only seems to affect routes within the last 30-60 minutes, up to Now') +
-            getCheckboxHtml('routingorder', 'Use routing order', 'Sorts routes in the same order they would appear in the app or livemap (only works if the server returned more routes than requested)') +
+            getCheckboxHtml('livetraffic', 'Use live traffic', 'Routes for times close to the current time can be displayed with or without live traffic information') +
+            getCheckboxHtml('sortresults', 'Sort routes by total time', 'If unchecked, routes are shown in the order they are received from the server') +
 
             '<div style="padding-top:4px;"><b>Routing Options:</b>' +
             '<a id="' + SCRIPT_ID + '-reset-routing-options" onclick="return false;" style="cursor:pointer; float:right; padding-right:8px;">Reset to App Defaults</a>' +
@@ -489,7 +491,7 @@
         else getByID('unpaved-rule').value = 2;
         getByID('routetype').value = options.routeType;
         getByID('allowuturns').checked = options.allowUTurns;
-        getByID('routingorder').checked = options.routingOrder;
+        getByID('sortresults').checked = !options.routingOrder;
         getByID('userbs').checked = options.useRBS;
         getByID('avoiddifficult').checked = options.avoidDifficult;
         getByID('avoidferries').checked = options.avoidFerries;
@@ -519,7 +521,7 @@
         getByID('unpaved-rule').onchange = changeUnpavedRule;
         getByID('routetype').onchange = clickRouteType;
         getByID('allowuturns').onclick = clickAllowUTurns;
-        getByID('routingorder').onclick = clickRoutingOrder;
+        getByID('sortresults').onclick = clickSortResults;
         getByID('userbs').onclick = clickUseRBS;
         getByID('avoiddifficult').onclick = clickAvoidDifficult;
         getByID('avoidferries').onclick = clickAvoidFerries;
@@ -1735,8 +1737,8 @@
         livemapRoute();
     }
 
-    function clickRoutingOrder() {
-        options.routingOrder = (getByID('routingorder').checked === true);
+    function clickSortResults() {
+        options.routingOrder = !(getByID('sortresults').checked === true);
         sortRoutes();
     }
 
