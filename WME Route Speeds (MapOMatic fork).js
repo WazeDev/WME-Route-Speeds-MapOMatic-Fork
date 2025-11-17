@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.11.15.1
+// @version      2025.11.17.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -142,6 +142,7 @@
         avoidUnpaved: true,
         avoidLongUnpaved: false,
         allowUTurns: true,
+        sortBy: 'time',
         passes: []
     };
 
@@ -335,7 +336,13 @@
             getCheckboxHtml('usemiles', 'Use miles and mph') +
             getCheckboxHtml('routetext', 'Show route descriptions') +
             getCheckboxHtml('livetraffic', 'Use live traffic', 'Routes for times close to the current time can be displayed with or without live traffic information') +
-            getCheckboxHtml('sortresults', 'Sort routes by total time', 'If unchecked, routes are shown in the order they are received from the server') +
+            '<div>' +
+            getCheckboxHtml('sortresults', 'Sort routes: by', 'If unchecked, routes are shown in the order they are received from the server', { display: 'inline-block' }) +
+            '<select id=' + SCRIPT_ID + '-sortby style="margin-left:-4px; display:inline-block;" >' +
+            '<option id=' + SCRIPT_ID + '-sortby value="time">total time</option>' +
+            '<option id=' + SCRIPT_ID + '-sortby value="length">total length</option>' +
+            '</select>' +
+            '</div>' +
 
             '<div style="padding-top:4px;"><b>Routing Options:</b>' +
             '<a id="' + SCRIPT_ID + '-reset-routing-options" onclick="return false;" style="cursor:pointer; float:right; padding-right:8px;">Reset to App Defaults</a>' +
@@ -494,6 +501,7 @@
         getByID('avoiddifficult').checked = options.avoidDifficult;
         getByID('avoidferries').checked = options.avoidFerries;
         getByID('vehicletype').value = options.vehicleType;
+        getByID('sortby').value = options.sortBy;
     }
 
     function onTabCreated() {
@@ -524,6 +532,7 @@
         getByID('avoiddifficult').onclick = clickAvoidDifficult;
         getByID('avoidferries').onclick = clickAvoidFerries;
         getByID('vehicletype').onchange = clickVehicleType;
+        getByID('sortby').onchange = changeSortBy;
 
         getByID('sidepanel-a').onkeydown = enterAB;
         getByID('sidepanel-b').onkeydown = enterAB;
@@ -1161,19 +1170,14 @@
     function sortRoutes() {
         routesShown = [...routesReceived];
         if (!options.routingOrder) {
-            let sortByField = (options.routeType === 2) ? "length" : options.liveTraffic ? "crossTime" : "crossTimeWithoutRealTime";
-            routesShown.sort(function (a, b) {
-                let valField = "total_" + sortByField;
-                let val = function (r) {
-                    if (r[valField] !== undefined) return r[valField];
-                    let val = 0;
-                    for (let i = 0; i < r.results.length; ++i) {
-                        val += r.results[i][sortByField];
-                    }
-                    return r[valField] = val;
-                };
-                return val(a.response) - val(b.response);
-            });
+            let comparisonFunction;
+            if (options.sortBy == "length") {
+                comparisonFunction = (a, b) => getFieldTotal(a, "length") - getFieldTotal(b, "length");
+            } else {
+                let sortField = options.liveTraffic ? "totalRouteTime" : "totalRouteTimeWithoutRealtime";
+                comparisonFunction = (a, b) => a.response[sortField] - b.response[sortField];
+            }
+            routesShown.sort(comparisonFunction);
         }
         if (routesShown.length > options.maxRoutes) {
             routesShown = routesShown.slice(0, options.maxRoutes);
@@ -1182,6 +1186,14 @@
         if (routeSelected >= routesShown.length) routeSelected = routesShown.length - 1;
         createSummaries();
         drawRoutes(true);
+    }
+
+    function getFieldTotal(route, field) {
+        let total = 0;
+        for (let i = 0; i < route.response.results.length; i++) {
+            total += route.response.results[i][field];
+        }
+        return total;
     }
 
     function switchRoute() {
@@ -1737,6 +1749,11 @@
 
     function clickSortResults() {
         options.routingOrder = !(getByID('sortresults').checked === true);
+        sortRoutes();
+    }
+
+    function changeSortBy() {
+        options.sortBy = getByID('sortby').value;
         sortRoutes();
     }
 
