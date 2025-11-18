@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.11.17.0
+// @version      2025.11.17.1
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -337,7 +337,7 @@
             getCheckboxHtml('routetext', 'Show route descriptions') +
             getCheckboxHtml('livetraffic', 'Use live traffic', 'Routes for times close to the current time can be displayed with or without live traffic information') +
             '<div>' +
-            getCheckboxHtml('sortresults', 'Sort routes: by', 'If unchecked, routes are shown in the order they are received from the server', { display: 'inline-block' }) +
+            getCheckboxHtml('sortresults', 'Sort routes: by', 'If unchecked, routes are shown in the order they are received from the server. If 3 routes are requested, this will also be the order they would appear in the app or live map.', { display: 'inline-block' }) +
             '<select id=' + SCRIPT_ID + '-sortby style="margin-left:-4px; display:inline-block;" >' +
             '<option id=' + SCRIPT_ID + '-sortby value="time">total time</option>' +
             '<option id=' + SCRIPT_ID + '-sortby value="length">total length</option>' +
