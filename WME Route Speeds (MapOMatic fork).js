@@ -37,23 +37,19 @@
         '#4d4dcd', // route 1
         '#d34f8a', // route 2
         '#188984', // route 3
-        '#cafa27', // route 4
-        '#ffca3f', // route 5
-        '#39e440', // route 6
-        '#a848e2', // route 7
-        '#cbbf00', // route 8
-        '#2994f3', // route 9
-        '#ff3d1e', // route 10
-        '#b0b7f8', // route 1 HOV
-        '#ffb0ba', // route 2 HOV
-        '#71ded2', // route 3 HOV
-        '#86c211', // route 4 HOV
-        '#ff8500', // route 5 HOV
-        '#00a842', // route 6 HOV
-        '#ecd4ff', // route 7 HOV
-        '#7c00ff', // route 8 HOV
-        '#caeeff', // route 9 HOV
-        '#ffdab8', // route 10 HOV
+        '#c8fe0a', // route 4
+        '#ff9f0e', // route 5
+        '#4fdc52', // route 6
+        '#8567bb', // route 7
+        '#f03239', // route 8
+        '#bfb0ff', // route 1 HOV
+        '#ffb2d0', // route 2 HOV
+        '#9dd3d0', // route 3 HOV
+        '#e7ff8c', // route 4 HOV
+        '#ffd389', // route 5 HOV
+        '#aef7a4', // route 6 HOV
+        '#d3bdf3', // route 7 HOV
+        '#ffa99b', // route 8 HOV
     ];
     function getRouteColor(displayNumber) {
         return ROUTE_COLORS[(displayNumber - 1) % ROUTE_COLORS.length];
@@ -1212,9 +1208,9 @@
         for (let i = 0; i < hovRoutes.length; i++) {
             let parentIndex = routesShown.findIndex(r => r.response.uid == hovRoutes[i].response.hovIndex);
             routesShown.splice(parentIndex + 1, 0, hovRoutes[i]);
-            routesShown[parentIndex + 1].displayNumber = routesShown[parentIndex].displayNumber + 10;
+            routesShown[parentIndex + 1].displayNumber = routesShown[parentIndex].displayNumber + 8;
         }
-        if (normalRoutesReceived > options.maxRoutes) routesShown = routesShown.slice(0, routesShown.findIndex(r => r.displayNumber == options.maxRoutes + 1));
+        if (normalRoutesReceived > Math.min(options.maxRoutes, 10)) routesShown = routesShown.slice(0, routesShown.findIndex(r => r.displayNumber == Math.min(options.maxRoutes, 10) + 1));
         if (routeSelectedLast != -1) routeSelected = routeSelectedLast;
         if (routeSelected >= routesShown.length) routeSelected = routesShown.length - 1;
         createSummaries();
