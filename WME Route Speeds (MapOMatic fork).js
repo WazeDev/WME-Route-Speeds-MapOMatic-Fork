@@ -819,9 +819,10 @@
 
     function getTimeText(time_s) {
         let seconds = time_s % 60;
-        let minutes = Math.floor((time_s % 3600) / 60);
+        let minutes = Math.floor(time_s / 60) % 60;
         let hours = Math.floor(time_s / 3600);
-        return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        if (hours == 0) return minutes + ':' + String(seconds).padStart(2, '0');
+        else return hours + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
     }
 
     function createMarkers(lon1, lat1, lon2, lat2) {
