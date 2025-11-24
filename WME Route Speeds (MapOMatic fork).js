@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.11.23.0
+// @version      2025.11.24.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -879,15 +879,16 @@
         let feature = {};
         if (mode == "label") {
             feature = turf.along(geometry, turf.length(geometry) / 2);
-            let labelText;
+            let labelText = routesShown[routeIndex].response.results[segmentIndex].useHovLane ? "\u2662\n" : "";
             if (options.showSpeeds) {
                 let speed = getSpeed(routesShown[routeIndex].response.results[segmentIndex].length, getLabelTime(routesShown[routeIndex].response.results[segmentIndex]));
-                if (speed >= 1) labelText = Math.round(speed);
-                else if (speed == 0) labelText = '?';
-                else labelText = '<1';
+                if (speed >= 1) labelText += Math.round(speed);
+                else if (speed == 0) labelText += '?';
+                else labelText += '<1';
             } else {
-                labelText = getLabelTime(routesShown[routeIndex].response.results[segmentIndex]) + 's';
+                labelText += getLabelTime(routesShown[routeIndex].response.results[segmentIndex]) + 's';
             }
+            if (routesShown[routeIndex].response.results[segmentIndex].useHovLane) labelText += "\n";
             feature.properties = {
                 labelText: labelText,
                 fontWeight: getLabelWeight(routesShown[routeIndex].response.results[segmentIndex]),
