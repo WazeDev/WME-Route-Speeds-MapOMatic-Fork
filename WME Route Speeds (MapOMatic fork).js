@@ -216,7 +216,7 @@
     function initializeScript() {
         let addon = document.createElement('section');
         addon.id = SCRIPT_ID + "-addon";
-        addon.innerHTML = '<div id="' + SCRIPT_ID + '-sidepanel" style="margin: 0px; width: auto;">' +
+        addon.innerHTML = '<div id="' + SCRIPT_ID + '-sidepanel" style="margin:0px; width:auto; position:relative; z-index:6;">' +
             '<div style="margin-bottom:4px; padding:0px;"><a href="https://greasyfork.org/en/scripts/369630" target="_blank"><span style="font-weight:bold; text-decoration:underline">WME Route Speeds</span></a>' +
             '<span style="margin-left:6px; color:#888; font-size:11px;">v' + SCRIPT_VERSION + '</span>' +
             '</div>' +
