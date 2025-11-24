@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.11.22.0
+// @version      2025.11.23.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -397,16 +397,16 @@
             '.' + SCRIPT_ID + 'markerB                      { background-image:url(data:image/png;base64,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); }' +
             '.' + SCRIPT_ID + 'markerA:hover                { cursor:move }' +
             '.' + SCRIPT_ID + 'markerB:hover                { cursor:move }' +
-            '.' + SCRIPT_ID + '_summary_normal              { visibility:hidden; display:block; color:#000000; margin:4px 0px 4px 0px; padding:2px 4px 2px 4px; border:1px solid #c0c0c0; background:#f6f6f6; border-radius:4px; vertical-align:middle; white-space:nowrap; position:relative; }' +
-            '.' + SCRIPT_ID + '_summary_selected            { visibility:hidden; display:block; color:#000000; margin:4px 0px 4px 0px; padding:2px 4px 2px 4px; border:1px solid #c0c0c0; background:#c8fcff; border-radius:4px; vertical-align:middle; white-space:nowrap; position:relative; }' +
-            '.' + SCRIPT_ID + '_summary_hov                 { visibility:hidden; display:block; color:#2c2c2c; margin:-10px 1px 4px 1px; padding:6px 4px 1px 4px; border:1px solid #c0c0c0; background:#fdfdfd; border-radius:4px; vertical-align:middle; white-space:nowrap; position:relative; }' +
-            '.' + SCRIPT_ID + '_summary_hov_selected        { visibility:hidden; display:block; color:#2c2c2c; margin:-10px 1px 4px 1px; padding:6px 4px 1px 4px; border:1px solid #c0c0c0; background:#d8fdff; border-radius:4px; vertical-align:middle; white-space:nowrap; position:relative; }' +
+            '.' + SCRIPT_ID + '_summary_normal              { visibility:hidden; display:block; color:#000000; line-height:1.4; margin:4px 0px 4px 0px; padding:2px 4px 2px 4px; border:1px solid #c0c0c0; background:#f6f6f6; border-radius:4px; vertical-align:middle; position:relative; }' +
+            '.' + SCRIPT_ID + '_summary_selected            { visibility:hidden; display:block; color:#000000; line-height:1.4; margin:4px 0px 4px 0px; padding:2px 4px 2px 4px; border:1px solid #c0c0c0; background:#c8fcff; border-radius:4px; vertical-align:middle; position:relative; }' +
+            '.' + SCRIPT_ID + '_summary_hov                 { visibility:hidden; display:block; color:#282828; line-height:1.4; margin:-10px 1px 4px 1px; padding:7px 4px 2px 4px; border:1px solid #c0c0c0; background:#fdfdfd; border-radius:4px; vertical-align:middle; position:relative; }' +
+            '.' + SCRIPT_ID + '_summary_hov_selected        { visibility:hidden; display:block; color:#282828; line-height:1.4; margin:-10px 1px 4px 1px; padding:7px 4px 2px 4px; border:1px solid #c0c0c0; background:#d8fdff; border-radius:4px; vertical-align:middle; position:relative; }' +
             '.' + SCRIPT_ID + '_summary_normal:hover        { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
             '.' + SCRIPT_ID + '_summary_selected:hover      { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
             '.' + SCRIPT_ID + '_summary_hov:hover           { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
             '.' + SCRIPT_ID + '_summary_hov_selected:hover  { cursor:pointer; border:1px solid #808080; xbackground:#a0fffd; }' +
             '.' + SCRIPT_ID + '_header                      { display:inline-block; width:14px; height:14px; text-align:center; border-radius:2px; margin-right:2px; position:relative; top:2px; }' +
-            '.' + SCRIPT_ID + '_header_hov                  { display:inline-block; width:12px; height:12px; text-align:center; border-radius:2px; margin-right:3px; position:relative; top:1px; }' +
+            '.' + SCRIPT_ID + '_header_hov                  { display:inline-block; width:12px; height:12px; text-align:center; border-radius:2px; margin-right:3px; position:relative; top:2px; }' +
             '</style>' +
             '</div>';
 
@@ -1308,7 +1308,7 @@
         let lengthUnit = options.useMiles ? "miles" : "km";
         let speedUnit = options.useMiles ? "mph" : "km/h";
         for (let i = 0; i < routesShown.length; i++) {
-            summaryDiv.innerHTML += '<div id=' + SCRIPT_ID + '-summary-' + i + ' class=' + SCRIPT_ID + (routesShown[i].response.hovIndex == -1 ? '_summary_normal' : '_summary_hov') + ' style="z-index:' + (40 - i) + ';"></div>';
+            summaryDiv.innerHTML += '<div id=' + SCRIPT_ID + '-summary-' + i + ' class=' + SCRIPT_ID + (routesShown[i].response.hovIndex == -1 ? '_summary_normal' : '_summary_hov') + ' style="z-index:' + (20 - i) + ';"></div>';
         }
         for (let i = 0; i < routesShown.length; i++) {
             let routeDiv = getByID('summary-' + i);
@@ -1318,7 +1318,7 @@
             if (routeSelected == i) routeDiv.className = SCRIPT_ID + (hov ? '_summary_hov_selected' : '_summary_selected');
 
             let html = '<div class=' + SCRIPT_ID + '_header' + (hov ? '_hov' : '') + ' style="background: ' + getRouteColor(routesShown[i].displayNumber) + '; color:#e0e0e0; "></div>';
-            html += '<div style="min-width:24px; display:inline-block; font-size:14px; color:' + (hov ? '#6c6c6c' : '#404040') + '; text-align:right;"><b>' + (hov ? '&#x2662;&nbsp;' : routesShown[i].displayNumber + '.') + '</b></div>';
+            html += '<div style="min-width:24px; display:inline-block; font-size:' + (hov ? '11px' : '14px') + '; color:' + (hov ? '#686868' : '#404040') + '; padding-right:' + (hov ? '5px' : '0px') + '; text-align:right;"><b>' + (hov ? '&#x2662;' : routesShown[i].displayNumber + '.') + '</b></div>';
 
             let lengthM = 0;
             for (let s = 0; s < routesShown[i].response.results.length; s++) {
@@ -1331,11 +1331,13 @@
             let time = options.liveTraffic ? routesShown[i].response.totalRouteTime : routesShown[i].response.totalRouteTimeWithoutRealtime;
             let timeText = getTimeText(time);
 
-            html += '<div style="min-width:57px; display:inline-block; font-size:14px; text-align:right;">' + lengthText + '</div>' + '<span style="color:' + (hov ? '#6c6c6c' : '#404040') + ';"> ' + lengthUnit + '</span>';
-            html += '<div style="min-width:75px; display:inline-block; font-size:14px; text-align:right;"><b>' + timeText + '</b></div>';
+            html += '<div style="min-width:57px; display:inline-block; font-size:' + (hov ? '11px' : '14px') + '; padding-right:' + (hov ? '4px' : '0px') + '; text-align:right;">' + lengthText + '</div>';
+            html += '<span style="color:' + (hov ? '#686868' : '#404040') + ';"> ' + lengthUnit + '</span>';
+            html += '<div style="min-width:75px; display:inline-block; font-size:' + (hov ? '11px' : '14px') + '; padding-right:' + (hov ? '5px' : '0px') + '; font-weight:' + (hov ? 500 : 700) + '; text-align:right;">' + timeText + '</div>';
 
             let avgSpeed = getSpeed(lengthM, time);
-            html += '<div style="min-width:48px; display:inline-block; font-size:14px; text-align:right;" >' + avgSpeed.toFixed(1) + '</div><span style="color:' + (hov ? '#6c6c6c' : '#404040') + ';"> ' + speedUnit + '</span>';
+            html += '<div style="min-width:48px; display:inline-block; font-size:' + (hov ? '11px' : '14px') + '; padding-right:' + (hov ? '2px' : '0px') + '; text-align:right;">' + avgSpeed.toFixed(1) + '</div>';
+            html += '<span style="color:' + (hov ? '#686868' : '#404040') + ';"> ' + speedUnit + '</span>';
 
             if (options.showRouteText) {
                 let laneTypes = [];
@@ -1350,7 +1352,7 @@
                 let separator = '';
                 if (routesShown[i].response.minPassengers) separator += " (" + routesShown[i].response.minPassengers + "+)";
                 if (laneTypes.length) separator += ': ';
-                html += '<div style="white-space:normal; line-height:normal; font-variant-numeric:normal;">' + laneTypes.join(', ') + separator + routesShown[i].response.routeName + '</div>';
+                html += '<div style="color:' + (hov ? '#404040' : '#000000') + '; line-height:normal; font-variant-numeric:normal;">' + laneTypes.join(', ') + separator + routesShown[i].response.routeName + '</div>';
             }
 
             routeDiv.innerHTML = html;
