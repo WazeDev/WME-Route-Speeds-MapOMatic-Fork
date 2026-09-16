@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2025.11.24.0
+// @version      2026.09.15.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -1145,7 +1145,7 @@
 
         GM_xmlhttpRequest({
             method: "GET",
-            url: url + "?" + jQuery.param(data),
+            url: url + "?" + jQuery.param(data, true),
             headers: {
                 "Content-Type": "application/json"
             },
