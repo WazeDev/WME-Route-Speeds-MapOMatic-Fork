@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2026.09.15.0
+// @version      2026.11.07.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -1045,46 +1045,26 @@
         return document.getElementById(SCRIPT_ID + "-" + node);
     }
 
-    function getnowtoday() {
-        let hour = getByID('hour').value;
-        let day = getByID('day').value;
-        if (hour === '---') hour = 'now';
-        if (day === '---') day = 'today';
-        if (hour === '') hour = 'now';
-        if (day === '') day = 'today';
+    function getTimeDifference() {
+        let currentDate = new Date();
 
-        let t = new Date();
-        let thour = (t.getHours() * 60) + t.getMinutes();
-        let tnow = (t.getDay() * 1440) + thour;
-        let tsel = tnow;
+        let currentTime = currentDate.getHours() * 60 + currentDate.getMinutes();
+        let currentDay = currentDate.getDay();
+        let currentWeekTime = currentDay * 1440 + currentTime;
 
-        if (hour === 'now') {
-            if (day === "0") tsel = (parseInt(day) * 1440) + thour;
-            if (day === "1") tsel = (parseInt(day) * 1440) + thour;
-            if (day === "2") tsel = (parseInt(day) * 1440) + thour;
-            if (day === "3") tsel = (parseInt(day) * 1440) + thour;
-            if (day === "4") tsel = (parseInt(day) * 1440) + thour;
-            if (day === "5") tsel = (parseInt(day) * 1440) + thour;
-            if (day === "6") tsel = (parseInt(day) * 1440) + thour;
-        }
-        else {
-            if (day === "today") tsel = (t.getDay() * 1440) + parseInt(hour);
-            if (day === "0") tsel = (parseInt(day) * 1440) + parseInt(hour);
-            if (day === "1") tsel = (parseInt(day) * 1440) + parseInt(hour);
-            if (day === "2") tsel = (parseInt(day) * 1440) + parseInt(hour);
-            if (day === "3") tsel = (parseInt(day) * 1440) + parseInt(hour);
-            if (day === "4") tsel = (parseInt(day) * 1440) + parseInt(hour);
-            if (day === "5") tsel = (parseInt(day) * 1440) + parseInt(hour);
-            if (day === "6") tsel = (parseInt(day) * 1440) + parseInt(hour);
-        }
+        let selectedTime = getByID("hour").value;
+        if (selectedTime == "now") selectedTime = currentTime;
+        let selectedDay = getByID("day").value;
+        if (selectedDay == "today") selectedDay = currentDay;
+        let selectedWeekTime = selectedDay * 1440 + selectedTime;
 
-        //console.log(tsel, tnow, tsel-tnow);
-
-        return tsel - tnow;
+        let difference = selectedWeekTime - currentWeekTime;
+        if (difference < 0) difference += 10080;
+        return difference;
     }
 
     function requestRouteFromLiveMap(clearSelection) {
-        var atTime = getnowtoday();
+        var atTime = getTimeDifference();
         var numRoutes = Math.min(10, options.getAlternatives ? options.maxRoutes : 1);
         var routeType = (options.routeType === 3) ? "TIME" : "HISTORIC_TIME";
         var avoidTollRoads = options.avoidTolls;
