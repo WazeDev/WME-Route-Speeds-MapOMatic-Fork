@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2026.11.07.0
+// @version      2026.11.07.1
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -1052,10 +1052,8 @@
         let currentDay = currentDate.getDay();
         let currentWeekTime = currentDay * 1440 + currentTime;
 
-        let selectedTime = getByID("hour").value;
-        if (selectedTime == "now") selectedTime = currentTime;
-        let selectedDay = getByID("day").value;
-        if (selectedDay == "today") selectedDay = currentDay;
+        let selectedTime = getByID("hour").value == "now" ? currentTime : parseInt(getByID("hour").value);
+        let selectedDay = getByID("day").value == "today" ? currentDay : parseInt(getByID("day").value);
         let selectedWeekTime = selectedDay * 1440 + selectedTime;
 
         let difference = selectedWeekTime - currentWeekTime;
