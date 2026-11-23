@@ -2,7 +2,7 @@
 // @name         WME Route Speeds (MapOMatic fork)
 // @description  Shows segment speeds in a route.
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
-// @version      2026.11.07.1
+// @version      2026.11.22.0
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @namespace    https://greasyfork.org/en/scripts/369630-wme-route-speeds-mapomatic-fork
@@ -231,10 +231,10 @@
             '</style>' +
 
             '<div style="float:left; display:inline-block;">' +
-            '<a id="' + SCRIPT_ID + '-button-A" onclick="return false;" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on A marker">A:</a>' +
+            '<a id="' + SCRIPT_ID + '-button-A" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on A marker">A:</a>' +
             '<input id="' + SCRIPT_ID + '-sidepanel-a" class="form-control" style="width:180px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
             '<br><div style="height: 4px;"></div>' +
-            '<a id="' + SCRIPT_ID + '-button-B" onclick="return false;" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on B marker">B:</a>' +
+            '<a id="' + SCRIPT_ID + '-button-B" style="cursor:pointer; width:20px; display:inline-block; vertical-align:middle;" title="Center map on B marker">B:</a>' +
             '<input id="' + SCRIPT_ID + '-sidepanel-b" class="form-control" style="width:180px; padding:6px; margin:0px; display:inline; height:24px" type="text" name=""/>' +
             '</div>' +
             '<div style="float:right; padding-right:20px; padding-top:11px;">' +
@@ -342,7 +342,7 @@
             '</div>' +
 
             '<div style="padding-top:4px;"><b>Routing Options:</b>' +
-            '<a id="' + SCRIPT_ID + '-reset-routing-options" onclick="return false;" style="cursor:pointer; float:right; padding-right:8px;">Reset to App Defaults</a>' +
+            '<a id="' + SCRIPT_ID + '-reset-routing-options" style="cursor:pointer; float:right; padding-right:8px;">Reset to App Defaults</a>' +
             '</div>' +
             getCheckboxHtml('userbs', 'Use Routing Beta Server (RBS)', '', { display: window.location.hostname.includes('beta') ? 'inline' : 'none' }) +
 
@@ -1130,33 +1130,41 @@
             nocache: true,
             responseType: "json",
             onerror: function(response) {
-                let str = "Route request failed" + (response.status !== null ? " with error " + response.status : "") + "!<br>";
+                let str = "Route request failed: network error" + (response.status ? " (status " + response.status + ")" : "") + "!<br>";
                 handleRouteRequestError(str);
                 waitingForRoute = false;
                 if (clearSelection) sdk.Editing.clearSelection();
             },
             onload: function(response) {
-                if (response.response.error !== undefined) {
-                    let str = response.response.error;
-                    str = str.replace("|", "<br>");
-                    handleRouteRequestError(str);
-                } else {
-                    if (response.response.coords !== undefined) {
-                        if (routeSelected > 0) routeSelected = 0;
-                        routesReceived = [response.response];
+                try {
+                    if (response.status !== 200 || response.response === null || typeof response.response !== "object") {
+                        handleRouteRequestError("Route request failed: HTTP " + response.status + "!<br>");
+                    } else if (response.response.error !== undefined) {
+                        let str = response.response.error;
+                        str = str.replace("|", "<br>");
+                        handleRouteRequestError(str);
+                    } else {
+                        if (response.response.coords !== undefined) {
+                            if (routeSelected > 0) routeSelected = 0;
+                            routesReceived = [response.response];
+                        }
+                        if (response.response.alternatives !== undefined) {
+                            routesReceived = response.response.alternatives;
+                        }
+                        updateRouteCount();
+                        sortRoutes();
                     }
-                    if (response.response.alternatives !== undefined) {
-                        routesReceived = response.response.alternatives;
-                    }
-                    updateRouteCount();
-                    sortRoutes();
-                }
 
-                getByID('button-livemap').style.backgroundColor = '';
-                getByID('button-reverse').style.backgroundColor = '';
-                switchRoute();
-                waitingForRoute = false;
-                if (clearSelection) sdk.Editing.clearSelection();
+                    getByID('button-livemap').style.backgroundColor = '';
+                    getByID('button-reverse').style.backgroundColor = '';
+                    switchRoute();
+                } catch (ex) {
+                    error(ex);
+                    handleRouteRequestError("Unexpected error: " + ex.name + "!<br>");
+                } finally {
+                    waitingForRoute = false;
+                    if (clearSelection) sdk.Editing.clearSelection();
+                }
             },
         });
     }
